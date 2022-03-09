@@ -5,6 +5,7 @@
 #include <string_view>
 #include <string>
 #include <stdexcept>
+#include <sstream>
 
 #include "Exception.hpp"
 
@@ -45,18 +46,12 @@ namespace tlucanti
 
 		std::string text()
 		{
-			char buf[10000] {};
-			fin.read(buf, 10000);
-			return {buf};
-
-			std::string data;
-			std::string line = _readline_s();
-			while (not line.empty())
-			{
-				data += line + '\n';
-				line = _readline_s();
-			}
-			return data;
+			char buff[10000];
+			fin.read(buff, 10000);
+			return { buff };
+			std::stringstream buffer;
+			buffer << fin.rdbuf();
+			return buffer.str();
 		}
 
 		~File()

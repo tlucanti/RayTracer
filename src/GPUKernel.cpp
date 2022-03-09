@@ -5,15 +5,18 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: tlucanti <tlucanti@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/03/08 20:51:18 by tlucanti          #+#    #+#             */
-/*   Updated: 2022/03/08 20:52:51 by tlucanti         ###   ########.fr       */
+/*   Created: 2022/03/09 19:53:06 by tlucanti          #+#    #+#             */
+/*   Updated: 2022/03/09 21:33:07 by tlucanti         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../inc/GPUKernel.hpp"
 #include "../inc/GPUArray.hpp"
+#include "../inc/File.hpp"
 
-bool 				tlucanti::GPUKernel::init_done;
+bool 				tlucanti::GPUKernel::init_done = false;
+bool 				tlucanti::GPUKernel::destroy_done = false;
+
 cl_platform_id		tlucanti::GPUKernel::platform_id;
 cl_device_id		tlucanti::GPUKernel::dev_id;
 cl_uint				tlucanti::GPUKernel::dev_num;
@@ -22,25 +25,57 @@ cl_uint				tlucanti::GPUKernel::platform_num;
 cl_context			tlucanti::GPUKernel::context;
 cl_command_queue	tlucanti::GPUKernel::command_queue;
 
-cl_program			tlucanti::GPUKernel::program;
-cl_kernel			tlucanti::GPUKernel::kernel;
+tlucanti::GPUKernel::GPUKernel(char operation)
+		: size(0)
+{
+	std::string code;
+	const char *func;
+	switch (operation)
+	{
+		case '+':
+			code = File("../cl/add.cl").text();
+			func = "add";
+			break;
+		case '-':
+			code = File("../cl/sub.cl").text();
+			func = "sub";
+			break;
+		case '*':
+			code = File("../cl/mul.cl").text();
+			func = "mul";
+			break;
+		case '/':
+			code = File("../cl/div.cl").text();
+			func = "div";
+			break;
+		default:
+			throw GPUArrayException("kernel", "unknown kernel opertaoion", operation);
+	}
+	init();
+	constructor(code.c_str(), code.size(), func	);	
+}
 
-tlucanti::GPUKernel::GPUKernel(const std::string &program_code)
+tlucanti::GPUKernel::GPUKernel(const std::string &program_code, const std::string &func)
 		: size(0)
 {
 	init();
-	cl_int	cl_errno;
-	const char *sum_code_char = program_code.c_str();
-	std::size_t sum_code_size = program_code.size();
+	constructor(program_code.c_str(), program_code.size(), func.c_str());
+}
 
-	program= clCreateProgramWithSource(context, 1, &sum_code_char, &sum_code_size, &cl_errno);
+void
+tlucanti::GPUKernel::constructor(const char *program_code, size_t program_size, const char *func)
+{
+	cl_int	cl_errno;
+
+	size = program_size;
+	program = clCreateProgramWithSource(context, 1, &program_code, &size, &cl_errno);
 	if (cl_errno)
-		throw GPUArrayException("kernel init", "cannot create sum program", cl_errno);
-	if (clBuildProgram(program, 1, &dev_id, nullptr, nullptr, nullptr))
-		throw GPUArrayException("kernel init", "cannot build sum program", cl_errno);
-	kernel = clCreateKernel(program, "addition", &cl_errno);
+		throw GPUArrayException("kernel init", "cannot create program", cl_errno);
+	if ((cl_errno = clBuildProgram(program, 1, &dev_id, nullptr, nullptr, nullptr)))
+		throw GPUArrayException("kernel init", "cannot build program", cl_errno);
+	kernel = clCreateKernel(program, func, &cl_errno);
 	if (cl_errno)
-		throw GPUArrayException("kernel init", "cannot create sum kernel", cl_errno);
+		throw GPUArrayException("kernel init", "cannot create kernel", cl_errno);
 }
 
 void
@@ -76,18 +111,27 @@ tlucanti::GPUKernel::do_operation() const
 tlucanti::GPUKernel::~GPUKernel() noexcept(false)
 {
 	cl_int cl_errno;
-	if ((cl_errno = clFlush(command_queue)))
-		throw GPUArrayException("gpuarray", "cannot flush command queue", cl_errno);
-	if ((cl_errno = clFinish(command_queue)))
-		throw GPUArrayException("gpuarray", "cannot finish", cl_errno);
 	if ((cl_errno = clReleaseKernel(kernel)))
 		throw GPUArrayException("gpuarray", "cannot destroy kernel", cl_errno);
 	if ((cl_errno = clReleaseProgram(program)))
 		throw GPUArrayException("gpuarray", "cannot destroy kernel program", cl_errno);
+}
+
+void
+tlucanti::GPUKernel::destroy()
+{
+	if (destroy_done)
+		return ;
+	cl_int cl_errno;
+	if ((cl_errno = clFlush(command_queue)))
+		throw GPUArrayException("gpuarray", "cannot flush command queue", cl_errno);
+	if ((cl_errno = clFinish(command_queue)))
+		throw GPUArrayException("gpuarray", "cannot finish", cl_errno);
 	if ((cl_errno = clReleaseCommandQueue(command_queue)))
 		throw GPUArrayException("gpuarray", "cannot destroy command queue", cl_errno);
 	if ((cl_errno = clReleaseContext(context)))
 		throw GPUArrayException("gpuarray", "cannot destroy kernel context", cl_errno);
+	destroy_done = true;
 }
 
 void

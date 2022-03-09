@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 project(RayTracer)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_FLAGS "-D__DEBUG -D__CMAKE -Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS "-D__DEBUG -D__CMAKE -Wall -Wextra -Werror -O0")
 
 include_directories(.)
 link_directories(.)

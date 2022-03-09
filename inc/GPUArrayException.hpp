@@ -18,7 +18,7 @@
 
 namespace tlucanti
 {
-	class GPUArrayException : tlucanti::Exception
+	class GPUArrayException : public tlucanti::Exception
 	{
 	public:
 		GPUArrayException(const std::string_view &parent, const std::string_view &message, int cl_errno)
