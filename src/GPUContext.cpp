@@ -12,6 +12,7 @@
 
 #include "../inc/GPUContext.hpp"
 #include <GPUArrayException.hpp>
+#include <iostream>
 
 bool				tlucanti::GPUContext::init_done = false;
 bool				tlucanti::GPUContext::destroy_done = false;
@@ -33,6 +34,7 @@ tlucanti::GPUContext::init()
 	cl_errno = clGetPlatformIDs(1, &platform_id, &platform_num);
 	if (cl_errno)
 		throw GPUArrayException("init error", "cannot get platform id", cl_errno);
+    std::cout << "platform_id: " << platform_id << ", platform_num: " << platform_num << std::endl;
 	cl_errno = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &dev_id, &dev_num);
 	if (cl_errno)
 		throw GPUArrayException("init error", "cannot get devices id", cl_errno);

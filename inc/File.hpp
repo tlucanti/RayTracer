@@ -31,7 +31,7 @@ namespace tlucanti
 	public:
 		File(const std::string_view &fname)
 		{
-			fin.open(fname);
+			fin.open(std::string(fname));
 			if (not fin.is_open())
 				throw IOError("fileIO", "cannot open file " + std::string(fname));
 		}

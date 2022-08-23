@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <iostream>
+#include <ctime>
 
 #include <GPUKernel.hpp>
 #include <GPUArray.hpp>
@@ -21,25 +22,40 @@
 
 #ifdef __CMAKE
 const char *SUM_PROG_PATH = "../cl/sum.cl";
-
 #else /* not __CMAKE */
 const char *SUM_PROG_PATH = "./cl/sum.cl";
-
 #endif /* __CMAKE */
 
-inline auto now() { return std::chrono::high_resolution_clock::now(); }
+namespace hidden
+{
+    struct timespec *_timer_get() {
+        static struct timespec ts = {};
+        return &ts;
+    }
+}
 
-using std::chrono::duration_cast;
-using std::chrono::duration;
-using std::chrono::milliseconds;
+void time_start()
+{
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, hidden::_timer_get());
+}
+
+double time_end()
+{
+    struct timespec ts = {};
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts);
+    struct timespec *g_ts = hidden::_timer_get();
+    time_t sec = ts.tv_sec - g_ts->tv_sec;
+    long nsec = ts.tv_nsec - g_ts->tv_nsec;
+    return static_cast<double>(sec) + static_cast<double>(nsec) * 1e-9;
+}
 
 void speed_test_stl() {
     std::vector<int> v(10000000, 1);
-    auto t1 = now();
-    for (auto i: v)
+    time_start();
+    for (auto &i : v)
         i = i * i;
-    std::cout << "stl array 10e8 operations: " <<
-              duration<double, std::milli>(now() - t1).count() << "ms\n";
+    double t = time_end();
+    std::cout << "stl array 10e8 operations: " << t * 1e3 << "ms\n";
 }
 
 void speed_test_gpu() {
@@ -49,10 +65,10 @@ void speed_test_gpu() {
 
     sum.set_operands(a, a, a);
 
-    auto t1 = now();
+    time_start();
     sum.do_operation();
-    std::cout << "gpu array 10e8 operations: " <<
-              duration<double, std::milli>(now() - t1).count() << "ms\n";
+    double t = time_end();
+    std::cout << "gpu array 10e8 operations: " << t * 1e3 << "ms\n";
 }
 
 void test() {
@@ -110,9 +126,9 @@ void test() {
     tlucanti::GPUContext::destroy();
 }
 
-# include <SDL.h>
-
 int main() {
+    speed_test_stl();
+    speed_test_gpu();
 
 //    SDL_Renderer *ren = SDL_CreateRenderer(win, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 //    if (ren == nullptr) {

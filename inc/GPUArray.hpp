@@ -29,7 +29,7 @@ namespace tlucanti {
     template<char o>
     class GPUKernel;
 
-    template<typename value_type, int flags = 'rw'>
+    template<typename value_type, int flags='rw'>
     class GPUArray {
     public:
         GPUArray(std::vector<value_type> &data) {

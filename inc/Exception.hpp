@@ -16,6 +16,7 @@
 # include <stdexcept>
 # include <string_view>
 # include <string>
+# include <cstring>
 # include "defs.h"
 
 namespace tlucanti {
