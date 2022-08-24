@@ -20,6 +20,8 @@ add_executable(RayTracer
 		src/main.cpp
 )
 
+add_executable(test test.cpp)
+
 find_library(OPENCL_LIB OpenCL)
 #find_library(X11_LIB X11)
 
@@ -27,3 +29,5 @@ target_link_libraries(RayTracer
 		${OPENCL_LIB}
 #		${X11_LIB}
 )
+
+target_link_libraries(test ${OPENCL_LIB})

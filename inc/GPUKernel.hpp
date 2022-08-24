@@ -13,21 +13,21 @@
 #ifndef GPUKERNEL_HPP
 # define GPUKERNEL_HPP
 
-#ifdef __APPLE__
+# ifdef __APPLE__
+#  include <OpenCL/opencl.h>
+# else /* not __APPLE__ */
+#  include <CL/cl.h>
+# endif /* __APPLE__ */
 
-# include <OpenCL/opencl.h>
+# include <GPUArrayException.hpp>
+# include <File.hpp>
+# include <GPUContext.hpp>
 
-#else /* not __APPLE__ */
-# include <CL/cl.h>
-#endif /* __APPLE__ */
-
-# include "GPUArrayException.hpp"
-#include <File.hpp>
-#include <GPUContext.hpp>
-
-namespace tlucanti {
+namespace tlucanti
+{
     template<char operation>
-    class GPUKernel {
+    class GPUKernel
+            {
     public:
         GPUKernel()
                 : size(0) {
@@ -37,7 +37,8 @@ namespace tlucanti {
 
             std::string code;
             const char *func;
-            switch (operation) {
+            switch (operation)
+            {
                 case '+':
                     code = File("../cl/add.cl").text();
                     func = "add";
