@@ -9,4 +9,5 @@ int main()
     cllib::CLqueue queue(context, device);
     cllib::CLprogram program(cllib::sources::addf, context);
     program.compile(device);
+    cllib::CLkernel(program, "add");
 }

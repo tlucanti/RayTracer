@@ -8,6 +8,7 @@
 # include "CLcontext.hpp"
 # include "CLqueue.hpp"
 # include "CLprogram.hpp"
+# include "CLkernel.hpp"
 
 CLLIB_NAMESPACE_BEGIN
 
