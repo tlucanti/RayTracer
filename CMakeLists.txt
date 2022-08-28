@@ -9,6 +9,7 @@ include_directories(.)
 include_directories(inc)
 include_directories(/opt/X11/include)
 link_directories(.)
+link_directories(cllib)
 
 add_executable(RayTracer
 		src/GPUContext.cpp
@@ -21,6 +22,8 @@ add_executable(RayTracer
 )
 
 add_executable(test test.cpp)
+
+add_executable(cllib cllib/main.cpp)
 
 find_library(OPENCL_LIB OpenCL)
 #find_library(X11_LIB X11)

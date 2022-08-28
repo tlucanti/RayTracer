@@ -142,13 +142,55 @@ int main()
     if (error != CL_SUCCESS)
         throw std::runtime_error(cl_strerror((error)));
 
-    // buffer
-    cl_mem buffer;
+    // buffers
+    cl_mem buffer1, buffer2, buffer3;
     std::vector<int> arr1 = {1, 2, 3, 4, 5};
     std::vector<int> arr2 = {6, 7, 8, 9, 0};
+    std::vector<int> arr3(arr1.size());
 
-    clCreateBuffer(context, CL_MEM_READ_WRITE, arr1.size() * sizeof(int), nullptr, &error);
+    // create buffers
+    buffer1 = clCreateBuffer(context, CL_MEM_READ_WRITE, arr1.size() * sizeof(int), nullptr, &error);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror((error)));
+    buffer2 = clCreateBuffer(context, CL_MEM_READ_WRITE, arr2.size() * sizeof(int), nullptr, &error);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror((error)));
+    buffer3 = clCreateBuffer(context, CL_MEM_READ_WRITE, arr3.size() * sizeof(int), nullptr, &error);
     if (error != CL_SUCCESS)
         throw std::runtime_error(cl_strerror((error)));
 
+    // fill buffers
+    error = clEnqueueWriteBuffer(queue, buffer1, CL_TRUE, 0, arr1.size() * sizeof(int), arr1.data(), 0, nullptr, nullptr);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror((error)));
+    error = clEnqueueWriteBuffer(queue, buffer2, CL_TRUE, 0, arr2.size() * sizeof(int), arr2.data(), 0, nullptr, nullptr);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror((error)));
+    error = clEnqueueWriteBuffer(queue, buffer3, CL_TRUE, 0, arr3.size() * sizeof(int), arr3.data(), 0, nullptr, nullptr);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror((error)));
+
+    // set args
+    error =  clSetKernelArg(kernel, 0, sizeof(cl_mem), &buffer1);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror((error)));
+    error =  clSetKernelArg(kernel, 1, sizeof(cl_mem), &buffer2);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror((error)));
+    error =  clSetKernelArg(kernel, 2, sizeof(cl_mem), &buffer3);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror((error)));
+
+    // run kernel
+    size_t work_size[1] = { arr1.size() };
+    error = clEnqueueNDRangeKernel(queue, kernel, 1, nullptr, work_size, nullptr, 0, nullptr, nullptr);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror((error)));
+
+    // get result
+    error = clEnqueueReadBuffer(queue, buffer3, CL_TRUE, 0, arr3.size() * sizeof(int), arr3.data(), 0, nullptr, nullptr);
+
+    for (auto i : arr3)
+        std::cout << i << ' ';
+    std::cout << '\n';
 }
