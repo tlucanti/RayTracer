@@ -1,4 +1,7 @@
 
+#ifndef CLLIB_DEFS_HPP
+# define CLLIB_DEFS_HPP
+
 # ifdef __APPLE__
 #  include <OpenCL/opencl.h>
 # else /* not __APPLE__ */
@@ -20,3 +23,9 @@
 # ifndef WUR
 #  define WUR [[nodiscard]]
 # endif /* WUR */
+
+# ifndef UNUSED
+#  define UNUSED [[maybe_unused]]
+# endif /* UNUSED */
+
+#endif /* CLLIB_DEFS_HPP */

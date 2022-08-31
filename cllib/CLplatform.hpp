@@ -1,37 +1,153 @@
 
 #ifndef CLLIB_PLATFORM_HPP
 # define CLLIB_PLATFORM_HPP
+
 # include "defs.hpp"
 # include "CLexception.hpp"
+# include "CLdevice.hpp"
+
+# include <string>
+# include <vector>
 
 CLLIB_NAMESPACE_BEGIN
 
 class CLplatform
 {
 public:
-    CLplatform(cl_uint num_entries=1)
-        : platform_id(), num_platforms()
+    WUR std::vector<CLdevice> get_devices(
+        cl_device_type type=CLdevice::any_type,
+        cl_uint num_entries=-1
+    ) const
     {
-        cl_int  error;
+        cl_int error;
 
-        error = clGetPlatformIDs(num_entries, &platform_id, &num_platforms);
+        error = clGetDeviceIDs(
+            platform_id,
+            type,
+            num_entries,
+            nullptr,
+            &num_entries
+        );
         if (error != CL_SUCCESS)
             throw CLexception(error);
+
+        std::vector<cl_device_id> devices(num_entries);
+        error = clGetDeviceIDs(
+            platform_id,
+            type,
+            num_entries,
+            devices.data(),
+            nullptr
+        );
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+
+        std::vector<CLdevice> ret(num_entries, CLdevice());
+        for (cl_uint i=0; i < num_entries; ++i)
+            ret.at(i)._set_device_id(devices.at(i));
+
+        return ret;
     }
 
-    WUR cl_platform_id get_platform_id() const
+    WUR UNUSED std::string get_platform_profile() const
     {
-        return platform_id;
+        return _get_string_data(CL_PLATFORM_PROFILE);
     }
 
-    WUR cl_uint get_num_platforms() const
+    WUR UNUSED std::string get_platform_version() const
     {
-        return num_platforms;
+        return _get_string_data(CL_PLATFORM_VERSION);
+    }
+
+    WUR UNUSED std::string get_platform_name() const
+    {
+        return _get_string_data(CL_PLATFORM_NAME);
+    }
+
+    WUR UNUSED std::string get_platform_vendor() const
+    {
+        return _get_string_data(CL_PLATFORM_VENDOR);
+    }
+
+    WUR UNUSED std::string get_platform_extensions() const
+    {
+        return _get_string_data(CL_PLATFORM_EXTENSIONS);
+    }
+
+    WUR UNUSED cl_ulong get_platform_timer_resolution() const
+    {
+        return _get_ulong_data(CL_PLATFORM_HOST_TIMER_RESOLUTION);
+    }
+
+#ifdef CL_PLATFORM_ICD_SUFFIX_KHR
+    WUR UNUSED std::string get_platform_icd_suffix_khr() const
+    {
+        return _get_string_data(CL_PLATFORM_ICD_SUFFIX_KHR);
+    }
+#endif /* CL_PLATFORM_ICD_SUFFIX_KHR */
+
+private:
+    CLplatform()
+        : platform_id(nullptr)
+    {}
+
+    void _set_platform_id(cl_platform_id id)
+    {
+        platform_id = id;
+    }
+
+    WUR std::string _get_string_data(cl_platform_info type) const
+    {
+        cl_int      error;
+        size_t      info_size;
+        std::string info;
+
+        error = clGetPlatformInfo(
+            platform_id,
+            type,
+            0,
+            nullptr,
+            &info_size
+        );
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+
+        info.resize(info_size - 1);
+        error = clGetPlatformInfo(
+            platform_id,
+            type,
+            info_size,
+            info.data(),
+            nullptr
+        );
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+
+        return info;
+    }
+
+    WUR cl_ulong _get_ulong_data(cl_platform_info type) const
+    {
+        cl_int      error;
+        cl_ulong    info;
+
+        error = clGetPlatformInfo(
+                platform_id,
+                type,
+                sizeof(cl_ulong),
+                &info,
+                nullptr
+        );
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+
+        return info;
     }
 
 private:
     cl_platform_id  platform_id;
-    cl_uint         num_platforms;
+
+    friend std::vector<CLplatform> get_platforms(cl_uint);
 };
 
 CLLIB_NAMESPACE_END

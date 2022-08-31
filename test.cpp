@@ -102,13 +102,27 @@ int main()
     cl_platform_id  platform_id;
     cl_uint         num_platforms;
     error = clGetPlatformIDs(1, &platform_id, &num_platforms);
+    std::cout << "platform_num: " << num_platforms << std::endl;
     if (error != CL_SUCCESS)
         throw std::runtime_error(cl_strerror(error));
+
+    // platform info
+    size_t info_size;
+    std::string info;
+    error = clGetPlatformInfo(platform_id, CL_PLATFORM_NAME, 0, nullptr, &info_size);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror(error));
+    info.resize(info_size - 1);
+    error = clGetPlatformInfo(platform_id, CL_PLATFORM_NAME, info_size, info.data(), nullptr);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror(error));
+    std::cout << "platform name: " << info << std::endl;
 
     // devices
     cl_device_id    device_id;
     cl_uint         num_devices;
-    error = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, &num_devices);
+    error = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, 1, &device_id, &num_devices);
+    std::cout << "device_num: " << num_devices << "(error)" << error << "\n";
     if (error != CL_SUCCESS)
         throw std::runtime_error(cl_strerror(error));
 

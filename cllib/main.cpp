@@ -3,8 +3,12 @@
 
 int main()
 {
-    cllib::CLplatform platform;
-    cllib::CLdevice device(platform, cllib::gpu_type);
+    auto platforms = cllib::get_platforms();
+    cllib::CLplatform platform = platforms.at(0);
+
+    auto devices = platform.get_devices();
+    cllib::CLdevice device = devices.at(0);
+
     cllib::CLcontext context(device);
     cllib::CLqueue queue(context, device);
     cllib::CLprogram program(cllib::sources::addf, context);
