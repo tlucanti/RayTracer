@@ -1,10 +1,13 @@
 
+#ifndef CLLIB_EXCEPTION_HPP
+# define CLLIB_EXCEPTION_HPP
+
 #include <stdexcept>
 #include "defs.hpp"
 
 CLLIB_NAMESPACE_BEGIN
 
-class CLexception : std::runtime_error
+class CLexception : public std::runtime_error
 {
 public:
     CLexception(cl_int cl_errno)
@@ -92,3 +95,5 @@ private:
 };
 
 CLLIB_NAMESPACE_END
+
+#endif /* CLLIB_EXCEPTION_HPP */

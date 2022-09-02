@@ -122,9 +122,18 @@ int main()
     cl_device_id    device_id;
     cl_uint         num_devices;
     error = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, 1, &device_id, &num_devices);
-    std::cout << "device_num: " << num_devices << "(error)" << error << "\n";
     if (error != CL_SUCCESS)
         throw std::runtime_error(cl_strerror(error));
+
+    // device info
+    error = clGetDeviceInfo(device_id, CL_DEVICE_NAME, 0, nullptr, &info_size);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror(error));
+    info.resize(info_size - 1);
+    error = clGetDeviceInfo(device_id, CL_DEVICE_NAME, info_size, info.data(), nullptr);
+    if (error != CL_SUCCESS)
+        throw std::runtime_error(cl_strerror(error));
+    std::cout << "device name: " << info << std::endl;
 
     // context
     cl_context      context;

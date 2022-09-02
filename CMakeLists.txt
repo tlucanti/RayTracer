@@ -23,7 +23,7 @@ add_executable(RayTracer
 
 add_executable(test test.cpp)
 
-add_executable(cllib cllib/main.cpp cllib/CLGPUarray.hpp)
+add_executable(cllib cllib/main.cpp)
 
 find_library(OPENCL_LIB OpenCL)
 #find_library(X11_LIB X11)
@@ -35,3 +35,4 @@ target_link_libraries(RayTracer
 )
 
 target_link_libraries(test ${OPENCL_LIB})
+target_link_libraries(cllib ${OPENCL_LIB})

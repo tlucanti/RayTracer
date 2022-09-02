@@ -12,6 +12,7 @@ CLLIB_NAMESPACE_BEGIN
 
 class CLdevice
 {
+public:
     static const cl_device_type any_type            = CL_DEVICE_TYPE_DEFAULT;
     static const cl_device_type gpu_type            = CL_DEVICE_TYPE_GPU;
     static const cl_device_type cpu_type            = CL_DEVICE_TYPE_CPU;
@@ -385,7 +386,191 @@ class CLdevice
         return ret;
     }
 
+    WUR UNUSED cl_uint get_device_max_active_reservations() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PIPE_MAX_ACTIVE_RESERVATIONS, sizeof(cl_uint)));
+    }
 
+    WUR UNUSED cl_uint get_device_pipe_max_packet_size() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PIPE_MAX_PACKET_SIZE, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_platform_id get_device_platform() const
+    {
+        return _get_struct_data<cl_platform_id>(CL_DEVICE_PLATFORM);
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_global_atomic_alignment() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_GLOBAL_ATOMIC_ALIGNMENT, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_bool get_device_preferred_interop_user_sync() const
+    {
+        return static_cast<cl_bool>(_get_numeric_data(CL_DEVICE_PREFERRED_INTEROP_USER_SYNC, sizeof(cl_bool)));
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_local_atomic_alignment() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_LOCAL_ATOMIC_ALIGNMENT, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_platform_atomic_alignment() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_PLATFORM_ATOMIC_ALIGNMENT, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_vector_width_char() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_VECTOR_WIDTH_CHAR, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_vector_width_short() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_VECTOR_WIDTH_SHORT, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_vector_width_int() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_VECTOR_WIDTH_INT, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_vector_width_long() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_VECTOR_WIDTH_LONG, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_vector_width_float() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_VECTOR_WIDTH_FLOAT, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_vector_width_double() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_VECTOR_WIDTH_DOUBLE, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED cl_uint get_device_preferred_vector_width_half() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_PREFERRED_VECTOR_WIDTH_HALF, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED size_t get_device_printf_buffer_size() const
+    {
+        return static_cast<size_t>(_get_numeric_data(CL_DEVICE_PRINTF_BUFFER_SIZE, sizeof(size_t)));
+    }
+
+    WUR UNUSED std::string get_device_profile() const
+    {
+        return _get_string_data(CL_DEVICE_PROFILE);
+    }
+
+    WUR UNUSED size_t get_device_profiling_timer_resolution() const
+    {
+        return static_cast<size_t>(_get_numeric_data(CL_DEVICE_PROFILING_TIMER_RESOLUTION, sizeof(size_t)));
+    }
+
+    WUR UNUSED size_t get_device_queue_on_device_max_size() const
+    {
+        return static_cast<size_t>(_get_numeric_data(CL_DEVICE_QUEUE_ON_DEVICE_MAX_SIZE, sizeof(size_t)));
+    }
+
+    WUR UNUSED size_t get_device_queue_on_device_preferred_size() const
+    {
+        return static_cast<size_t>(_get_numeric_data(CL_DEVICE_QUEUE_ON_DEVICE_PREFERRED_SIZE, sizeof(size_t)));
+    }
+
+    WUR UNUSED cl_command_queue_properties get_device_queue_on_device_properties() const
+    {
+        return static_cast<cl_command_queue_properties>(
+            _get_numeric_data(
+                CL_DEVICE_QUEUE_ON_DEVICE_PROPERTIES,
+                sizeof(cl_command_queue_properties)
+            )
+        );
+    }
+
+    WUR UNUSED cl_command_queue_properties get_device_queue_on_host_properties() const
+    {
+        return static_cast<cl_command_queue_properties>(
+            _get_numeric_data(
+                CL_DEVICE_QUEUE_ON_HOST_PROPERTIES,
+                sizeof(cl_command_queue_properties)
+            )
+        );
+    }
+
+    WUR UNUSED size_t get_device_reference_count() const
+    {
+        return static_cast<size_t>(_get_numeric_data(CL_DEVICE_REFERENCE_COUNT, sizeof(size_t)));
+    }
+
+    WUR UNUSED cl_device_fp_config get_device_single_fp_config() const
+    {
+        return static_cast<cl_device_fp_config>(_get_numeric_data(CL_DEVICE_SINGLE_FP_CONFIG, sizeof(cl_device_fp_config)));
+    }
+
+#ifdef CL_DEVICE_SPIR_VERSIONS
+    WUR UNUSED std::string get_device_spir_versions() const
+    {
+        return _get_string_data(CL_DEVICE_SPIR_VERSIONS);
+    }
+#endif
+
+#ifdef CL_DEVICE_SUBGROUP_INDEPENDENT_FORWARD_PROGRESS
+    WUR UNUSED cl_bool get_device_reference_count() const
+    {
+        return static_cast<cl_bool>(_get_numeric_data(CL_DEVICE_SUBGROUP_INDEPENDENT_FORWARD_PROGRESS, sizeof(cl_bool)));
+    }
+#endif
+
+    WUR UNUSED cl_device_svm_capabilities get_device_svm_capabilities() const
+    {
+        return static_cast<cl_device_svm_capabilities>
+        (_get_numeric_data(
+                CL_DEVICE_SVM_CAPABILITIES,
+                sizeof(cl_device_svm_capabilities)
+                )
+                );
+    }
+
+#ifdef CL_DEVICE_TERMINATE_CAPABILITY_KHR
+    WUR UNUSED cl_device_terminate_capability_khr() const
+    {
+        return static_cast<cl_device_terminate_capability_khr>(
+                _get_numeric_data(
+                        CL_DEVICE_TERMINATE_CAPABILITY_KHR,
+                        sizeof(cl_device_terminate_capability_khr)
+                        )
+                        );
+    }
+#endif
+
+    WUR UNUSED cl_device_type get_device_type() const
+    {
+        return static_cast<cl_device_type>(_get_numeric_data(CL_DEVICE_TYPE, sizeof(cl_device_type)));
+    }
+
+    WUR UNUSED std::string get_device_vendor() const
+    {
+        return _get_string_data(CL_DEVICE_VENDOR);
+    }
+
+    WUR UNUSED cl_uint get_devive_vendor_id() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_DEVICE_VENDOR_ID, sizeof(cl_uint)));
+    }
+
+    WUR UNUSED std::string get_device_version() const
+    {
+        return _get_string_data(CL_DEVICE_VERSION);
+    }
+
+    WUR UNUSED std::string get_driver_version() const
+    {
+        return _get_string_data(CL_DRIVER_VERSION);
+    }
 
 private:
     CLdevice()

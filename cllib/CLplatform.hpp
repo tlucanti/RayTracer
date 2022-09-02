@@ -19,31 +19,31 @@ public:
         cl_uint num_entries=-1
     ) const
     {
-        cl_int error;
+        cl_int      error;
+        cl_uint     max_num;
 
-        error = clGetDeviceIDs(
-            platform_id,
-            type,
-            num_entries,
-            nullptr,
-            &num_entries
-        );
-        if (error != CL_SUCCESS)
-            throw CLexception(error);
+        std::vector<cl_device_id> devices;
+        while (devices.size() < num_entries)
+        {
+            devices.push_back(cl_device_id());
+            error = clGetDeviceIDs(
+                platform_id,
+                type,
+                devices.size(),
+                devices.data(),
+                &max_num
+            );
+            if (error != CL_SUCCESS)
+                throw CLexception(error);
+            if (max_num < devices.size())
+            {
+                devices.pop_back();
+                break ;
+            }
+        }
 
-        std::vector<cl_device_id> devices(num_entries);
-        error = clGetDeviceIDs(
-            platform_id,
-            type,
-            num_entries,
-            devices.data(),
-            nullptr
-        );
-        if (error != CL_SUCCESS)
-            throw CLexception(error);
-
-        std::vector<CLdevice> ret(num_entries, CLdevice());
-        for (cl_uint i=0; i < num_entries; ++i)
+        std::vector<CLdevice> ret(devices.size(), CLdevice());
+        for (cl_uint i=0; i < devices.size(); ++i)
             ret.at(i)._set_device_id(devices.at(i));
 
         return ret;
@@ -85,6 +85,8 @@ public:
         return _get_string_data(CL_PLATFORM_ICD_SUFFIX_KHR);
     }
 #endif /* CL_PLATFORM_ICD_SUFFIX_KHR */
+
+    CLplatform(const CLplatform &cpy) = default;
 
 private:
     CLplatform()
