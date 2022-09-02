@@ -88,6 +88,11 @@ public:
 
     CLplatform(const CLplatform &cpy) = default;
 
+    WUR const cl_platform_id &__get_platform() const
+    {
+        return platform_id;
+    }
+
 private:
     CLplatform()
         : platform_id(nullptr)

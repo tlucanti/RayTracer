@@ -3,16 +3,17 @@
 # define CLLIB_HPP
 
 # include "defs.hpp"
-//# include "CLutils.hpp"
-//# include "CLsources.hpp"
-//# include "CLexception.hpp"
+# include "CLutils.hpp"
+# include "CLsources.hpp"
+# include "CLexception.hpp"
 //
 # include "CLplatform.hpp"
 # include "CLdevice.hpp"
-//# include "CLcontext.hpp"
-//# include "CLqueue.hpp"
-//# include "CLprogram.hpp"
-//# include "CLkernel.hpp"
+# include "CLcontext.hpp"
+# include "CLqueue.hpp"
+# include "CLprogram.hpp"
+# include "CLkernel.hpp"
+# include "CLarray.hpp"
 
 # include <vector>
 

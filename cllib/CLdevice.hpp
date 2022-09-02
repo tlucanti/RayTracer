@@ -7,6 +7,7 @@
 # include "CLexception.hpp"
 
 # include <vector>
+# include <iostream>
 
 CLLIB_NAMESPACE_BEGIN
 
@@ -570,6 +571,19 @@ public:
     WUR UNUSED std::string get_driver_version() const
     {
         return _get_string_data(CL_DRIVER_VERSION);
+    }
+
+    WUR const cl_device_id &__get_device() const
+    {
+        return device_id;
+    }
+
+    ~CLdevice()
+    {
+        if (device_id == nullptr)
+            return ;
+        std::cout << "released device " << get_device_name() << std::endl;
+        clReleaseDevice(device_id);
     }
 
 private:

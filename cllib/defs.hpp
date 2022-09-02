@@ -8,6 +8,8 @@
 #  include <CL/cl.h>
 # endif /* __APPLE__ */
 
+# include <type_traits>
+
 # define CLIB_NAMESPACE cllib
 # define CLLIB_NAMESPACE_BEGIN namespace CLIB_NAMESPACE {
 # define CLLIB_NAMESPACE_END }
@@ -27,5 +29,10 @@
 # ifndef UNUSED
 #  define UNUSED [[maybe_unused]]
 # endif /* UNUSED */
+
+# define IS_INTEGRAL(__type) std::is_integral<__type>::value
+# define IS_FLOATING(__type) std::is_floating_point<__type>::value
+# define IS_ARITHMETIC(__type) std::is_arithmetic<__type>::value
+
 
 #endif /* CLLIB_DEFS_HPP */

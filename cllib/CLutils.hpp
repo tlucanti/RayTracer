@@ -2,10 +2,10 @@
 #ifndef CLLIB_UTILS_HPP
 # define CLLIB_UTILS_HPP
 
-CLLIB_NAMESPACE_BEGIN
-
 # include <regex>
 # include <string>
+
+CLLIB_NAMESPACE_BEGIN
 
 namespace __utils
 {
@@ -18,11 +18,11 @@ namespace __utils
 
         __replacer &replace(const std::string &from, const std::string &to)
         {
-            __str = std::regex_replace(str, std::regex(from), to);
+            __str = std::regex_replace(__str, std::regex(from), to);
             return *this;
         }
 
-        const std::string &str() const
+        WUR const std::string &str() const
         {
             return __str;
         }

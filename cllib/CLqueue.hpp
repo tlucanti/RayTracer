@@ -15,20 +15,25 @@ public:
     CLqueue(
         const CLcontext &context,
         const CLdevice &device,
-        cl_command_queue_properties properties=0
+        const cl_command_queue_properties *properties=nullptr
     ) :
         queue()
     {
         cl_int  error;
 
-        queue = clCreateCommandQueue(context.get_context(), device.get_device_id(), properties, &error);
+        queue = clCreateCommandQueueWithProperties(context.__get_context(), device.__get_device(), properties, &error);
         if (error)
             throw CLexception(error);
     }
 
-    WUR cl_command_queue get_queue() const
+    WUR const cl_command_queue &__get_queue() const
     {
         return queue;
+    }
+
+    ~CLqueue()
+    {
+        clReleaseCommandQueue(queue);
     }
 
 private:

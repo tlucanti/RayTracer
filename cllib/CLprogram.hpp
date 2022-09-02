@@ -23,7 +23,7 @@ public:
         cl_int  error;
         const char  *code_ptr = kernel_code.c_str();
 
-        program = clCreateProgramWithSource(context.get_context(), 1, &code_ptr, nullptr, &error);
+        program = clCreateProgramWithSource(context.__get_context(), 1, &code_ptr, nullptr, &error);
         if (error)
             throw CLexception(error);
     }
@@ -38,12 +38,12 @@ public:
     {
         cl_int  error;
 
-        error = clBuildProgram(program, num_devices, &device.device_id, options, notify, user_data);
+        error = clBuildProgram(program, num_devices, &device.__get_device(), options, notify, user_data);
         if (error)
             throw CLexception(error);
     }
 
-    WUR cl_program get_program() const
+    WUR const cl_program &__get_program() const
     {
         return program;
     }
