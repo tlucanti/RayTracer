@@ -19,9 +19,9 @@ int main()
     program.compile(device);
     cllib::CLkernel(program, "addf");
 
-    cllib::CLarray<float>({1, 2, 3, 4, 5}, context, queue);
-    cllib::CLarray<float>({10,20,30,40,50}, context, queue);
-    cllib::CLarray<float>(5, context, queue);
+    cllib::CLarray<float> array1({1, 2, 3, 4, 5}, context, queue);
+    cllib::CLarray<float> array2({10,20,30,40,50}, context, queue);
+    cllib::CLarray<float> array3(5, context, queue);
 
-    kernel.set_args()
+    kernel.set_args(array1, array2, array3);
 }

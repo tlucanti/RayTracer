@@ -3,6 +3,7 @@
 # define CLLIB_KERNEL_HPP
 
 # include <string>
+# include <utility>
 
 # include "defs.hpp"
 # include "CLexception.hpp"
@@ -14,12 +15,8 @@ CLLIB_NAMESPACE_BEGIN
 class CLkernel
 {
 public:
-    CLkernel(const sources::CLbuiltinprog &program)
-        : CLkernel(program.code(), program,argc(), program.name())
-    {}
-
-    CLkernel(const CLprogram &program, int argc, const std::string &name)
-        : kernel()
+    CLkernel(const CLprogram &program, const std::string &name)
+        : kernel(), argc(program.__get_argc())
     {
         cl_int  error;
 
@@ -28,19 +25,21 @@ public:
             throw CLexception(error);
     }
 
-    template <class... types>
-    void set_args(const types &... args)
+    template <class... type>
+    void set_args(const CLarray<type> &... arg)
     {
-        va_
+        clSetKernelArg(kernel, i, sizeof(cl_mem), arg.get_buffer());
     }
 
     WUR const cl_kernel &__get_kernel() const
     {
         return kernel;
+
     }
 
 private:
     cl_kernel   kernel;
+    int         argc;
 };
 
 CLLIB_NAMESPACE_END

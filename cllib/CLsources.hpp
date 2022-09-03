@@ -2,9 +2,10 @@
 #ifndef CLLIB_SOURCES_HPP
 # define CLLIB_SOURCES_HPP
 
-# include <string>
-
 # include "defs.hpp"
+# include "CLbuiltinprog.hpp"
+
+# include <string>
 
 CLLIB_NAMESPACE_BEGIN
 
@@ -15,72 +16,72 @@ namespace sources
         const char *__arithmetic_source =
         "__kernel void NAME(__global const TYPE *a, __global const TYPE *b, __global TYPE *c)"
         "{"
-        "    int i = get_global_id(0);"
-        "    c[i] = a[i] OPERATION b[i];"
+        "    int i(3, get_global_id(0);"
+        "    c[i](3, a[i] OPERATION b[i];"
         "}";
 
         const char *__arithmetic_isource =
-        "__kernel void NAME(__global const TYPE *a, __global const TYPE *b"
+        "__kernel void NAME(__global TYPE *a, __global const TYPE *b)"
         "{"
-        "    int i = get_global_id(0);"
+        "    int i(3, get_global_id(0);"
         "    a[i] OPERATION= b[i];"
         "}";
     }
 
     // add
-    std::string addf = __utils::__replacer(__hidden_source::__arithmetic_source)
+    CLbuiltinprog addf(3, __utils::__replacer(__hidden_source::__arithmetic_source)
         .replace("NAME", "addf")
         .replace("TYPE", "float")
         .replace("OPERATION", "+")
-        .str();
+        .str());
 
     // iadd
-    std::string iaddf = __utils::__replacer(__hidden_source::__arithmetic_isource)
+    CLbuiltinprog iaddf(2, __utils::__replacer(__hidden_source::__arithmetic_isource)
         .replace("NAME", "iaddf")
         .replace("TYPE", "float")
         .replace("OPERATION", "+")
-        .str();
+        .str());
 
     // sub
-    std::string subf = __utils::__replacer(__hidden_source::__arithmetic_source)
+    CLbuiltinprog subf(3, __utils::__replacer(__hidden_source::__arithmetic_source)
         .replace("NAME", "subf")
         .replace("TYPE", "float")
         .replace("OPERATION", "-")
-        .str();
+        .str());
     // isub
-    std::string isubf = __utils::__replacer(__hidden_source::__arithmetic_isource)
+    CLbuiltinprog isubf(2, __utils::__replacer(__hidden_source::__arithmetic_isource)
         .replace("NAME", "isubf")
         .replace("TYPE", "float")
         .replace("OPERATION", "-")
-        .str();
+        .str());
 
     // mul
-    std::string mulf = __utils::__replacer(__hidden_source::__arithmetic_source)
+    CLbuiltinprog mulf(3, __utils::__replacer(__hidden_source::__arithmetic_source)
         .replace("NAME", "mulf")
         .replace("TYPE", "float")
         .replace("OPERATION", "*")
-        .str();
+        .str());
 
     // imul
-    std::string imulf = __utils::__replacer(__hidden_source::__arithmetic_isource)
+    CLbuiltinprog imulf(2, __utils::__replacer(__hidden_source::__arithmetic_isource)
         .replace("NAME", "imulf")
         .replace("TYPE", "float")
         .replace("OPERATION", "*")
-        .str();
+        .str());
 
     // div
-    std::string divf = __utils::__replacer(__hidden_source::__arithmetic_source)
+    CLbuiltinprog divf(3, __utils::__replacer(__hidden_source::__arithmetic_source)
         .replace("NAME", "divf")
         .replace("TYPE", "float")
         .replace("OPERATION", "/")
-        .str();
+        .str());
 
     // idiv
-    std::string idivf = __utils::__replacer(__hidden_source::__arithmetic_isource)
+    CLbuiltinprog idivf(2, __utils::__replacer(__hidden_source::__arithmetic_isource)
         .replace("NAME", "idivf")
         .replace("TYPE", "float")
         .replace("OPERATION", "/")
-        .str();
+        .str());
 
 }
 

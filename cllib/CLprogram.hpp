@@ -15,10 +15,16 @@ class CLprogram
 {
 public:
     CLprogram(
+        const CLbuiltinprog &program,
+        const CLcontext &context
+    ) : CLprogram(program.__get_argc(), program.__get_code(), context) {}
+
+    CLprogram(
+        int argc,
         const std::string &kernel_code,
         const CLcontext &context
     ) :
-        program()
+        argc(argc), program()
     {
         cl_int  error;
         const char  *code_ptr = kernel_code.c_str();
@@ -48,8 +54,14 @@ public:
         return program;
     }
 
+    WUR int __get_argc() const
+    {
+        return argc;
+    }
+
 private:
     cl_program  program;
+    int         argc;
 };
 
 CLLIB_NAMESPACE_END

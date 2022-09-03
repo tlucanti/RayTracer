@@ -6,6 +6,7 @@
 # include "CLutils.hpp"
 # include "CLsources.hpp"
 # include "CLexception.hpp"
+# include "CLbuiltinprog.hpp"
 //
 # include "CLplatform.hpp"
 # include "CLdevice.hpp"
