@@ -11,7 +11,7 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-class CLplatform
+class CLplatform /*: public __utils::__noncopymovable<>*/
 {
 public:
     WUR std::vector<CLdevice> get_devices(
@@ -42,9 +42,10 @@ public:
             }
         }
 
-        std::vector<CLdevice> ret(devices.size(), CLdevice());
-        for (cl_uint i=0; i < devices.size(); ++i)
-            ret.at(i)._set_device_id(devices.at(i));
+        std::vector<CLdevice> ret;
+        ret.reserve(devices.size());
+        for (auto &device : devices)
+            ret.emplace_back(CLdevice(device));
 
         return ret;
     }
@@ -98,18 +99,16 @@ public:
     }
 #endif /* CL_PLATFORM_ICD_SUFFIX_KHR */
 
-    CLplatform(const CLplatform &cpy) = default;
+//    CLplatform(const CLplatform &cpy) = default;
 
     WUR const cl_platform_id &__get_platform() const
     {
         return platform_id;
     }
 
-private:
-    CLplatform()
-        : platform_id(nullptr)
-    {}
+    CLplatform()=delete;
 
+private:
     void _set_platform_id(cl_platform_id id)
     {
         platform_id = id;
@@ -164,6 +163,10 @@ private:
     }
 
 private:
+    CLplatform(cl_platform_id platform)
+        : platform_id(platform)
+    {}
+
     cl_platform_id  platform_id;
 
     friend std::vector<CLplatform> get_platforms(cl_uint);

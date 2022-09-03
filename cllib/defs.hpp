@@ -35,6 +35,10 @@
 #  define UNUSED [[maybe_unused]]
 # endif /* UNUSED */
 
+# ifndef THROW
+#  define THROW noexcept(false)
+# endif
+
 # define IS_INTEGRAL(__type) std::is_integral<__type>::value
 # define IS_FLOATING(__type) std::is_floating_point<__type>::value
 # define IS_ARITHMETIC(__type) std::is_arithmetic<__type>::value

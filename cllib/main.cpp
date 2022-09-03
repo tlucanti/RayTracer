@@ -1,29 +1,29 @@
 
 #include "CLlib.hpp"
 #include <iostream>
-
 #include <tuple>
-#include <utility>
-#include <iostream>
 
-template<std::size_t I = 0, typename... Tp>
-inline typename std::enable_if<I == sizeof...(Tp), void>::type
-print(const Tp &...t)
-{ }
+template <size_t argc=0, class ...type>
+typename std::enable_if<argc == sizeof...(type), void>::type __print(const std::tuple<type...> &t)
+{}
 
-template<std::size_t I = 0, typename... Tp>
-inline typename std::enable_if<I < sizeof...(Tp), void>::type
-print(const Tp &...t)
+template <size_t argc=0, class ...type>
+typename std::enable_if<argc < sizeof...(type), void>::type __print(const std::tuple<type...> &t)
 {
-    int i=0;
-    for (const auto & a : {t...})
-    {
-        std::cout << i++ << ' ' << a.__get_buffer() << std::endl;
-    }
+    std::cout << "num: " << argc << ", el: " << std::get<argc>(t) << std::endl;
+    __print<argc + 1, type...>(t);
+}
+
+template <class... type>
+void print(const type &...arg)
+{
+    __print(std::tuple<type...>(arg...));
 }
 
 int main()
 {
+    print(1, 2.1, 2.2f, (char *)"lol", (char *)"kek", 'f');
+
     auto platforms = cllib::get_platforms();
     cllib::CLplatform &platform = platforms.at(0);
     std::cout << "platform: " << platform.get_platform_name() << std::endl;
@@ -41,13 +41,16 @@ int main()
     } catch (cllib::CLexception &e) {
         std::cout << program.builder.get_program_log() << std::endl;
         std::cout << cllib::sources::addf.get_program_source() << std::endl;
+        throw ;
     }
-    cllib::CLkernel(program, "addf");
+    cllib::CLkernel kernel(program);
 
     cllib::CLarray<float> array1({1, 2, 3, 4, 5}, context, queue);
     cllib::CLarray<float> array2({10,20,30,40,50}, context, queue);
     cllib::CLarray<float> array3(5, context, queue);
 
-    print(array1, array2, array3);
-//    kernel.set_args(array1, array2, array3);
+    kernel.set_arg(0, array1);
+    kernel.set_arg(1, array2);
+    kernel.set_arg(2, array3);
+    kernel.run(queue);
 }

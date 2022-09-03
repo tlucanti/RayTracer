@@ -29,55 +29,55 @@ namespace sources
     }
 
     // add
-    CLbuiltinprog addf(3, __utils::__replacer(__hidden_source::__arithmetic_source)
+    CLbuiltinprog addf(3, "addf", __utils::__replacer(__hidden_source::__arithmetic_source)
         .replace("NAME", "addf")
         .replace("TYPE", "float")
         .replace("OPERATION", "+")
         .str());
 
     // iadd
-    CLbuiltinprog iaddf(2, __utils::__replacer(__hidden_source::__arithmetic_isource)
+    CLbuiltinprog iaddf(2, "iadd",__utils::__replacer(__hidden_source::__arithmetic_isource)
         .replace("NAME", "iaddf")
         .replace("TYPE", "float")
         .replace("OPERATION", "+")
         .str());
 
     // sub
-    CLbuiltinprog subf(3, __utils::__replacer(__hidden_source::__arithmetic_source)
+    CLbuiltinprog subf(3, "subf",__utils::__replacer(__hidden_source::__arithmetic_source)
         .replace("NAME", "subf")
         .replace("TYPE", "float")
         .replace("OPERATION", "-")
         .str());
     // isub
-    CLbuiltinprog isubf(2, __utils::__replacer(__hidden_source::__arithmetic_isource)
+    CLbuiltinprog isubf(2, "isubf",__utils::__replacer(__hidden_source::__arithmetic_isource)
         .replace("NAME", "isubf")
         .replace("TYPE", "float")
         .replace("OPERATION", "-")
         .str());
 
     // mul
-    CLbuiltinprog mulf(3, __utils::__replacer(__hidden_source::__arithmetic_source)
+    CLbuiltinprog mulf(3, "mulf", __utils::__replacer(__hidden_source::__arithmetic_source)
         .replace("NAME", "mulf")
         .replace("TYPE", "float")
         .replace("OPERATION", "*")
         .str());
 
     // imul
-    CLbuiltinprog imulf(2, __utils::__replacer(__hidden_source::__arithmetic_isource)
+    CLbuiltinprog imulf(2, "imulf", __utils::__replacer(__hidden_source::__arithmetic_isource)
         .replace("NAME", "imulf")
         .replace("TYPE", "float")
         .replace("OPERATION", "*")
         .str());
 
     // div
-    CLbuiltinprog divf(3, __utils::__replacer(__hidden_source::__arithmetic_source)
+    CLbuiltinprog divf(3, "divf", __utils::__replacer(__hidden_source::__arithmetic_source)
         .replace("NAME", "divf")
         .replace("TYPE", "float")
         .replace("OPERATION", "/")
         .str());
 
     // idiv
-    CLbuiltinprog idivf(2, __utils::__replacer(__hidden_source::__arithmetic_isource)
+    CLbuiltinprog idivf(2, "idivf", __utils::__replacer(__hidden_source::__arithmetic_isource)
         .replace("NAME", "idivf")
         .replace("TYPE", "float")
         .replace("OPERATION", "/")

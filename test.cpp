@@ -153,6 +153,16 @@ int main()
     if (error != CL_SUCCESS)
         throw std::runtime_error(cl_strerror((error)));
 
+    // program info
+//    error = clGetProgramInfo(program, CL_PROGRAM_KERNEL_NAMES_APPLE, 0, nullptr, &info_size);
+//    if (error != CL_SUCCESS)
+//        throw std::runtime_error(cl_strerror(error));
+//    info.resize(/*info_size*/ 3000 - 1);
+//                error = clGetProgramInfo(program, CL_PROGRAM_KERNEL_NAMES, 3000 - 1, info.data(), &info_size);
+//    if (error != CL_SUCCESS)
+//        throw std::runtime_error(cl_strerror(error));
+//    std::cout << "kernel names: " << info << std::endl;
+
     // compile
     error = clBuildProgram(program, 1, &device_id, nullptr, nullptr, nullptr);
     if (error != CL_SUCCESS)

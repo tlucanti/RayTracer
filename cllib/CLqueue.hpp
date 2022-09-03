@@ -9,7 +9,7 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-class CLqueue
+class CLqueue : public __utils::__noncopymovable<>
 {
 public:
     CLqueue(
@@ -32,10 +32,16 @@ public:
         return queue;
     }
 
-    ~CLqueue()
+    ~CLqueue() THROW
     {
-        clReleaseCommandQueue(queue);
+        cl_int  error;
+
+        error = clReleaseCommandQueue(queue);
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
     }
+
+    CLqueue()=delete;
 
 private:
     cl_command_queue    queue;

@@ -41,9 +41,10 @@ WUR std::vector<CLplatform> get_platforms(cl_uint num_platforms=-1)
     if (error != CL_SUCCESS)
         throw CLexception(error);
 
-    std::vector<CLplatform> ret(num_platforms, CLplatform());
+    std::vector<CLplatform> ret;
+    ret.reserve(num_platforms);
     for (cl_uint i=0; i < num_platforms; ++i)
-        ret.at(i)._set_platform_id(platforms.at(i));
+        ret.emplace_back(CLplatform(platforms.at(i)));
 
     return ret;
 }

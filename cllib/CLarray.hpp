@@ -11,61 +11,60 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-cl_mem_flags read_write_array = CL_MEM_READ_WRITE;
-cl_mem_flags read_only_array = CL_MEM_READ_ONLY;
-cl_mem_flags write_only_array = CL_MEM_WRITE_ONLY;
+const cl_mem_flags read_write_array = CL_MEM_READ_WRITE;
+const cl_mem_flags read_only_array = CL_MEM_READ_ONLY;
+const cl_mem_flags write_only_array = CL_MEM_WRITE_ONLY;
 
-template <class value_type>
-class CLarray
+template <class value_type, cl_mem_flags flag=read_write_array>
+class CLarray /* : public __utils::__noncopymovable<value_type> */
 {
 public:
     CLarray(
         size_t size,
         const CLcontext &context,
         const CLqueue &queue,
-        cl_mem_flags flag=read_write_array,
         void *host_ptr=nullptr
-    ) : CLarray(
-            std::vector<value_type>(size),
-            context,
-            queue,
-            flag,
-            host_ptr
-        )
-    {}
+    ) :
+        buffer(), ref_cnt(1)
+    {
+        static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
+        cl_int  error;
+
+        buffer = clCreateBuffer(context.__get_context(), flag, size * sizeof(value_type), host_ptr, &error);
+        if (error)
+            throw CLexception(error);
+        std::cout << "created array " << this << " (" << buffer << ")" << std::endl;
+    }
 
     CLarray(
         const std::vector<value_type> &vec,
         const CLcontext &context,
         const CLqueue &queue,
-        cl_mem_flags flag=read_write_array,
         void *host_ptr=nullptr
     ) :
-        buffer()
+        buffer(), ref_cnt(1)
     {
-        static_assert(IS_ARITHMETIC(value_type), "array type can only be integral");
+        static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
         cl_int  error;
 
         buffer = clCreateBuffer(context.__get_context(), flag, vec.size() * sizeof(value_type), host_ptr, &error);
         if (error)
             throw CLexception(error);
         fill(vec, queue);
+        std::cout << "created array " << this << " (" << buffer << ")" << std::endl;
     }
 
-    CLarray(
-        const CLcontext &context,
-        size_t size,
-        cl_mem_flags flag=read_write_array,
-        void *host_ptr=nullptr
-    ) :
-        buffer()
+    ~CLarray() THROW
     {
-        static_assert(IS_INTEGRAL(value_type), "array type can only be integral");
         cl_int  error;
 
-        buffer = clCreateBuffer(context.__get_context(), flag, size * sizeof(value_type), host_ptr, &error);
-        if (error)
-            throw CLexception(error);
+        --ref_cnt;
+        if (ref_cnt == 0)
+        {
+            error = clReleaseMemObject(buffer);
+            if (error != CL_SUCCESS)
+                throw CLexception(error);
+        }
     }
 
     void fill(
@@ -96,13 +95,104 @@ public:
             throw CLexception(error);
     }
 
+# ifdef CL_MEM_TYPE
+    WUR UNUSED cl_mem_object_type get_mem_type() const
+    {
+        return static_cast<cl_mem_object_type>(_get_numeric_data(CL_MEM_TYPE, sizeof(cl_mem_object_type)));
+    }
+# endif
+
+# ifdef CL_MEM_FLAGS
+    WUR UNUSED cl_mem_flags get_mem_flags() const
+    {
+        return static_cast<cl_mem_flags>(_get_numeric_data(CL_MEM_FLAGS, sizeof(cl_mem_flags)));
+    }
+# endif
+
+# ifdef CL_MEM_SIZE
+    WUR UNUSED size_t get_mem_size() const
+    {
+        return static_cast<size_t>(_get_numeric_data(CL_MEM_SIZE, sizeof(size_t)));
+    }
+# endif
+
+# ifdef CL_MEM_HOST_PTR
+    WUR UNUSED void *get_mem_host_ptr() const
+    {
+        return reinterpret_cast<void *>(_get_numeric_data(CL_MEM_HOST_PTR, sizeof(void *)));
+    }
+# endif
+
+# ifdef CL_MEM_MAP_COUNT
+    WUR UNUSED cl_uint get_mem_map_count() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_MEM_MAP_COUNT, sizeof(cl_uint)));
+    }
+# endif
+
+# ifdef CL_MEM_REFERENCE_COUNT
+    WUR UNUSED cl_uint get_mem_reference_count() const
+    {
+        return static_cast<cl_uint>(_get_numeric_data(CL_MEM_REFERENCE_COUNT, sizeof(cl_uint)));
+    }
+# endif
+
+# ifdef CL_MEM_CONTEXT
+    WUR UNUSED cl_context get_mem_context() const
+    {
+        return static_cast<cl_context>(_get_numeric_data(CL_MEM_CONTEXT, sizeof(cl_context)));
+    }
+# endif
+
+# ifdef CL_MEM_ASSOCIATED_MEMOBJECT
+    WUR UNUSED cl_mem get_mem_associated_memobject() const
+    {
+        return static_cast<cl_mem>(_get_numeric_data(CL_MEM_ASSOCIATED_MEMOBJECT, sizeof(cl_mem)));
+    }
+# endif
+
+# ifdef CL_MEM_OFFSET
+    WUR UNUSED size_t get_mem_offset() const
+    {
+        return static_cast<size_t>(_get_numeric_data(CL_MEM_OFFSET, sizeof(size_t)));
+    }
+# endif
+
     WUR const cl_mem &__get_buffer() const
     {
         return buffer;
     }
 
+    CLarray()=delete;
+
 private:
-    cl_mem  buffer;
+
+    CLarray(const CLarray &cpy)
+        : buffer(cpy.buffer), ref_cnt(cpy.ref_cnt + 1)
+    {}
+
+    WUR unsigned long long _get_numeric_data(cl_mem_info type, size_t value_size) const
+    {
+        cl_int              error;
+        unsigned long long  info;
+
+        error = clGetMemObjectInfo(
+                buffer,
+                type,
+                value_size,
+                &info,
+                nullptr
+        );
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+
+        return info;
+    }
+
+    cl_mem          buffer;
+    unsigned int    ref_cnt;
+
+    friend class CLkernel;
 };
 
 CLLIB_NAMESPACE_END

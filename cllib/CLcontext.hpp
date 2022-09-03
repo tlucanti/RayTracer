@@ -8,7 +8,7 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-class CLcontext
+class CLcontext : public __utils::__noncopymovable<>
 {
 public:
     CLcontext(
@@ -60,10 +60,16 @@ public:
         return context;
     }
 
-    ~CLcontext()
+    ~CLcontext() THROW
     {
-        clReleaseContext(context);
+        cl_int  error;
+
+        error = clReleaseContext(context);
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
     }
+
+    CLcontext()=delete;
 
 private:
     WUR unsigned long long _get_numeric_data(cl_context_info type, size_t value_size) const

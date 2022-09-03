@@ -11,26 +11,36 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-class CLprogram
+class CLprogram : public __utils::__noncopymovable<>
 {
 public:
     CLprogram(
         const CLbuiltinprog &program,
         const CLcontext &context
-    ) : CLprogram(program.__get_argc(), program.__get_code(), context) {}
+    ) : CLprogram(program.get_programd_arg_num(), program.get_program_source(), program.get_program_name(), context) {}
 
     CLprogram(
         int argc,
-        const std::string &kernel_code,
+        const std::string &program_code,
+        const std::string &program_name,
         const CLcontext &context
     ) :
-        builder(), argc(argc), program()
+        builder(), argc(argc), program(), name(program_name)
     {
         cl_int  error;
-        const char  *code_ptr = kernel_code.c_str();
+        const char  *code_ptr = program_code.c_str();
 
         program = clCreateProgramWithSource(context.__get_context(), 1, &code_ptr, nullptr, &error);
         if (error)
+            throw CLexception(error);
+    }
+
+    ~CLprogram() THROW
+    {
+        cl_int error;
+
+        error = clReleaseProgram(program);
+        if (error != CL_SUCCESS)
             throw CLexception(error);
     }
 
@@ -49,6 +59,11 @@ public:
         error = clBuildProgram(program, num_devices, &device.__get_device(), options, notify, user_data);
         if (error != CL_SUCCESS)
             throw CLexception(error);
+    }
+
+    WUR std::string get_program_name() const
+    {
+        return name;
     }
 
 # ifdef CL_PROGRAM_REFERENCE_COUNT
@@ -169,6 +184,8 @@ public:
     {
         return argc;
     }
+
+    CLprogram()=delete;
 
 private:
 
@@ -355,6 +372,7 @@ public:
 private:
     cl_program  program;
     int         argc;
+    std::string name;
 };
 
 CLLIB_NAMESPACE_END

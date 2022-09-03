@@ -30,6 +30,28 @@ namespace __utils
     private:
         std::string __str;
     };
+
+    template <class ...>
+    struct __noncopyble
+    {
+        __noncopyble()=default;
+        __noncopyble(const __noncopyble &)=delete;
+        __noncopyble &operator =(const __noncopyble &)=delete;
+    };
+
+    template <class ...>
+    struct __nonmovable
+    {
+        __nonmovable()=default;
+        __nonmovable(const __nonmovable &&)=delete;
+        __nonmovable &&operator =(const __nonmovable &&)=delete;
+    };
+
+    template <class ...T>
+    struct __noncopymovable : public __noncopyble<T...>, public __nonmovable<T...>
+    {
+        __noncopymovable()=default;
+    };
 }
 
 CLLIB_NAMESPACE_END

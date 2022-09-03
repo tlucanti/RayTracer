@@ -11,7 +11,7 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-class CLdevice
+class CLdevice : public __utils::__noncopyble<>
 {
 public:
     static const cl_device_type any_type            = CL_DEVICE_TYPE_DEFAULT;
@@ -753,28 +753,36 @@ public:
     }
 # endif
 
+    ~CLdevice() THROW
+    {
+        cl_int  error;
+
+        --ref_cnt;
+        if (device_id != nullptr && ref_cnt == 0)
+        {
+            std::cout << "released device " << get_device_name() << std::endl;
+            error = clReleaseDevice(device_id);
+            if (error != CL_SUCCESS)
+                throw CLexception(error);
+        }
+
+    }
+
+    CLdevice(const CLdevice &cpy)
+        : device_id(cpy.device_id), ref_cnt(cpy.ref_cnt + 1)
+    {}
+
+    CLdevice()=delete;
+
     WUR const cl_device_id &__get_device() const
     {
         return device_id;
     }
 
-    ~CLdevice()
-    {
-        if (device_id == nullptr)
-            return ;
-        std::cout << "released device " << get_device_name() << std::endl;
-        clReleaseDevice(device_id);
-    }
-
 private:
-    CLdevice()
-        : device_id()
+    CLdevice(cl_device_id device_id)
+            : device_id(device_id)
     {}
-
-    void _set_device_id(cl_device_id id)
-    {
-        device_id = id;
-    }
 
     WUR std::string _get_string_data(cl_device_info type) const
     {
@@ -844,6 +852,7 @@ private:
     }
 
     cl_device_id    device_id;
+    unsigned int    ref_cnt;
 
     friend class CLplatform;
 };
