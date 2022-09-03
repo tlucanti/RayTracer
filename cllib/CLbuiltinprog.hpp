@@ -11,7 +11,7 @@ CLLIB_NAMESPACE_BEGIN
 class CLbuiltinprog
 {
 public:
-    CLbuiltinprog(int arg_count, const std::string &program_code)
+    CLbuiltinprog(int arg_count, std::string program_code)
         : argc(arg_count), program(program_code)
     {}
 
@@ -25,8 +25,18 @@ public:
         return argc;
     }
 
+    WUR UNUSED const std::string &get_program_source() const
+    {
+        return program;
+    }
+
+    WUR UNUSED int get_programd_arg_num() const
+    {
+        return argc;
+    }
+
 private:
-    const std::string &program;
+    std::string program;
     int argc;
 };
 

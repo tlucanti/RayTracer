@@ -16,14 +16,14 @@ namespace sources
         const char *__arithmetic_source =
         "__kernel void NAME(__global const TYPE *a, __global const TYPE *b, __global TYPE *c)"
         "{"
-        "    int i(3, get_global_id(0);"
-        "    c[i](3, a[i] OPERATION b[i];"
+        "    int i = get_global_id(0);"
+        "    c[i] = a[i] OPERATION b[i];"
         "}";
 
         const char *__arithmetic_isource =
         "__kernel void NAME(__global TYPE *a, __global const TYPE *b)"
         "{"
-        "    int i(3, get_global_id(0);"
+        "    int i = get_global_id(0);"
         "    a[i] OPERATION= b[i];"
         "}";
     }

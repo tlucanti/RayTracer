@@ -66,7 +66,7 @@ public:
     }
 
 private:
-    WUR unsigned long long _get_numeric_data(cl_device_info type, size_t value_size) const
+    WUR unsigned long long _get_numeric_data(cl_context_info type, size_t value_size) const
     {
         cl_int              error;
         unsigned long long  info;

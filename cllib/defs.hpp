@@ -8,6 +8,11 @@
 #  include <CL/cl.h>
 # endif /* __APPLE__ */
 
+# ifdef __APPLE__
+#  define clCreateCommandQueueWithProperties    clCreateCommandQueueWithPropertiesAPPLE
+//#  define cl_command_queue_properties           cl_queue_properties_APPLE
+# endif /* __APPLE__ */
+
 # include <type_traits>
 
 # define CLIB_NAMESPACE cllib

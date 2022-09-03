@@ -49,35 +49,47 @@ public:
         return ret;
     }
 
+# ifdef CL_PLATFORM_PROFILE
     WUR UNUSED std::string get_platform_profile() const
     {
         return _get_string_data(CL_PLATFORM_PROFILE);
     }
+# endif
 
+# ifdef CL_PLATFORM_VERSION
     WUR UNUSED std::string get_platform_version() const
     {
         return _get_string_data(CL_PLATFORM_VERSION);
     }
+# endif
 
+# ifdef CL_PLATFORM_NAME
     WUR UNUSED std::string get_platform_name() const
     {
         return _get_string_data(CL_PLATFORM_NAME);
     }
+# endif
 
+# ifdef CL_PLATFORM_VENDOR
     WUR UNUSED std::string get_platform_vendor() const
     {
         return _get_string_data(CL_PLATFORM_VENDOR);
     }
+# endif
 
+# ifdef CL_PLATFORM_EXTENSIONS
     WUR UNUSED std::string get_platform_extensions() const
     {
         return _get_string_data(CL_PLATFORM_EXTENSIONS);
     }
+# endif
 
+# ifdef CL_PLATFORM_HOST_TIMER_RESOLUTION
     WUR UNUSED cl_ulong get_platform_timer_resolution() const
     {
         return _get_ulong_data(CL_PLATFORM_HOST_TIMER_RESOLUTION);
     }
+# endif
 
 #ifdef CL_PLATFORM_ICD_SUFFIX_KHR
     WUR UNUSED std::string get_platform_icd_suffix_khr() const

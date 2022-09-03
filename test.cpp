@@ -121,7 +121,7 @@ int main()
     // devices
     cl_device_id    device_id;
     cl_uint         num_devices;
-    error = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_ALL, 1, &device_id, &num_devices);
+    error = clGetDeviceIDs(platform_id, CL_DEVICE_TYPE_GPU, 1, &device_id, &num_devices);
     if (error != CL_SUCCESS)
         throw std::runtime_error(cl_strerror(error));
 
