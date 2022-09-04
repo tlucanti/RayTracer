@@ -4,21 +4,30 @@
 #include <tuple>
 
 template <size_t argc=0, class ...type>
-typename std::enable_if<argc == sizeof...(type), void>::type __print(const std::tuple<type...> &t)
+typename std::enable_if<argc == sizeof...(type), void>::type
+_print(const std::tuple<type...> &t)
 {}
 
 template <size_t argc=0, class ...type>
-typename std::enable_if<argc < sizeof...(type), void>::type __print(const std::tuple<type...> &t)
+typename std::enable_if<argc < sizeof...(type), void>::type
+_print(const std::tuple<type...> &t)
 {
     std::cout << "num: " << argc << ", el: " << std::get<argc>(t) << std::endl;
-    __print<argc + 1, type...>(t);
+    _print<argc + 1, type...>(t);
 }
 
 template <class... type>
 void print(const type &...arg)
 {
-    __print(std::tuple<type...>(arg...));
+    _print(std::tuple<type...>(arg...));
 }
+
+const char *kernel2_code =
+"__kernel void add_fl(__global const float *a, const float b, __global float *c)"
+"{"
+"    int i = get_global_id(0);"
+"    c[i] = a[i] + b;"
+"}";
 
 int main()
 {
@@ -35,7 +44,8 @@ int main()
 
     cllib::CLcontext context(device);
     cllib::CLqueue queue(context, device);
-    cllib::CLprogram program(cllib::sources::addf, context);
+//    cllib::CLprogram program(cllib::sources::addf, context);
+    cllib::CLprogram program(3, kernel2_code, "add_fl", context);
     try {
         program.compile(device);
     } catch (cllib::CLexception &e) {
@@ -43,14 +53,23 @@ int main()
         std::cout << cllib::sources::addf.get_program_source() << std::endl;
         throw ;
     }
-    cllib::CLkernel kernel(program);
 
     cllib::CLarray<float> array1({1, 2, 3, 4, 5}, context, queue);
-    cllib::CLarray<float> array2({10,20,30,40,50}, context, queue);
+//    cllib::CLarray<float> array2({10,20,30,40,50}, context, queue);
+    float arg2 = 0.5;
     cllib::CLarray<float> array3(5, context, queue);
 
+    size_t global_size[1] = { array1.size() };
+    cllib::CLkernel kernel(program, global_size);
+
     kernel.set_arg(0, array1);
-    kernel.set_arg(1, array2);
+    kernel.set_arg(1, arg2);
     kernel.set_arg(2, array3);
+
     kernel.run(queue);
+
+    auto arr = array3.dump(queue);
+    for (const auto &i : arr)
+        std::cout << i << ' ';
+    std::cout << std::endl;
 }

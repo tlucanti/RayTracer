@@ -4,6 +4,7 @@ project(RayTracer)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_FLAGS "-D__DEBUG -D__CMAKE -DCL_TARGET_OPENCL_VERSION=210 -O0")
 #set(CMAKE_CXX_FLAGS "-O0")
+set(CMAKE_CXX_COMPILER "clang++")
 
 include_directories(.)
 include_directories(inc)

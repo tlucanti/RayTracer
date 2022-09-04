@@ -25,7 +25,7 @@ public:
         const CLqueue &queue,
         void *host_ptr=nullptr
     ) :
-        buffer(), ref_cnt(1)
+        buffer(), buff_size(size), ref_cnt(1)
     {
         static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
         cl_int  error;
@@ -42,12 +42,12 @@ public:
         const CLqueue &queue,
         void *host_ptr=nullptr
     ) :
-        buffer(), ref_cnt(1)
+        buffer(), buff_size(vec.size()), ref_cnt(1)
     {
         static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
         cl_int  error;
 
-        buffer = clCreateBuffer(context.__get_context(), flag, vec.size() * sizeof(value_type), host_ptr, &error);
+        buffer = clCreateBuffer(context.__get_context(), flag, buff_size * sizeof(value_type), host_ptr, &error);
         if (error)
             throw CLexception(error);
         fill(vec, queue);
@@ -61,10 +61,16 @@ public:
         --ref_cnt;
         if (ref_cnt == 0)
         {
+            std::cout << "released array " << this << " (" << buffer << ')' << std::endl;
             error = clReleaseMemObject(buffer);
             if (error != CL_SUCCESS)
                 throw CLexception(error);
         }
+    }
+
+    size_t size()
+    {
+        return buff_size;
     }
 
     void fill(
@@ -80,6 +86,8 @@ public:
         static_assert(IS_ARITHMETIC(value_type), "array type can only be integral");
         cl_int  error;
 
+        if (vec.size() > buff_size)
+            throw std::runtime_error("vector size more than buffer size");
         error = clEnqueueWriteBuffer(
             queue.__get_queue(),
             buffer,
@@ -87,6 +95,55 @@ public:
             offset,
             vec.size() * sizeof(value_type),
             vec.data(),
+            num_events_in_wait_list,
+            event_wait_list,
+            event
+        );
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+    }
+
+    std::vector<value_type> dump(
+        const CLqueue &queue,
+        bool block=true,
+        size_t size=0,
+        size_t offset=0,
+        cl_uint num_events_in_wait_list=0,
+        cl_event *event_wait_list=nullptr,
+        cl_event *event=nullptr
+    )
+    {
+        if (size == 0)
+            size = buff_size - offset;
+        std::vector<value_type> ret(size);
+        dump(ret, queue, block, size, offset, num_events_in_wait_list, event_wait_list, event);
+        return ret;
+    }
+
+    void dump(
+        std::vector<value_type> &out,
+        const CLqueue &queue,
+        bool block=true,
+        size_t size=0,
+        size_t offset=0,
+        cl_uint num_events_in_wait_list=0,
+        cl_event *event_wait_list=nullptr,
+        cl_event *event=nullptr
+        )
+    {
+        cl_int  error;
+
+        if (size == 0)
+            size = out.size();
+        if (size > buff_size)
+            throw std::runtime_error("vector size more than buffer size");
+        error = clEnqueueReadBuffer(
+            queue.__get_queue(),
+            buffer,
+            static_cast<cl_bool>(block),
+            offset,
+            size * sizeof(value_type),
+            out.data(),
             num_events_in_wait_list,
             event_wait_list,
             event
@@ -190,6 +247,7 @@ private:
     }
 
     cl_mem          buffer;
+    size_t          buff_size;
     unsigned int    ref_cnt;
 
     friend class CLkernel;

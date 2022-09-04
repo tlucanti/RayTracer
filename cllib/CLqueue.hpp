@@ -21,8 +21,8 @@ public:
     {
         cl_int  error;
 
-        queue = clCreateCommandQueue(context.__get_context(), device.__get_device(), 0, &error);
-//        queue = clCreateCommandQueueWithProperties(context.__get_context(), device.__get_device(), properties, &error);
+//        queue = clCreateCommandQueue(context.__get_context(), device.__get_device(), 0, &error);
+        queue = clCreateCommandQueueWithProperties(context.__get_context(), device.__get_device(), properties, &error);
         if (error)
             throw CLexception(error);
     }
