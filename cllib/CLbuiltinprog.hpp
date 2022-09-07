@@ -2,7 +2,7 @@
 #ifndef CLLIB_BUILTINPROG
 # define CLLIB_BUILTINPROG
 
-# include "defs.hpp"
+# include "CLdefs.hpp"
 
 # include <string>
 

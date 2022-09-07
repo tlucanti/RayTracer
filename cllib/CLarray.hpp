@@ -2,12 +2,12 @@
 #ifndef CLLIB_GPUARRAY_HPP
 # define CLLIB_GPUARRAY_HPP
 
-# include <vector>
-
-# include "defs.hpp"
+# include "CLdefs.hpp"
 # include "CLexception.hpp"
 # include "CLcontext.hpp"
 # include "CLqueue.hpp"
+
+# include <vector>
 
 CLLIB_NAMESPACE_BEGIN
 

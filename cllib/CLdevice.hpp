@@ -2,8 +2,7 @@
 #ifndef CLLIB_DEVICE_HPP
 # define CLLIB_DEVICE_HPP
 
-# include "defs.hpp"
-//# include "CLplatform.hpp"
+# include "CLdefs.hpp"
 # include "CLexception.hpp"
 
 # include <vector>

@@ -2,13 +2,13 @@
 #ifndef CLLIB_KERNEL_HPP
 # define CLLIB_KERNEL_HPP
 
-# include <string>
-# include <utility>
-
-# include "defs.hpp"
+# include "CLdefs.hpp"
 # include "CLexception.hpp"
 # include "CLprogram.hpp"
 # include "CLarray.hpp"
+
+# include <string>
+# include <utility>
 
 CLLIB_NAMESPACE_BEGIN
 

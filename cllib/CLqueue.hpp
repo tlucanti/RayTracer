@@ -2,7 +2,7 @@
 #ifndef CLLIB_QUEUE_HPP
 # define CLLIB_QUEUE_HPP
 
-# include "defs.hpp"
+# include "CLdefs.hpp"
 # include "CLexception.hpp"
 # include "CLcontext.hpp"
 # include "CLdevice.hpp"

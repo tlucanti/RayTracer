@@ -2,8 +2,9 @@
 #ifndef CLLIB_EXCEPTION_HPP
 # define CLLIB_EXCEPTION_HPP
 
+# include "CLdefs.hpp"
+
 #include <stdexcept>
-#include "defs.hpp"
 
 CLLIB_NAMESPACE_BEGIN
 

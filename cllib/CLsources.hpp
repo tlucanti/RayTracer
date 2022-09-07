@@ -2,7 +2,7 @@
 #ifndef CLLIB_SOURCES_HPP
 # define CLLIB_SOURCES_HPP
 
-# include "defs.hpp"
+# include "CLdefs.hpp"
 # include "CLbuiltinprog.hpp"
 
 # include <string>

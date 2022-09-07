@@ -4,7 +4,7 @@
 
 # include <string>
 
-# include "defs.hpp"
+# include "CLdefs.hpp"
 # include "CLexception.hpp"
 # include "CLcontext.hpp"
 # include "CLdevice.hpp"
