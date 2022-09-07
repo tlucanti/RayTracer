@@ -43,7 +43,7 @@ public:
         mlx_string_put(mlx_ptr, window_ptr, x, y, color, const_cast<char *>(str.c_str()));
     }
 
-    NORET void event_loop()
+    /* NORET */ void event_loop()
     {
         mlx_loop(mlx_ptr);
     }
