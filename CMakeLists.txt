@@ -8,7 +8,6 @@ set(CMAKE_CXX_COMPILER "clang++")
 
 include_directories(.)
 include_directories(inc)
-include_directories(/opt/X11/include)
 link_directories(.)
 link_directories(cllib)
 
@@ -23,17 +22,19 @@ add_executable(RayTracer
 )
 
 add_executable(test test.cpp)
-
 add_executable(cllib cllib/main.cpp)
+add_executable(mlxlib mlxlib/main.cpp)
 
 find_library(OPENCL_LIB OpenCL)
+find_library(MLX_LIB mlx)
 #find_library(X11_LIB X11)
 
 message(${OPENCL_LIB})
+message(${MLX_LIB})
 target_link_libraries(RayTracer
-		${OPENCL_LIB}
 #		${X11_LIB}
 )
 
 target_link_libraries(test ${OPENCL_LIB})
 target_link_libraries(cllib ${OPENCL_LIB})
+target_link_libraries(mlxlib ${MLX_LIB} Xext X11 m z)

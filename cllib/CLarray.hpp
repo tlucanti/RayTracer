@@ -47,7 +47,6 @@ public:
         static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
         cl_int  error;
 
-        clCreateImage2D()
         buffer = clCreateBuffer(context.__get_context(), flag, buff_size * sizeof(value_type), host_ptr, &error);
         if (error)
             throw CLexception(error);

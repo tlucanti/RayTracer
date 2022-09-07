@@ -5,10 +5,10 @@
 # include <regex>
 # include <string>
 
-CLLIB_NAMESPACE_BEGIN
-
 namespace __utils
 {
+# ifndef __REPLACER
+#  define __REPLACER
     class __replacer
     {
     public:
@@ -30,7 +30,10 @@ namespace __utils
     private:
         std::string __str;
     };
+# endif /* __REPLACER */
 
+# ifndef __NONCOPYBLE
+#  define __NONCOPYBLE
     template <class ...>
     struct __noncopyble
     {
@@ -38,7 +41,10 @@ namespace __utils
         __noncopyble(const __noncopyble &)=delete;
         __noncopyble &operator =(const __noncopyble &)=delete;
     };
+# endif /* __NONCOPYBLE */
 
+# ifndef __NONMOVABLE
+#  define __NONMOVABLE
     template <class ...>
     struct __nonmovable
     {
@@ -46,14 +52,17 @@ namespace __utils
         __nonmovable(const __nonmovable &&)=delete;
         __nonmovable &&operator =(const __nonmovable &&)=delete;
     };
+# endif /* __NONMOVABLE */
 
+# ifndef __NONCOPYMOVABLE
+#  define __NONCOPYMOVABLE
     template <class ...T>
     struct __noncopymovable : public __noncopyble<T...>, public __nonmovable<T...>
     {
         __noncopymovable()=default;
     };
-}
+# endif /* __NONCOPYMOVABLE */
 
-CLLIB_NAMESPACE_END
+} /* namespace __utils */
 
 #endif /* CLLIB_UTILS_HPP */
