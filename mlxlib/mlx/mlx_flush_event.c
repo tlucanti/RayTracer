@@ -22,4 +22,5 @@ int	mlx_flush_event(t_xvar *xvar)
   {
      XNextEvent(xvar->display,&ev);
   }
+  return 0;
 }

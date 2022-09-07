@@ -34,4 +34,5 @@ int	mlx_put_image_to_window(t_xvar *xvar,t_win_list *win,t_img *img,
 	    0,0,img->width,img->height,x,y);
   if (xvar->do_flush)
     XFlush(xvar->display);
+  return 0;
 }

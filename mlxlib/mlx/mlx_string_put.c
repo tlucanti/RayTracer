@@ -23,4 +23,5 @@ int		mlx_string_put(t_xvar *xvar,t_win_list *win,
    XDrawString(xvar->display,win->window,win->gc,x,y,string,strlen(string));
    if (xvar->do_flush)
      XFlush(xvar->display);
+   return 0;
 }

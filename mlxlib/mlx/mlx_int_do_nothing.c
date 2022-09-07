@@ -10,7 +10,7 @@
 
 
 
-int	mlx_int_do_nothing(void *param)
+int	mlx_int_do_nothing(__attribute__((unused)) void *param)
 {
-  
+  return 0;
 }

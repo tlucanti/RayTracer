@@ -35,4 +35,5 @@ int	mlx_destroy_window(t_xvar *xvar,t_win_list *win)
   free(win);
   if (xvar->do_flush)
     XFlush(xvar->display);
+  return 0;
 }

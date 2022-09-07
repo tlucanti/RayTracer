@@ -14,6 +14,12 @@
 ** Internal settings for MiniLibX
 */
 
+#ifndef MLX_INT_H
+# define MLX_INT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include	<stdlib.h>
 #include	<stdio.h>
@@ -103,7 +109,7 @@ typedef struct	s_xvar
   Colormap	cmap;
   int		private_cmap;
   t_win_list	*win_list;
-  int		(*loop_hook)();
+  int		(*loop_hook)(void *);
   void		*loop_param;
   int		use_xshm;
   int		pshm_format;
@@ -113,13 +119,28 @@ typedef struct	s_xvar
 
 
 int	mlx_int_do_nothing();
-int	mlx_int_get_good_color();
+
 int	mlx_int_find_in_pcm();
-int	mlx_int_anti_resize_win();
-int	mlx_int_wait_first_expose();
-int	mlx_int_rgb_conversion();
-int	mlx_int_deal_shm();
 void	*mlx_int_new_xshm_image();
 char    **mlx_int_str_to_wordtab();
 void	*mlx_new_image();
 int	shm_att_pb();
+
+int		mlx_int_get_visual(t_xvar *xvar);
+int	mlx_int_deal_shm(t_xvar *xvar);
+int	mlx_int_rgb_conversion(t_xvar *xvar);
+int	mlx_int_anti_resize_win(t_xvar *xvar,Window win,int w,int h);
+int	mlx_int_wait_first_expose(t_xvar *xvar,Window win);
+int		mlx_int_get_good_color(t_xvar *xvar,int color);
+int	mlx_int_set_win_event_mask(t_xvar *xvar);
+int	mlx_int_str_str(char *str,char *find,int len);
+int             mlx_get_color_value(t_xvar *xvar,int color);
+int	mlx_int_str_str_cote(char *str,char *find,int len);
+
+size_t strlcpy (char *dst, const char *src, size_t size);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* MLX_INT_H */

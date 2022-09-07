@@ -17,7 +17,6 @@
 int	mlx_int_set_win_event_mask(t_xvar *xvar)
 {
   t_win_list	*win;
-  int		mask;
   int		i;
   XSetWindowAttributes	xwa;
 
@@ -31,4 +30,5 @@ int	mlx_int_set_win_event_mask(t_xvar *xvar)
       XChangeWindowAttributes(xvar->display, win->window, CWEventMask, &xwa);
       win = win->next;
     }
+  return 0;
 }
