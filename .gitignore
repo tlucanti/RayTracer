@@ -3,3 +3,7 @@ cmake-build-debug
 .gdb_history
 obj
 dep
+*.o
+*.a
+*.so
+a.out

@@ -1,0 +1,13 @@
+
+#ifndef MLXLIB_HPP
+# define MLXLIB_HPP
+
+# include "MLXdefs.hpp"
+# include "MLXexception.hpp"
+# include "MLXutils.hpp"
+
+# include "MLXcore.hpp"
+# include "MLXwindow.hpp"
+# include "MLXimage.hpp"
+
+#endif /* MLXLIB_HPP */
