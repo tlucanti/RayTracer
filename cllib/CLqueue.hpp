@@ -27,6 +27,24 @@ public:
             throw CLexception(error);
     }
 
+    void finish() const
+    {
+        cl_int  error;
+
+        error = clFinish(queue);
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+    }
+
+    void flush() const
+    {
+        cl_int  error;
+
+        error = clFlush(queue);
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+    }
+
     WUR const cl_command_queue &__get_queue() const
     {
         return queue;

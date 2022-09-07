@@ -59,8 +59,7 @@ int main()
     float arg2 = 0.5;
     cllib::CLarray<float> array3(5, context, queue);
 
-    size_t global_size[1] = { array1.size() };
-    cllib::CLkernel kernel(program, global_size);
+    cllib::CLkernel kernel(program, array1.size());
 
     kernel.set_arg(0, array1);
     kernel.set_arg(1, arg2);
