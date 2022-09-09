@@ -19,7 +19,7 @@ public:
 
     ~MLXcore() = default;
 
-private:
+//private:
     void    *mlx_ptr;
 
     friend class MLXwindow;

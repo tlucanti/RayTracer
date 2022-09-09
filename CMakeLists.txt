@@ -32,7 +32,7 @@ add_executable(RayTracer src/main.cpp)
 
 find_library(OPENCL_LIB OpenCL)
 #find_library(MLX_LIB mlx)
-set(MLX_LIB mlxlib/libmlx.so)
+set(MLX_LIB mlxlib/libmlx.a)
 #find_library(X11_LIB X11)
 
 message(${OPENCL_LIB})

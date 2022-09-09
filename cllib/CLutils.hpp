@@ -4,6 +4,7 @@
 
 # include <regex>
 # include <string>
+# include <fstream>
 
 namespace __utils
 {
@@ -31,6 +32,21 @@ namespace __utils
         std::string __str;
     };
 # endif /* __REPLACER */
+
+# ifndef __GET_STREAM_CONTENT
+#  define __GET_STREAM_CONTENT
+    std::string __get_stream_content(std::ifstream &stream)
+    {
+        std::streamsize start = stream.gcount();
+        stream.ignore(std::numeric_limits<std::streamsize>::max());
+        std::streamsize length = stream.gcount();
+        stream.seekg(0, std::ios_base::beg);
+        std::string content;
+        content.resize(length - start);
+        stream.read(content.data(), length - start);
+        return content;
+    }
+# endif /* __GET_STREAM_CONTENT */
 
 # ifndef __NONCOPYBLE
 #  define __NONCOPYBLE

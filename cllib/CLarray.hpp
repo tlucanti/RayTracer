@@ -44,7 +44,7 @@ public:
     ) :
         buffer(), buff_size(vec.size()), ref_cnt(1)
     {
-        static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
+//        static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
         cl_int  error;
 
         buffer = clCreateBuffer(context.__get_context(), flag, buff_size * sizeof(value_type), host_ptr, &error);
@@ -83,7 +83,7 @@ public:
         cl_event *event=nullptr
     )
     {
-        static_assert(IS_ARITHMETIC(value_type), "array type can only be integral");
+//        static_assert(IS_ARITHMETIC(value_type), "array type can only be integral");
         cl_int  error;
 
         if (vec.size() > buff_size)
@@ -215,7 +215,7 @@ public:
     }
 # endif
 
-    WUR const cl_mem &__get_buffer() const
+    WUR const cl_mem &data() const
     {
         return buffer;
     }

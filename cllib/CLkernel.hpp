@@ -26,21 +26,9 @@ public:
     {
         cl_int  error;
 
-        global_work_size_vector = std::vector<size_t>(1, global_work_size);
-        if (local_work_size == 0)
-            local_work_size_ptr = nullptr;
-        else
-        {
-            local_work_size_vector = std::vector<size_t>(1, local_work_size);
-            local_work_size_ptr = local_work_size_vector.data();
-        }
-        if (global_work_offset == 0)
-            global_work_offset_ptr = nullptr;
-        else
-        {
-            global_work_offset_vector = std::vector<size_t>(1, global_work_offset);
-            global_work_offset_ptr = global_work_offset_vector.data();
-        }
+        set_global_work_size(global_work_size);
+        set_local_work_size(local_work_size);
+        set_global_work_offset(global_work_offset);
 
         kernel = clCreateKernel(program.__get_program(), program.get_program_name().c_str(), &error);
         if (error)
@@ -60,20 +48,9 @@ public:
     {
         cl_int  error;
 
-        if (not local_work_size.empty())
-        {
-            if (local_work_size.size() != global_work_size.size())
-                throw std::runtime_error("local_work_size and global_work_size dimensions mismatch");
-        }
-        else
-            local_work_size_ptr = local_work_size_vector.data();
-        if (not global_work_offset.empty())
-        {
-            if (global_work_offset.size() != global_work_size.size())
-                throw std::runtime_error("global_work_offset and global_work_size dimensions mismatch");
-        }
-        else
-            global_work_offset_ptr = global_work_offset_vector.data();
+        set_global_work_size(global_work_size);
+        set_local_work_size(local_work_size);
+        set_global_work_offset(global_work_offset);
 
         kernel = clCreateKernel(program.__get_program(), program.get_program_name().c_str(), &error);
         if (error)
@@ -101,6 +78,11 @@ public:
 
     void set_local_work_size(const std::vector<size_t> &local_work_size)
     {
+        if (local_work_size.empty())
+        {
+            local_work_size_ptr = nullptr;
+            return ;
+        }
         if (local_work_size.size() != global_work_size_vector.size())
             throw std::runtime_error("local_work_size and global_work_size dimensions mismatch");
         local_work_size_vector = local_work_size;
@@ -122,6 +104,11 @@ public:
 
     void set_global_work_offset(const std::vector<size_t> &global_work_offset)
     {
+        if (global_work_offset.empty())
+        {
+            global_work_offset_ptr = nullptr;
+            return ;
+        }
         if (global_work_offset.size() != global_work_size_vector.size())
             throw std::runtime_error("global_work_offset and global_work_size dimensions mismatch");
         global_work_offset_vector = global_work_offset;
@@ -146,7 +133,7 @@ public:
     {
         cl_int  error;
 
-        error = clSetKernelArg(kernel, argi, sizeof(cl_mem), &array.__get_buffer());
+        error = clSetKernelArg(kernel, argi, sizeof(cl_mem), &array.data());
         if (error != CL_SUCCESS)
             throw CLexception(error);
     }

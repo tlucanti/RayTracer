@@ -2,12 +2,14 @@
 #ifndef CLLIB_PROGRAM_HPP
 # define CLLIB_PROGRAM_HPP
 
-# include <string>
-
 # include "CLdefs.hpp"
+# include "CLutils.hpp"
 # include "CLexception.hpp"
 # include "CLcontext.hpp"
 # include "CLdevice.hpp"
+
+# include <string>
+# include <fstream>
 
 CLLIB_NAMESPACE_BEGIN
 
@@ -18,6 +20,14 @@ public:
         const CLbuiltinprog &program,
         const CLcontext &context
     ) : CLprogram(program.get_programd_arg_num(), program.get_program_source(), program.get_program_name(), context) {}
+
+    CLprogram(
+        int argc,
+        std::ifstream stream,
+        const std::string &program_name,
+        const CLcontext &context
+    ) : CLprogram(argc, __utils::__get_stream_content(stream), program_name, context)
+    {}
 
     CLprogram(
         int argc,
@@ -46,6 +56,7 @@ public:
 
     void compile(
         const CLdevice &device,
+        bool verbose=false,
         const char *options=nullptr,
         cl_uint num_devices=1,
         void (CL_CALLBACK *notify)(cl_program, void *)=nullptr,
@@ -57,6 +68,8 @@ public:
         builder.program = program;
         builder.device = device.__get_device();
         error = clBuildProgram(program, num_devices, &device.__get_device(), options, notify, user_data);
+        if (error == CL_BUILD_PROGRAM_FAILURE and verbose)
+            std::cout << builder.get_program_log() << std::endl;
         if (error != CL_SUCCESS)
             throw CLexception(error);
     }
