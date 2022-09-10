@@ -18,7 +18,7 @@ public:
     MLXwindow(const MLXcore &core, int width=800, int height=600, const std::string &title="")
         : mlx_ptr(core.mlx_ptr)
     {
-        window_ptr = mlx_new_window(mlx_ptr, width, height, title.c_str());
+        window_ptr = mlx_new_window(mlx_ptr, width, height, const_cast<char *>(title.c_str()));
         if (window_ptr == nullptr)
             throw MLXexception("mlx window initialization error");
     }

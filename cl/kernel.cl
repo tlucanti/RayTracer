@@ -69,8 +69,8 @@ __kernel void ray_tracer(
         int height
     )
 {
-    const float rheight = 1 / height;
-    const float rwidth = 1 / width;
+    const float rheight = 1.0f / height;
+    const float rwidth = 1.0f / width;
 
     int z = get_global_id(0);
     int y = get_global_id(1);

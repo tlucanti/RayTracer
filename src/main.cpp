@@ -47,8 +47,8 @@ int main()
     int spheres_num = sp_vec.size();
     int cameras_num = cam_vec.size();
 
-    const int width = 1920;
-    const int height = 1080;
+    const int width = 1000;
+    const int height = 1000;
 
     cllib::CLarray<unsigned int> canvas(width * height, context, queue);
     cllib::CLkernel kernel(program, {width, height});

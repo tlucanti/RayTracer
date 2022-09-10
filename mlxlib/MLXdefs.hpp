@@ -22,9 +22,9 @@ namespace Color
     const int green =   0x00FF00;
     const int blue =    0x0000FF;
     const int cyan =    0x00FFFF;
-    const int magneta = 0xFF00FF;
+    const int magenta = 0xFF00FF;
     const int yellow =  0xFFFF00;
-    const int purple =  magneta;
+    const int purple =  magenta;
 }
 
 MLXLIB_NAMESPACE_END
