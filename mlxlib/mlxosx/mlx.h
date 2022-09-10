@@ -46,6 +46,9 @@
 
 #define	MLX_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 void	*mlx_init();
 /*
@@ -145,5 +148,9 @@ int     mlx_mouse_get_pos(void *win_ptr, int *x, int *y);
 int	mlx_do_key_autorepeatoff(void *mlx_ptr);
 int	mlx_do_key_autorepeaton(void *mlx_ptr);
 int	mlx_do_sync(void *mlx_ptr);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* MLX_H */

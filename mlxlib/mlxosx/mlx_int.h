@@ -6,6 +6,12 @@
 // include opengl needed before mlx_int.h
 //
 
+#ifndef MLX_INT_H
+#define MLX_INT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
 
 #define	MAX_EVENT	32
 #define MAX_PIXEL_NB	200000
@@ -100,3 +106,8 @@ int	mlx_destroy_image(mlx_ptr_t *mlx_ptr, mlx_img_list_t *img_ptr);
 void	*mlx_new_image();
 void    *mlx_xpm_to_image(mlx_ptr_t *xvar,char **xpm_data,int *width,int *height);
 int	mlx_do_sync(mlx_ptr_t *mlx_ptr);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus
+

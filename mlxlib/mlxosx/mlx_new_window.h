@@ -6,6 +6,13 @@
 // include opengl needed before mlx_int.h
 //
 
+#ifndef MLX_NEW_WINDOW_H
+#define MLX_NEW_WINDOW_H
+
+#ifdef __cplusplus
+extern "C"
+#endif /* _cplusplus */
+
 #import <Cocoa/Cocoa.h>
 #import "mlx_int.h"
 
@@ -55,3 +62,8 @@
 - (void) setKeyRepeat:(int)mode;
 - (void) ctxNeedsUpdate;
 @end
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus
+

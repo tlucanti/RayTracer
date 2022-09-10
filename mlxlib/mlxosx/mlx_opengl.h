@@ -7,6 +7,13 @@
 **
 */
 
+#ifndef MLX_OPENGL_H
+#define MLX_OPENFGL_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void    *mlx_new_opengl_window(void *mlx_ptr, int size_x, int size_y, char *title);
 
 /* create an opengl window. put_image & pixel_put & string_put do not work there. */
@@ -19,3 +26,8 @@ int	mlx_opengl_swap_buffers(void *win_ptr);
 int	mlx_opengl_window_set_context(void *win_ptr);
 
 /* in case multiple opengl windows are present, change opengl active context */
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus
+
