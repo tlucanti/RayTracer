@@ -3,6 +3,7 @@
 #include "mlxlib"
 
 #include <fstream>
+#include <cmath>
 
 const char *fname = "../cl/kernel.cl";
 
@@ -40,8 +41,8 @@ typedef struct camera_s
     camera_s(cl_float3 position, cl_float3 d)
         : position(position)
     {
-        float length = d.x * d.x + d.y + d.y + d.z * d.z;
-        direction = {d.x / length, d.y / length, d.z / length};
+        float length = 1 / sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+        direction = {d.x * length, d.y * length, d.z * length};
     }
 } PACKED camera_t;
 
@@ -92,25 +93,22 @@ int main()
     program.compile(device, true, "-D__OPENCL");
 
     std::vector<sphere_t> sp_vec = {
-            {{0,-1,3}, 1, Color::red},
-            {{2, 0, 4}, 1, Color::blue},
-            {{-2, 0, 4}, 1, Color::green}
+            sphere_t({0,-1,3}, 1, Color::red),
+            sphere_t({2, 0, 4}, 1, Color::blue),
+            sphere_t({-2, 0, 4}, 1, Color::green)
     };
-    sphere_t *s = &sp_vec.at(0);
-    std::cout << s->center.x << ' ' << s->center.y << ' ' << s->center.z << std::endl;
-    std::cout << *(float *)(s) << ' ' << *(float *)(s + 1) << ' ' << *(float *)(s + 2) << std::endl;
     std::vector<camera_t> cam_vec = {
-        camera_t({0, 0, 0}, {0, 0, 0})
+            camera_t({0, 0, 0}, {0, 0, 1})
     };
 
     std::vector<ambient_t> amb_vec = {
-        ambient_t(0.2, Color::white)
+            ambient_t(0.2, Color::white)
     };
     std::vector<point_t> pt_vec = {
-        point_t({2, 1, 0}, 0.6, Color::white)
+            point_t({2, 1, 0}, 0.6, Color::white)
     };
     std::vector<direct_t> dir_vec = {
-        direct_t({1, 4, 4}, 0.2, Color::white)
+            direct_t({1, 4, 4}, 0.2, Color::white)
     };
 
     cllib::CLarray<sphere_t> spheres(sp_vec, context, queue);

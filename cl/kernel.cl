@@ -190,7 +190,7 @@ __kernel void ray_tracer(
         points_num,
         directs_num,
 
-        cameras[0].direction,
+        cameras[0].position,
         vec
     );
     unsigned int int_color =
