@@ -8,18 +8,77 @@ const char *fname = "../cl/kernel.cl";
 
 #define PACKED __attribute__((packed))
 
+namespace Color
+{
+    const cl_float3 white = {255, 255, 255};
+    const cl_float3 black = {0, 0, 0};
+    const cl_float3 red = {255, 0, 0};
+    const cl_float3 green = {0, 255, 0};
+    const cl_float3 blue = {0, 0, 255};
+    const cl_float3 cyan = {0, 255, 255};
+    const cl_float3 magenta = {255, 0, 255};
+    const cl_float3 yellow = {255, 255, 0};
+    const cl_float3 purple = magenta;
+}
+
 typedef struct sphere_s
 {
     cl_float3   center;
     float       radius;
-    int         color;
+    cl_float3        color;
+
+    sphere_s(cl_float3 center, float radius, cl_float3 color)
+        : center(center), radius(radius), color(color)
+    {}
 } PACKED sphere_t;
 
 typedef struct camera_s
 {
-    cl_float3   center;
+    cl_float3   position;
     cl_float3   direction;
+
+    camera_s(cl_float3 position, cl_float3 d)
+        : position(position)
+    {
+        float length = d.x * d.x + d.y + d.y + d.z * d.z;
+        direction = {d.x / length, d.y / length, d.z / length};
+    }
 } PACKED camera_t;
+
+typedef struct ambient_s
+{
+    float   intensity;
+    cl_float3    color;
+
+    ambient_s(float intensity, cl_float3 color)
+        : intensity(intensity), color(color)
+    {}
+} PACKED ambient_t;
+
+typedef struct point_s
+{
+    cl_float3   position;
+    float       intensity;
+    cl_float3        color;
+
+    point_s(cl_float3 position, float intencity, cl_float3 color)
+        : position(position), intensity(intencity), color(color)
+    {}
+} PACKED point_t;
+
+typedef struct direct_s
+{
+    cl_float3   direction;
+    float       intensity;
+    cl_float3        color;
+
+    direct_s(cl_float3 d, float intensity, cl_float3 color)
+        : intensity(intensity), color(color)
+    {
+        float length = d.x * d.x + d.y + d.y + d.z * d.z;
+        direction = {d.x / length, d.y / length, d.z / length};
+    }
+} PACKED direct_t;
 
 int main()
 {
@@ -30,22 +89,36 @@ int main()
     cllib::CLqueue queue(context, device);
 
     cllib::CLprogram program(4, std::ifstream(fname), "ray_tracer", context);
-    program.compile(device, true);
+    program.compile(device, true, "-D__OPENCL");
 
     std::vector<sphere_t> sp_vec = {
-        {{0,-1,3}, 1, 0xFF0000},
-        {{2, 0, 4}, 1, 0x000FF},
-        {{-2, 0, 4}, 1, 0x00FF00}
+            {{0,-1,3}, 1, Color::red},
+            {{2, 0, 4}, 1, Color::blue},
+            {{-2, 0, 4}, 1, Color::green}
     };
+    sphere_t *s = &sp_vec.at(0);
+    std::cout << s->center.x << ' ' << s->center.y << ' ' << s->center.z << std::endl;
+    std::cout << *(float *)(s) << ' ' << *(float *)(s + 1) << ' ' << *(float *)(s + 2) << std::endl;
     std::vector<camera_t> cam_vec = {
-        {{0, 0, 0}, {0, 0, 0}}
+        camera_t({0, 0, 0}, {0, 0, 0})
+    };
+
+    std::vector<ambient_t> amb_vec = {
+        ambient_t(0.2, Color::white)
+    };
+    std::vector<point_t> pt_vec = {
+        point_t({2, 1, 0}, 0.6, Color::white)
+    };
+    std::vector<direct_t> dir_vec = {
+        direct_t({1, 4, 4}, 0.2, Color::white)
     };
 
     cllib::CLarray<sphere_t> spheres(sp_vec, context, queue);
     cllib::CLarray<camera_t> cameras(cam_vec, context, queue);
 
-    int spheres_num = sp_vec.size();
-    int cameras_num = cam_vec.size();
+    cllib::CLarray<ambient_t> ambients(amb_vec, context, queue);
+    cllib::CLarray<point_t> points(pt_vec, context, queue);
+    cllib::CLarray<direct_t> directs(dir_vec, context, queue);
 
     const int width = 1000;
     const int height = 1000;
@@ -55,11 +128,17 @@ int main()
 
     kernel.set_arg(0, canvas);
     kernel.set_arg(1, spheres);
-    kernel.set_arg(2, spheres_num);
-    kernel.set_arg(3, cameras);
-    kernel.set_arg(4, cameras_num);
-    kernel.set_arg(5, width);
-    kernel.set_arg(6, height);
+    kernel.set_arg(2, ambients);
+    kernel.set_arg(3, points);
+    kernel.set_arg(4, directs);
+    kernel.set_arg(5, cameras);
+    kernel.set_arg(6, static_cast<int>(spheres.size()));
+    kernel.set_arg(7, static_cast<int>(ambients.size()));
+    kernel.set_arg(8, static_cast<int>(points.size()));
+    kernel.set_arg(9, static_cast<int>(directs.size()));
+    kernel.set_arg(10, static_cast<int>(cameras.size()));
+    kernel.set_arg(11, width);
+    kernel.set_arg(12, height);
 
     kernel.run(queue);
     auto pixel_data = canvas.dump(queue);

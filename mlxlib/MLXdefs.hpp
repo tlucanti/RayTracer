@@ -18,7 +18,7 @@ namespace Color
 {
     const int white =   0xFFFFFF;
     const int black =   0x000000;
-    const int red =     0xFF00FF;
+    const int red =     0xFF0000;
     const int green =   0x00FF00;
     const int blue =    0x0000FF;
     const int cyan =    0x00FFFF;

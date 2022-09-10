@@ -1,5 +1,22 @@
 
-//typedef float float3;
+#ifndef __OPENCL
+# define __kernel
+# define __global
+# define __constant
+# define __local
+# define INFINITY 1e38f
+
+typedef float float3;
+typedef char uchar3;
+
+int get_global_id(int);
+float dot(float3, float3);
+float sqrt(float);
+float fmin(float, float);
+float fmax(float, float);
+float3 normalize(float3);
+
+#endif
 
 #define PACKED  __attribute__((packed))
 #define NULL    (void *)0
@@ -11,12 +28,32 @@ typedef struct sphere_s
 {
    float3  center;
    float   radius;
-   int     color;
+    float3     color;
 } PACKED sphere_t;
+
+typedef struct ambient_s
+{
+    float   intensity;
+    float3    color;
+} PACKED ambient_t;
+
+typedef struct point_s
+{
+    float3  position;
+    float   intensity;
+    float3    color;
+} PACKED point_t;
+
+typedef struct direct_s
+{
+    float3  direction;
+    float   intensity;
+    float3    color;
+} PACKED direct_t;
 
 typedef struct camera_s
 {
-    float3  center;
+    float3  position;
     float3  direction;
 } PACKED camera_t;
 
@@ -40,10 +77,59 @@ float intersect_sphere(float3 camera, float3 direction, __global sphere_t *sp)
    return mn;
 }
 
-int    trace_ray(__global sphere_t *spheres, int spheres_num, float3 camera, float3 direction)
+float compute_lightning(
+        __global ambient_t *ambients,
+        __global point_t *points,
+        __global direct_t *directs,
+
+        int ambients_num,
+        int points_num,
+        int directs_num,
+
+        float3 point,
+        float3 normal)
+{
+    float intesity = 0;
+
+    for (int i=0; i < ambients_num; ++i)
+    intesity += ambients[i].intensity;
+
+    for (int i=0; i < points_num; ++i)
+    {
+        float3 L = normalize(points[i].position - point);
+
+        float normal_angle = dot(normal, L);
+        if (normal_angle > 1e-3)
+            intesity += points[i].intensity * normal_angle;
+    }
+
+    for (int i=0; i < directs_num; ++i)
+    {
+        float normal_angle = dot(normal, directs[i].direction);
+        if (normal_angle > 1e-3)
+            intesity += directs[i].intensity * normal_angle;
+    }
+
+    return intesity;
+}
+
+float3    trace_ray(
+        __global sphere_t *spheres,
+        __global ambient_t *ambients,
+        __global point_t *points,
+        __global direct_t *directs,
+
+        int spheres_num,
+        int ambients_num,
+        int points_num,
+        int directs_num,
+
+        float3 camera,
+        float3 direction
+    )
 {
     float closest_t = INFINITY;
-    __global sphere_t *closest_sphere = NULL;
+    __global sphere_t *closest_sphere = (__global sphere_t *)NULL;
 
     for (int i=0; i < spheres_num; ++i)
     {
@@ -56,15 +142,28 @@ int    trace_ray(__global sphere_t *spheres, int spheres_num, float3 camera, flo
     }
     if (closest_sphere == NULL)
         return BLACK;
-    return closest_sphere->color;
+
+    float3 point = camera + closest_t * direction;
+    float3 normal = point - closest_sphere->center;
+    float factor = compute_lightning(ambients, points, directs, ambients_num, points_num, directs_num, point, normal);
+    return closest_sphere->color * factor;
 }
 
 __kernel void ray_tracer(
         __global unsigned int *canvas,
+
         __global sphere_t *spheres,
-        int spheres_num,
+        __global ambient_t *ambients,
+        __global point_t *points,
+        __global direct_t *directs,
         __global camera_t *cameras,
+
+        int spheres_num,
+        int ambients_num,
+        int points_num,
+        int directs_num,
         int cameras_num,
+
         int width,
         int height
     )
@@ -80,6 +179,23 @@ __kernel void ray_tracer(
         1
     );
     vec = normalize(vec);
-    int color = trace_ray(spheres, spheres_num, cameras[0].direction, vec);
-    canvas[y * width + z] = color;
+    float3 color = trace_ray(
+        spheres,
+        ambients,
+        points,
+        directs,
+
+        spheres_num,
+        ambients_num,
+        points_num,
+        directs_num,
+
+        cameras[0].direction,
+        vec
+    );
+    unsigned int int_color =
+            (unsigned int)(color.x) << 16
+            | (unsigned int)(color.y) << 8
+            | (unsigned int)(color.z);
+    canvas[(height - y - 1) * width + z] = int_color;
 }
