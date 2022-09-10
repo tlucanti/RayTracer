@@ -17,35 +17,39 @@
 #ifndef MLX_INT_H
 # define MLX_INT_H
 
-#ifdef __cplusplus
+# ifdef __cplusplus
 extern "C" {
-#endif
+# endif
 
-#include	<stdlib.h>
-#include	<stdio.h>
-#include	<string.h>
-#include        <unistd.h>
-#include        <fcntl.h>
-#include        <sys/mman.h>
-#include	<X11/Xlib.h>
-#include	<X11/Xutil.h>
-#include	<sys/ipc.h>
-#include	<sys/shm.h>
-#include	<X11/extensions/XShm.h>
-/* #include	<X11/xpm.h> */
+# include	<stdlib.h>
+# include	<stdio.h>
+# include	<string.h>
+# include        <unistd.h>
+# include        <fcntl.h>
+# include        <sys/mman.h>
+# include	<X11/Xlib.h>
+# include	<X11/Xutil.h>
+# include	<sys/ipc.h>
+# include	<sys/shm.h>
+# include	<X11/extensions/XShm.h>
+/* # include	<X11/xpm.h> */
 
-
-#define	MLX_TYPE_SHM_PIXMAP	3
-#define	MLX_TYPE_SHM		2
-#define	MLX_TYPE_XIMAGE		1
-
-#define	MLX_MAX_EVENT		LASTEvent
+# ifndef __APPLE__
+size_t strlcpy (char *dst, const char *src, size_t size);
+# endif /* __APPLE__ */
 
 
-#define	ENV_DISPLAY		"DISPLAY"
-#define	LOCALHOST		"localhost"
-#define	ERR_NO_TRUECOLOR	"MinilibX Error : No TrueColor Visual available.\n"
-#define	WARN_SHM_ATTACH		"MinilibX Warning : X server can't attach shared memory.\n"
+# define	MLX_TYPE_SHM_PIXMAP	3
+# define	MLX_TYPE_SHM		2
+# define	MLX_TYPE_XIMAGE		1
+
+# define	MLX_MAX_EVENT		LASTEvent
+
+
+# define	ENV_DISPLAY		"DISPLAY"
+# define	LOCALHOST		"localhost"
+# define	ERR_NO_TRUECOLOR	"MinilibX Error : No TrueColor Visual available.\n"
+# define	WARN_SHM_ATTACH		"MinilibX Warning : X server can't attach shared memory.\n"
 
 
 typedef	struct	s_xpm_col
@@ -137,10 +141,15 @@ int	mlx_int_str_str(char *str,char *find,int len);
 int             mlx_get_color_value(t_xvar *xvar,int color);
 int	mlx_int_str_str_cote(char *str,char *find,int len);
 
-size_t strlcpy (char *dst, const char *src, size_t size);
+extern KeySym XkbKeycodeToKeysym(
+        Display*		/* display */,
+        unsigned int	/* keycode */,
+        KeyCode		/* keycode */,
+        int			/* index */
+);
 
-#ifdef __cplusplus
+# ifdef __cplusplus
 }
-#endif
+# endif
 
 #endif /* MLX_INT_H */

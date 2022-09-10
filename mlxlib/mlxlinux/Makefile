@@ -50,12 +50,22 @@ SRC		=	mlx_init.c \
 OBJ		=	$(SRC:.c=.o)
 CFLAGS	=	-O3 -Wall -Wextra -fPIC -I$(INC)
 
+LIBRARY	=
+OS		=	$(shell uname -s | tr A-Z a-z)
+
+ifeq ($(OS), linux)
+	LIBRARY		=	-lXext -lX11 -lm -lz
+endif
+ifeq ($(OS), darwin)
+	LIBRARY		=	-framework OpenGL -framework AppKit -lz
+endif
+
 DESTDIR	=	/usr/local
 
 all: $(NAME) $(DOCP)
 
 $(NAME): $(OBJ)
-	$(CC) -shared -o $(NAME) $(OBJ)
+	$(CC) -shared -o $(NAME) $(OBJ) $(LIBRARY)
 
 do_cp:
 
