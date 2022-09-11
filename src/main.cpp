@@ -28,9 +28,10 @@ typedef struct sphere_s
     float       radius;
     cl_float3        color;
     int       specular;
+    float       reflective;
 
-    sphere_s(cl_float3 center, float radius, cl_float3 color, int specular)
-        : center(center), radius(radius), color(color), specular(specular)
+    sphere_s(cl_float3 center, float radius, cl_float3 color, int specular, float reflective)
+        : center(center), radius(radius), color(color), specular(specular), reflective(reflective)
     {}
 } PACKED sphere_t;
 
@@ -94,9 +95,10 @@ int main()
     program.compile(device, true, "-D__OPENCL");
 
     std::vector<sphere_t> sp_vec = {
-            sphere_t({0,-1,3}, 1, Color::red, 500),
-            sphere_t({2, 0, 4}, 1, Color::blue, 500),
-            sphere_t({-2, 0, 4}, 1, Color::green, 10)
+            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2f),
+            sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2f),
+            sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2f),
+            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2f)
     };
     std::vector<camera_t> cam_vec = {
             camera_t({0, 0, 0}, {0, 0, 1})

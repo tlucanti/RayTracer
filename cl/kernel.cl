@@ -20,7 +20,7 @@ float pow(float, float);
 
 #define PACKED  __attribute__((packed))
 #ifndef NULL
-# define NULL    (void *)0
+# define NULL    0
 #endif /* NULL */
 
 #define BLACK   0x000000
@@ -32,6 +32,7 @@ typedef struct sphere_s
    float   radius;
     float3     color;
     int   specular;
+    float reflective;
 } PACKED sphere_t;
 
 typedef struct ambient_s
@@ -60,7 +61,25 @@ typedef struct camera_s
     float3  direction;
 } PACKED camera_t;
 
-float intersect_sphere(float3 camera, float3 direction, __global sphere_t *sp)
+typedef struct scene_s
+{
+    __global const sphere_t *__restrict spheres;
+    const int spheres_num;
+
+    __global const ambient_t *__restrict ambients;
+    const int ambients_num;
+
+    __global const point_t *__restrict points;
+    const int points_num;
+
+    __global const direct_t *__restrict directs;
+    const int directs_num;
+
+    __global const camera_t *__restrict cameras;
+    const int cameras_num;
+} scene_t;
+
+float intersect_sphere(float3 camera, float3 direction, __global const sphere_t *__restrict sp)
 {
    float3  oc = camera - sp->center;
    
@@ -80,12 +99,47 @@ float intersect_sphere(float3 camera, float3 direction, __global sphere_t *sp)
    return mn;
 }
 
+const __global sphere_t *__restrict closest_intersection(
+        const scene_t *__restrict scene,
+        float3 camera,
+        float3 direction,
+        float start,
+        float end,
+        float *closest_t_ptr
+    )
+{
+    float closest_t = INFINITY;
+    __global const sphere_t *closest_sphere = NULL;
+
+    for (int i=0; i < scene->spheres_num; ++i)
+    {
+        float t = intersect_sphere(camera, direction, scene->spheres + i);
+
+        if (t < start || t > end)
+            continue ;
+        if (t < closest_t)
+        {
+            closest_t = t;
+            closest_sphere = scene->spheres + i;
+        }
+    }
+
+    *closest_t_ptr = closest_t;
+    return closest_sphere;
+}
+
 float3 reflect_ray(float3 ray, float3 normal)
 {
     return 2 * normal * dot(ray, normal) - ray;
 }
 
-float compute_lightning_single(float3 light_vector, float3 normal_vector, float3 direction, float light_intensity, int specular)
+float compute_lightning_single(
+        float3 light_vector,
+        float3 normal_vector,
+        float3 direction,
+        float light_intensity,
+        int specular
+    )
 {
     float intensity = 0;
 
@@ -101,89 +155,69 @@ float compute_lightning_single(float3 light_vector, float3 normal_vector, float3
             intensity += light_intensity * pow(reflected_angle, specular);
     }
 
-    return      intensity;
+    return intensity;
 }
 
 float compute_lightning(
-        __global ambient_t *ambients,
-        __global point_t *points,
-        __global direct_t *directs,
-
-        int ambients_num,
-        int points_num,
-        int directs_num,
-
+        const scene_t *scene,
         float3 point,
         float3 normal,
         float3 direction,
-
         int specular)
 {
     float intensity = 0;
     float3 light_vector;
+    float _;
 
-    for (int i=0; i < ambients_num; ++i)
-        intensity += ambients[i].intensity;
+    for (int i=0; i < scene->ambients_num; ++i)
+        intensity += scene->ambients[i].intensity;
 
-    for (int i=0; i < points_num; ++i)
+    for (int i=0; i < scene->points_num; ++i)
     {
-        light_vector = normalize(points[i].position - point);
-        intensity += compute_lightning_single(light_vector, normal, direction, points[i].intensity, specular);
+        light_vector = normalize(scene->points[i].position - point);
+        if (closest_intersection(scene, point, light_vector, 1e-3, 1, &_) != NULL)
+            continue ;
+        intensity += compute_lightning_single(light_vector, normal, direction, scene->points[i].intensity, specular);
     }
 
-    for (int i=0; i < directs_num; ++i)
+    for (int i=0; i < scene->directs_num; ++i)
     {
-        light_vector = directs[i].direction;
-        intensity += compute_lightning_single(light_vector, normal, direction, directs[i].intensity, specular);
+        light_vector = scene->directs[i].direction;
+        if (closest_intersection(scene, point, light_vector, 1e-3, INFINITY, &_) != NULL)
+            continue ;
+        intensity += compute_lightning_single(light_vector, normal, direction, scene->directs[i].intensity, specular);
     }
 
     return fmin(1, intensity);
 }
 
 float3    trace_ray(
-        __global sphere_t *spheres,
-        __global ambient_t *ambients,
-        __global point_t *points,
-        __global direct_t *directs,
-
-        int spheres_num,
-        int ambients_num,
-        int points_num,
-        int directs_num,
-
+        const scene_t *scene,
         float3 camera,
         float3 direction
     )
 {
-    float closest_t = INFINITY;
-    __global sphere_t *closest_sphere = NULL;
+    const __global sphere_t *__restrict closest_sphere;
+    float closest_t;
 
-    for (int i=0; i < spheres_num; ++i)
-    {
-        float t = intersect_sphere(camera, direction, spheres + i);
-        if (t < closest_t)
-        {
-            closest_t = t;
-            closest_sphere = spheres + i;
-        }
-    }
+    closest_sphere = closest_intersection(scene, camera, direction, 0, INFINITY, &closest_t);
     if (closest_sphere == NULL)
         return BLACK;
 
     float3 point = camera + closest_t * direction;
-    float3 normal = point - closest_sphere->center;
-    float factor = compute_lightning(ambients, points, directs, ambients_num, points_num, directs_num, point, normal, direction, closest_sphere->specular);
+    float3 normal = normalize(point - closest_sphere->center);
+    float factor = compute_lightning(scene, point, normal, direction, closest_sphere->specular);
     return closest_sphere->color * factor;
 }
 
 __kernel void ray_tracer(
         __global unsigned int *canvas,
 
-        __global sphere_t *spheres,
-        __global ambient_t *ambients,
-        __global point_t *points,
-        __global direct_t *directs,
-        __global camera_t *cameras,
+        __global const sphere_t *spheres,
+        __global const ambient_t *ambients,
+        __global const point_t *points,
+        __global const direct_t *directs,
+        __global const camera_t *cameras,
 
         int spheres_num,
         int ambients_num,
@@ -197,30 +231,37 @@ __kernel void ray_tracer(
 {
     const float rheight = 1.0f / height;
     const float rwidth = 1.0f / width;
+    const int z = get_global_id(0);
+    const int y = get_global_id(1);
 
-    int z = get_global_id(0);
-    int y = get_global_id(1);
-    float3 vec = (float3)(
+    const scene_t scene = (scene_t){
+        spheres,
+        spheres_num,
+
+        ambients,
+        ambients_num,
+
+        points,
+        points_num,
+
+        directs,
+        directs_num,
+
+        cameras,
+        cameras_num
+    };
+
+    const float3 vec = normalize((float3)(
         (z - width / 2) * rwidth,
         (y - height / 2) * rheight,
         1
-    );
-    vec = normalize(vec);
-    float3 color = trace_ray(
-        spheres,
-        ambients,
-        points,
-        directs,
-
-        spheres_num,
-        ambients_num,
-        points_num,
-        directs_num,
-
+    ));
+    const float3 color = trace_ray(
+        &scene,
         cameras[0].position,
         vec
     );
-    unsigned int int_color =
+    const unsigned int int_color =
             (unsigned int)(color.x) << 16
             | (unsigned int)(color.y) << 8
             | (unsigned int)(color.z);
