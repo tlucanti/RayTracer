@@ -97,7 +97,7 @@ int main()
     std::vector<sphere_t> sp_vec = {
             sphere_t({0,-1,3}, 1, Color::red, 500, 0.2f),
             sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2f),
-            sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2f),
+            sphere_t({-2, 0, 4}, 1, Color::green, 10, 1.f),
             sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2f)
     };
     std::vector<camera_t> cam_vec = {
@@ -121,8 +121,8 @@ int main()
     cllib::CLarray<point_t> points(pt_vec, context, queue);
     cllib::CLarray<direct_t> directs(dir_vec, context, queue);
 
-    const int width = 1000;
-    const int height = 1000;
+    const int width = 2000;
+    const int height = 2000;
 
     cllib::CLarray<unsigned int> canvas(width * height, context, queue);
     cllib::CLkernel kernel(program, {width, height});
