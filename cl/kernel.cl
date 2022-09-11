@@ -32,8 +32,8 @@ typedef float3 FLOAT3;
 
 typedef struct sphere_s
 {
-   FLOAT3  center;
-   FLOAT   radius;
+    FLOAT3  center;
+    FLOAT   radius;
     FLOAT3     color;
     int   specular;
     FLOAT reflective;
@@ -63,6 +63,10 @@ typedef struct camera_s
 {
     FLOAT3  position;
     FLOAT3  direction;
+
+    FLOAT   alpha;
+    FLOAT   theta;
+    FLOAT3  rotate_matrix[3];
 } PACKED camera_t;
 
 typedef struct scene_s
@@ -82,6 +86,15 @@ typedef struct scene_s
     __global const camera_t *__restrict cameras;
     const int cameras_num;
 } scene_t;
+
+FLOAT3 rotate_vector(FLOAT3 vec, __global FLOAT3 matrix[3])
+{
+    return (FLOAT3)(
+        dot(matrix[0], vec),
+        dot(matrix[1], vec),
+        dot(matrix[2], vec)
+    );
+}
 
 FLOAT intersect_sphere(FLOAT3 camera, FLOAT3 direction, __global const sphere_t *__restrict sp)
 {
@@ -274,11 +287,13 @@ __kernel void ray_tracer(
         cameras_num
     };
 
-    const FLOAT3 vec = normalize((FLOAT3)(
+    FLOAT3 vec = (FLOAT3)(
         (z - width / 2) * rwidth,
         (y - height / 2) * rheight,
         1
-    ));
+    );
+    vec = normalize(vec);
+    vec = rotate_vector(vec, cameras[0].rotate_matrix);
     const FLOAT3 color = trace_ray(
         &scene,
         cameras[0].position,

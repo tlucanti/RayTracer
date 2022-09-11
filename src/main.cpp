@@ -40,11 +40,35 @@ typedef struct camera_s
     cl_float3   position;
     cl_float3   direction;
 
+    float       alpha;
+    float       theta;
+    cl_float3   rotate_matrix[3];
+
     camera_s(cl_float3 position, cl_float3 d)
         : position(position)
     {
         float length = 1.0f / sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
         direction = {d.x * length, d.y * length, d.z * length};
+
+        alpha = atan2f(d.x, d.z);
+        if (std::isinf(alpha) or std::isnan(alpha))
+            alpha = 0;
+
+        theta = atan2f(d.y, d.z * d.z + d.x * d.x);
+        if (std::isinf(theta) or std::isnan(theta))
+            theta = 0;
+
+        float	sin_alpha;
+        float   cos_alpha;
+        float   sin_theta;
+        float   cos_theta;
+
+        sincosf(alpha, &sin_alpha, &cos_alpha);
+        sincosf(theta, &sin_theta, &cos_theta);
+
+        rotate_matrix[0] = {cos_alpha, sin_alpha * sin_theta, sin_alpha * cos_theta};
+        rotate_matrix[1] = {0, cos_theta, sin_theta};
+        rotate_matrix[2] = {-sin_alpha, sin_theta * cos_alpha, cos_alpha * cos_theta};
     }
 } PACKED camera_t;
 
@@ -101,7 +125,7 @@ int main()
             sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2f)
     };
     std::vector<camera_t> cam_vec = {
-            camera_t({0, 0, 0}, {0, 0, 1})
+            camera_t({0, 0, -10}, {-0.3, .3, 1})
     };
 
     std::vector<ambient_t> amb_vec = {
