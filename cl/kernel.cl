@@ -194,7 +194,8 @@ float compute_lightning(
 float3    trace_ray(
         const scene_t *scene,
         float3 camera,
-        float3 direction
+        float3 direction,
+        int recursion_depth
     )
 {
     const __global sphere_t *__restrict closest_sphere;
@@ -207,7 +208,16 @@ float3    trace_ray(
     float3 point = camera + closest_t * direction;
     float3 normal = normalize(point - closest_sphere->center);
     float factor = compute_lightning(scene, point, normal, direction, closest_sphere->specular);
-    return closest_sphere->color * factor;
+    float3 local_color = closest_sphere->color * factor;
+
+    if (closest_sphere->reflective < 0 || recursion_depth <= 0)
+        return local_color;
+
+    float3 reflected_ray = reflect_ray(-direction, normal);
+    float3 reflected_color = trace_ray(scene, point, reflected_ray, recursion_depth - 1);
+    float reflective = closest_sphere->reflective;
+
+    return local_color * (1 - reflective) + reflected_color * reflective;
 }
 
 __kernel void ray_tracer(
@@ -259,7 +269,8 @@ __kernel void ray_tracer(
     const float3 color = trace_ray(
         &scene,
         cameras[0].position,
-        vec
+        vec,
+        4
     );
     const unsigned int int_color =
             (unsigned int)(color.x) << 16
