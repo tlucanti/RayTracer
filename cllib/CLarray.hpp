@@ -47,7 +47,10 @@ public:
 //        static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
         cl_int  error;
 
-        buffer = clCreateBuffer(context.__get_context(), flag, buff_size * sizeof(value_type), host_ptr, &error);
+        if (buff_size == 0)
+            buffer = nullptr;
+        else
+            buffer = clCreateBuffer(context.__get_context(), flag, buff_size * sizeof(value_type), host_ptr, &error);
         if (error)
             throw CLexception(error);
         fill(vec, queue);
@@ -88,6 +91,8 @@ public:
 
         if (vec.size() > buff_size)
             throw std::runtime_error("vector size more than buffer size");
+        if (vec.empty())
+            return ;
         error = clEnqueueWriteBuffer(
             queue.__get_queue(),
             buffer,

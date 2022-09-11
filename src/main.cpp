@@ -27,9 +27,10 @@ typedef struct sphere_s
     cl_float3   center;
     float       radius;
     cl_float3        color;
+    int       specular;
 
-    sphere_s(cl_float3 center, float radius, cl_float3 color)
-        : center(center), radius(radius), color(color)
+    sphere_s(cl_float3 center, float radius, cl_float3 color, int specular)
+        : center(center), radius(radius), color(color), specular(specular)
     {}
 } PACKED sphere_t;
 
@@ -41,7 +42,7 @@ typedef struct camera_s
     camera_s(cl_float3 position, cl_float3 d)
         : position(position)
     {
-        float length = 1 / sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+        float length = 1.0f / sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
         direction = {d.x * length, d.y * length, d.z * length};
     }
 } PACKED camera_t;
@@ -76,8 +77,8 @@ typedef struct direct_s
     direct_s(cl_float3 d, float intensity, cl_float3 color)
         : intensity(intensity), color(color)
     {
-        float length = d.x * d.x + d.y + d.y + d.z * d.z;
-        direction = {d.x / length, d.y / length, d.z / length};
+        float length = 1.0f / sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
+        direction = {d.x * length, d.y * length, d.z * length};
     }
 } PACKED direct_t;
 
@@ -93,9 +94,9 @@ int main()
     program.compile(device, true, "-D__OPENCL");
 
     std::vector<sphere_t> sp_vec = {
-            sphere_t({0,-1,3}, 1, Color::red),
-            sphere_t({2, 0, 4}, 1, Color::blue),
-            sphere_t({-2, 0, 4}, 1, Color::green)
+            sphere_t({0,-1,3}, 1, Color::red, 500),
+            sphere_t({2, 0, 4}, 1, Color::blue, 500),
+            sphere_t({-2, 0, 4}, 1, Color::green, 10)
     };
     std::vector<camera_t> cam_vec = {
             camera_t({0, 0, 0}, {0, 0, 1})

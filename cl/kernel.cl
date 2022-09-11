@@ -7,7 +7,6 @@
 # define INFINITY 1e38f
 
 typedef float float3;
-typedef char uchar3;
 
 int get_global_id(int);
 float dot(float3, float3);
@@ -15,11 +14,14 @@ float sqrt(float);
 float fmin(float, float);
 float fmax(float, float);
 float3 normalize(float3);
+float pow(float, float);
 
 #endif
 
 #define PACKED  __attribute__((packed))
-#define NULL    (void *)0
+#ifndef NULL
+# define NULL    (void *)0
+#endif /* NULL */
 
 #define BLACK   0x000000
 #define WHITE   0xFFFFFF
@@ -29,6 +31,7 @@ typedef struct sphere_s
    float3  center;
    float   radius;
     float3     color;
+    int   specular;
 } PACKED sphere_t;
 
 typedef struct ambient_s
@@ -77,6 +80,30 @@ float intersect_sphere(float3 camera, float3 direction, __global sphere_t *sp)
    return mn;
 }
 
+float3 reflect_ray(float3 ray, float3 normal)
+{
+    return 2 * normal * dot(ray, normal) - ray;
+}
+
+float compute_lightning_single(float3 light_vector, float3 normal_vector, float3 direction, float light_intensity, int specular)
+{
+    float intensity = 0;
+
+    float normal_angle = dot(normal_vector, light_vector);
+    if (normal_angle > 1e-3)
+        intensity += light_intensity * normal_angle;
+
+    if (specular > 0)
+    {
+        float3 reflected = reflect_ray(light_vector, normal_vector);
+        float reflected_angle = dot(reflected, direction);
+        if (reflected_angle < 1e-3)
+            intensity += light_intensity * pow(reflected_angle, specular);
+    }
+
+    return      intensity;
+}
+
 float compute_lightning(
         __global ambient_t *ambients,
         __global point_t *points,
@@ -87,30 +114,30 @@ float compute_lightning(
         int directs_num,
 
         float3 point,
-        float3 normal)
+        float3 normal,
+        float3 direction,
+
+        int specular)
 {
-    float intesity = 0;
+    float intensity = 0;
+    float3 light_vector;
 
     for (int i=0; i < ambients_num; ++i)
-    intesity += ambients[i].intensity;
+        intensity += ambients[i].intensity;
 
     for (int i=0; i < points_num; ++i)
     {
-        float3 L = normalize(points[i].position - point);
-
-        float normal_angle = dot(normal, L);
-        if (normal_angle > 1e-3)
-            intesity += points[i].intensity * normal_angle;
+        light_vector = normalize(points[i].position - point);
+        intensity += compute_lightning_single(light_vector, normal, direction, points[i].intensity, specular);
     }
 
     for (int i=0; i < directs_num; ++i)
     {
-        float normal_angle = dot(normal, directs[i].direction);
-        if (normal_angle > 1e-3)
-            intesity += directs[i].intensity * normal_angle;
+        light_vector = directs[i].direction;
+        intensity += compute_lightning_single(light_vector, normal, direction, directs[i].intensity, specular);
     }
 
-    return intesity;
+    return fmin(1, intensity);
 }
 
 float3    trace_ray(
@@ -129,7 +156,7 @@ float3    trace_ray(
     )
 {
     float closest_t = INFINITY;
-    __global sphere_t *closest_sphere = (__global sphere_t *)NULL;
+    __global sphere_t *closest_sphere = NULL;
 
     for (int i=0; i < spheres_num; ++i)
     {
@@ -145,7 +172,7 @@ float3    trace_ray(
 
     float3 point = camera + closest_t * direction;
     float3 normal = point - closest_sphere->center;
-    float factor = compute_lightning(ambients, points, directs, ambients_num, points_num, directs_num, point, normal);
+    float factor = compute_lightning(ambients, points, directs, ambients_num, points_num, directs_num, point, normal, direction, closest_sphere->specular);
     return closest_sphere->color * factor;
 }
 
