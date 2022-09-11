@@ -107,6 +107,57 @@ typedef struct direct_s
     }
 } PACKED direct_t;
 
+typedef struct data_s
+{
+    int current_camera = 0;
+    const float move_step = 1.f;
+    std::vector<camera_t> &cam_vec;
+    cllib::CLarray<camera_t> &cams;
+    cllib::CLqueue &queue;
+    cllib::CLkernel &kernel;
+    cllib::CLarray<unsigned int> &canvas;
+    mlxlib::MLXimage &img;
+    mlxlib::MLXwindow &win;
+} data_t;
+
+float dot(const cl_float3 &v1, const cl_float3 &v2)
+{
+    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+}
+
+void add_rotated_vec(cl_float3 &vec, const cl_float3 matrix[3], cl_float3 dir)
+{
+    vec.x += dot(matrix[0], dir);
+    vec.y += dot(matrix[1], dir);
+    vec.z += dot(matrix[2], dir);
+}
+
+void keyhook(int keycode, data_t *data)
+{
+    std::cout << keycode << std::endl;
+
+    cl_float3 dir = {0, 0, 0};
+    switch (keycode)
+    {
+        case mlxlib::keys::KEY_W: dir.z = data->move_step; break ;
+        case mlxlib::keys::KEY_S: dir.z = -data->move_step; break ;
+        case mlxlib::keys::KEY_A: dir.x = -data->move_step; break ;
+        case mlxlib::keys::KEY_D: dir.x = data->move_step; break ;
+        default: break ;
+    }
+    add_rotated_vec(
+        data->cam_vec.at(data->current_camera).position,
+        data->cam_vec.at(data->current_camera).rotate_matrix,
+        dir
+    );
+
+    data->cams.fill(data->cam_vec, data->queue);
+    data->kernel.run(data->queue, false);
+    auto pix = data->canvas.dump(data->queue);
+    data->img.fill(pix);
+    data->win.put_image(data->img);
+}
+
 int main()
 {
     auto platform = cllib::get_platforms().at(0);
@@ -125,7 +176,7 @@ int main()
             sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2f)
     };
     std::vector<camera_t> cam_vec = {
-            camera_t({0, 0, -10}, {-0.3, .3, 1})
+            camera_t({0, 0, -1}, {0, 0, 1})
     };
 
     std::vector<ambient_t> amb_vec = {
@@ -171,6 +222,21 @@ int main()
     mlxlib::MLXcore core;
     mlxlib::MLXwindow win(core, width, height);
     mlxlib::MLXimage img(core, width, height);
+
+    data_t data = {
+        0,
+        0.2f,
+        cam_vec,
+        cameras,
+        queue,
+        kernel,
+        canvas,
+        img,
+        win
+    };
+
+//    win.add_hook(keyhook, mlxlib::events::key_press, &data);
+    win.add_keyhook(keyhook, &data);
 
     img.fill(pixel_data);
 
