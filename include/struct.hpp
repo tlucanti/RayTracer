@@ -5,14 +5,15 @@
 # include "cllib"
 # ifdef __APPLE__
 #  include <math.h>
-#  define sincosf __sincos
+#  define sincos __sincos
 # endif /* __APPLE__ */
 
 # define PACKED __attribute__((packed))
 # include <cmath>
 
-# define FLOAT double
-# define FLOAT3 cl_double3
+typedef double FLOAT;
+typedef cl_double3 FLOAT3;
+typedef cl_double2 FLOAT2;
 
 namespace Color
 {
@@ -52,24 +53,28 @@ typedef struct camera_s
     camera_s(FLOAT3 position, FLOAT3 d)
             : position(position)
     {
-        FLOAT length = 1.0f / sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
+        FLOAT length = 1.0f / sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
         direction = {d.x * length, d.y * length, d.z * length};
 
-        alpha = atan2f(d.x, d.z);
+        alpha = atan2(d.x, d.z);
         if (std::isinf(alpha) or std::isnan(alpha))
             alpha = 0;
 
-        theta = atan2f(d.y, d.z * d.z + d.x * d.x);
+        theta = atan2(d.y, d.z * d.z + d.x * d.x);
         if (std::isinf(theta) or std::isnan(theta))
             theta = 0;
+        recompute_matrix();
+    }
 
+    void recompute_matrix()
+    {
         FLOAT	sin_alpha;
         FLOAT   cos_alpha;
         FLOAT   sin_theta;
         FLOAT   cos_theta;
 
-        sincosf(alpha, &sin_alpha, &cos_alpha);
-        sincosf(theta, &sin_theta, &cos_theta);
+        sincos(alpha, &sin_alpha, &cos_alpha);
+        sincos(theta, &sin_theta, &cos_theta);
 
         rotate_matrix[0] = {cos_alpha, sin_alpha * sin_theta, sin_alpha * cos_theta};
         rotate_matrix[1] = {0, cos_theta, sin_theta};

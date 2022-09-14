@@ -138,6 +138,7 @@ namespace events
     const int mouse_leave_window = 8;
     const int focus_in = 9;
     const int focus_out = 10;
+    const int window_close = 17;
 }
 
 namespace masks
