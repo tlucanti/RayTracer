@@ -18,7 +18,7 @@ public:
         void (CL_CALLBACK * callback)(const char *, const void *, size_t, void *)=nullptr,
         void *user_data=nullptr
     ) :
-        context()
+        context(nullptr), ref_count(new int(1))
     {
         cl_int  error;
 
@@ -55,21 +55,30 @@ public:
 
     UNUSED void get_device_context_properties() {}
 
-    WUR const cl_context &__get_context() const
+    WUR const cl_context &__get_context() const NOEXCEPT
     {
         return context;
     }
 
     ~CLcontext() THROW
     {
-        cl_int  error;
-
-        error = clReleaseContext(context);
-        if (error != CL_SUCCESS)
-            throw CLexception(error);
+        _destroy();
     }
 
-    CLcontext()=delete;
+    CLcontext() NOEXCEPT
+        : context(nullptr), ref_count(nullptr)
+    {}
+
+    CLcontext &operator =(const CLcontext &cpy)
+    {
+        if (this == &cpy or cpy.ref_count == nullptr)
+            return *this;
+        _destroy();
+        context = cpy.context;
+        ref_count = cpy.ref_count;
+        ++*ref_count;
+        return *this;
+    }
 
 private:
     WUR unsigned long long _get_numeric_data(cl_context_info type, size_t value_size) const
@@ -90,6 +99,19 @@ private:
         return info;
     }
 
+    void _destroy()
+    {
+        cl_int  error;
+
+        if (ref_count != nullptr and --*ref_count == 0)
+        {
+            error = clReleaseContext(context);
+            if (error != CL_SUCCESS)
+                throw CLexception(error);
+        }
+    }
+
+    int         *ref_count;
     cl_context  context;
 };
 

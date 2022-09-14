@@ -17,7 +17,7 @@ public:
         const CLdevice &device,
         const cl_command_queue_properties *properties=nullptr
     ) :
-        queue()
+        queue(), ref_count(new int(1))
     {
         cl_int  error;
 
@@ -48,24 +48,46 @@ public:
             throw CLexception(error);
     }
 
-    WUR const cl_command_queue &__get_queue() const
+    WUR const cl_command_queue &__get_queue() const NOEXCEPT
     {
         return queue;
     }
 
     ~CLqueue() THROW
     {
-        cl_int  error;
-
-        error = clReleaseCommandQueue(queue);
-        if (error != CL_SUCCESS)
-            throw CLexception(error);
+        _destroy();
     }
 
-    CLqueue()=delete;
+    CLqueue() NOEXCEPT
+        : queue(nullptr), ref_count(nullptr)
+    {}
+
+    CLqueue &operator =(const CLqueue &cpy)
+    {
+        if (this == &cpy or cpy.ref_count == nullptr)
+            return *this;
+        _destroy();
+        queue = cpy.queue;
+        ref_count = cpy.ref_count;
+        ++*ref_count;
+        return *this;
+    }
 
 private:
+    void _destroy()
+    {
+        cl_int  error;
+
+        if (ref_count != nullptr and --*ref_count == 0)
+        {
+            error = clReleaseCommandQueue(queue);
+            if (error != CL_SUCCESS)
+                throw CLexception(error);
+        }
+    }
+
     cl_command_queue    queue;
+    int                 *ref_count;
 };
 
 CLLIB_NAMESPACE_END

@@ -32,7 +32,11 @@
 
 # ifndef THROW
 #  define THROW noexcept(false)
-# endif
+# endif /* THROW */
+
+# ifndef NOEXCEPT
+#  define NOEXCEPT noexcept
+# endif /* NOEXCEPT */
 
 # define IS_INTEGRAL(__type) std::is_integral<__type>::value
 # define IS_FLOATING(__type) std::is_floating_point<__type>::value

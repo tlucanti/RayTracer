@@ -98,11 +98,11 @@ unsigned int	mlx_get_color_value(void *mlx_ptr, int color);
 */
 
 int	mlx_mouse_hook (void *win_ptr, int (*funct_ptr)(), void *param);
-int	mlx_key_hook (void *win_ptr, int (*funct_ptr)(), void *param);
+int	mlx_key_hook (void *win_ptr, void (*funct_ptr)(int, void *), void *param);
 int	mlx_expose_hook (void *win_ptr, int (*funct_ptr)(), void *param);
 
-int	mlx_loop_hook (void *mlx_ptr, int (*funct_ptr)(), void *param);
-int	mlx_loop (void *mlx_ptr);
+int	mlx_loop_hook (void *mlx_ptr, void (*funct_ptr)(void *), void *param);
+int	__attribute__((noreturn)) mlx_loop (void *mlx_ptr);
 
 
 /*
@@ -138,7 +138,7 @@ int	mlx_destroy_image(void *mlx_ptr, void *img_ptr);
 */
 
 int	mlx_hook(void *win_ptr, int x_event, int x_mask,
-                 int (*funct)(), void *param);
+                 void (*func)(...), void *param);
 
 int     mlx_mouse_hide();
 int     mlx_mouse_show();

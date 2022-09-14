@@ -14,6 +14,66 @@ MLXLIB_NAMESPACE_BEGIN
 
 namespace keys
 {
+# ifdef __APPLE__
+    const int KEY_Q = 12;
+    const int KEY_W = 13;
+    const int KEY_E = 14;
+    const int KEY_R = 15;
+    const int KEY_T = 17;
+    const int KEY_Y = 16;
+    const int KEY_U = 32;
+    const int KEY_I = 34;
+    const int KEY_O = 31;
+    const int KEY_P = 35;
+    const int KEY_A = 0;
+    const int KEY_S = 1;
+    const int KEY_D = 2;
+    const int KEY_F = 3;
+    const int KEY_G = 5;
+    const int KEY_H = 4;
+    const int KEY_J = 38;
+    const int KEY_K = 40;
+    const int KEY_L = 37;
+    const int KEY_Z = 6;
+    const int KEY_X = 7;
+    const int KEY_C = 8;
+    const int KEY_V = 9;
+    const int KEY_B = 11;
+    const int KEY_N = 45;
+    const int KEY_M = 46;
+
+    const int KEY_0 = 29;
+    const int KEY_1 = 18;
+    const int KEY_2 = 19;
+    const int KEY_3 = 20;
+    const int KEY_4 = 21;
+    const int KEY_5 = 23;
+    const int KEY_6 = 22;
+    const int KEY_7 = 26;
+    const int KEY_8 = 28;
+    const int KEY_9 = 25;
+
+    const int KEY_MINUS = 27;
+    const int KEY_PLUS = 24;
+    const int KEY_BACKSPACE = 51;
+
+    const int KEY_TAB = 48;
+    const int KEY_CAPS = 272;
+    const int KEY_LSHIFT = 257;
+    const int KEY_LCTRL = 256;
+    const int KEY_LALT = 261;
+    const int KEY_ENTER = 36;
+    const int KEY_RSHIFT = 258;
+    const int KEY_RALT = 262;
+    const int KEY_RCTRL = 269;
+    const int KEY_SPACE = 49;
+    const int KEY_ESCAPE = 53;
+
+    const int KEY_UP = 126;
+    const int KEY_DOWN = 125;
+    const int KEY_LEFT = 123;
+    const int KEY_RIGHT = 124;
+# else
     const int KEY_Q = 113;
     const int KEY_W = 119;
     const int KEY_E = 101;
@@ -64,6 +124,7 @@ namespace keys
     const int KEY_RSHIFT = 65506;
     const int KEY_RALT = 65514;
     const int KEY_RCTRL = 65508;
+# endif
 }
 
 namespace events
@@ -130,9 +191,15 @@ public:
     }
 
     template <class T>
-    void add_keyhook(void (*func)(int keycode, T *param), void *param=nullptr)
+    void add_keyhook(void (*func)(int keycode, T *param), T *param=nullptr)
     {
         mlx_key_hook(window_ptr, reinterpret_cast<void (*)(int, void *)>(func), param);
+    }
+
+    template <class T>
+    void add_loop_hook(void (*func)(T *param), T *param=nullptr)
+    {
+        mlx_loop_hook(mlx_ptr, reinterpret_cast<void (*)(void *)>(func), param);
     }
 
     NORET void event_loop()

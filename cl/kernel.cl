@@ -7,6 +7,7 @@
 # define INFINITY 1e38f
 
 typedef float float3;
+typedef double double3;
 
 int get_global_id(int);
 float dot(float3, float3);
@@ -22,10 +23,10 @@ float pow(float, float);
 #ifndef NULL
 # define NULL    0
 #endif /* NULL */
-#define EPS 1e-2f
+#define EPS 1e-4
 
-typedef float FLOAT;
-typedef float3 FLOAT3;
+typedef double FLOAT;
+typedef double3 FLOAT3;
 
 #define BLACK   (FLOAT3)(0.f, 0.f, 0.f)
 #define WHITE   (FLOAT3)(254.9f, 254.9f, 254.9f)
@@ -87,7 +88,7 @@ typedef struct scene_s
     const int cameras_num;
 } scene_t;
 
-FLOAT3 rotate_vector(FLOAT3 vec, __global FLOAT3 matrix[3])
+FLOAT3 rotate_vector(FLOAT3 vec, __global FLOAT3 *matrix)
 {
     return (FLOAT3)(
         dot(matrix[0], vec),
@@ -99,7 +100,7 @@ FLOAT3 rotate_vector(FLOAT3 vec, __global FLOAT3 matrix[3])
 FLOAT intersect_sphere(FLOAT3 camera, FLOAT3 direction, __global const sphere_t *__restrict sp)
 {
    FLOAT3  oc = camera - sp->center;
-   
+
    FLOAT a = dot(direction, direction);
    FLOAT b = 2 * dot(oc, direction); // change to 2b
    FLOAT c = dot(oc, oc) - sp->radius * sp->radius;
@@ -298,7 +299,7 @@ __kernel void ray_tracer(
         &scene,
         cameras[0].position,
         vec,
-        2
+        3
     );
     const unsigned int int_color =
             (unsigned int)(color.x) << 16

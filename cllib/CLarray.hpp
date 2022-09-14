@@ -16,7 +16,7 @@ const cl_mem_flags read_only_array = CL_MEM_READ_ONLY;
 const cl_mem_flags write_only_array = CL_MEM_WRITE_ONLY;
 
 template <class value_type, cl_mem_flags flag=read_write_array>
-class CLarray /* : public __utils::__noncopymovable<value_type> */
+class CLarray : public __utils::__noncopymovable<value_type>
 {
 public:
     CLarray(
@@ -25,7 +25,7 @@ public:
         const CLqueue &queue,
         void *host_ptr=nullptr
     ) :
-        buffer(), buff_size(size), ref_cnt(1)
+        buffer(), buff_size(size), ref_cnt(new int(1))
     {
         static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
         cl_int  error;
@@ -42,7 +42,7 @@ public:
         const CLqueue &queue,
         void *host_ptr=nullptr
     ) :
-        buffer(), buff_size(vec.size()), ref_cnt(1)
+        buffer(), buff_size(vec.size()), ref_cnt(new int(1))
     {
 //        static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
         cl_int  error;
@@ -59,19 +59,10 @@ public:
 
     ~CLarray() THROW
     {
-        cl_int  error;
-
-        --ref_cnt;
-        if (ref_cnt == 0)
-        {
-            std::cout << "released array " << this << " (" << buffer << ')' << std::endl;
-            error = clReleaseMemObject(buffer);
-            if (error != CL_SUCCESS)
-                throw CLexception(error);
-        }
+        _destroy();
     }
 
-    size_t size()
+    size_t size() const NOEXCEPT
     {
         return buff_size;
     }
@@ -134,12 +125,26 @@ public:
         cl_uint num_events_in_wait_list=0,
         cl_event *event_wait_list=nullptr,
         cl_event *event=nullptr
+    )
+    {
+        dump(out.data(), queue, block, size, offset, num_events_in_wait_list, event_wait_list, event);
+    }
+
+    void dump(
+        value_type *out,
+        const CLqueue &queue,
+        bool block=true,
+        size_t size=0,
+        size_t offset=0,
+        cl_uint num_events_in_wait_list=0,
+        cl_event *event_wait_list=nullptr,
+        cl_event *event=nullptr
         )
     {
         cl_int  error;
 
         if (size == 0)
-            size = out.size();
+            size = buff_size;
         if (size > buff_size)
             throw std::runtime_error("vector size more than buffer size");
         error = clEnqueueReadBuffer(
@@ -148,7 +153,7 @@ public:
             static_cast<cl_bool>(block),
             offset,
             size * sizeof(value_type),
-            out.data(),
+            out,
             num_events_in_wait_list,
             event_wait_list,
             event
@@ -220,15 +225,28 @@ public:
     }
 # endif
 
-    WUR const cl_mem &data() const
+    WUR const cl_mem &data() const NOEXCEPT
     {
         return buffer;
     }
 
-    CLarray()=delete;
+    CLarray() NOEXCEPT
+        : buffer(nullptr), buff_size(0), ref_cnt(nullptr)
+    {}
+
+    CLarray &operator =(const CLarray &cpy)
+    {
+        if (this == &cpy or cpy.ref_cnt == nullptr)
+            return *this;
+        _destroy();
+        buffer = cpy.buffer;
+        buff_size = cpy.buff_size;
+        ref_cnt = cpy.ref_cnt;
+        ++*ref_cnt;
+        return *this;
+    }
 
 private:
-
     CLarray(const CLarray &cpy)
         : buffer(cpy.buffer), ref_cnt(cpy.ref_cnt + 1)
     {}
@@ -251,9 +269,23 @@ private:
         return info;
     }
 
-    cl_mem          buffer;
-    size_t          buff_size;
-    unsigned int    ref_cnt;
+    void _destroy()
+    {
+        cl_int  error;
+
+        if (ref_cnt != nullptr and --*ref_cnt == 0)
+        {
+            delete ref_cnt;
+            std::cout << "released array " << this << " (" << buffer << ')' << std::endl;
+            error = clReleaseMemObject(buffer);
+            if (error != CL_SUCCESS)
+                throw CLexception(error);
+        }
+    }
+
+    cl_mem      buffer;
+    size_t      buff_size;
+    int         *ref_cnt;
 
     friend class CLkernel;
 };

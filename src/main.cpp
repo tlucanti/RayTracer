@@ -1,160 +1,94 @@
 
 #include "cllib"
 #include "mlxlib"
+#include "struct.hpp"
 
-#include <fstream>
-#include <cmath>
-
-const char *fname = "../cl/kernel.cl";
-
-#define PACKED __attribute__((packed))
-
-namespace Color
+namespace config
 {
-    const cl_float3 white = {255, 255, 255};
-    const cl_float3 black = {0, 0, 0};
-    const cl_float3 red = {255, 0, 0};
-    const cl_float3 green = {0, 255, 0};
-    const cl_float3 blue = {0, 0, 255};
-    const cl_float3 cyan = {0, 255, 255};
-    const cl_float3 magenta = {255, 0, 255};
-    const cl_float3 yellow = {255, 255, 0};
-    const cl_float3 purple = magenta;
+    const char *fname = "../cl/kernel.cl";
+    int current_camera = 0;
+    const FLOAT forward_move_step = 0.1f;
+    const FLOAT side_move_speed = 0.05f;
+    const FLOAT vertical_move_speed = 0.05f;
 }
 
-typedef struct sphere_s
-{
-    cl_float3   center;
-    float       radius;
-    cl_float3        color;
-    int       specular;
-    float       reflective;
+FLOAT3 move_direction;
 
-    sphere_s(cl_float3 center, float radius, cl_float3 color, int specular, float reflective)
-        : center(center), radius(radius), color(color), specular(specular), reflective(reflective)
-    {}
-} PACKED sphere_t;
+cllib::CLcontext context;
+cllib::CLqueue queue;
 
-typedef struct camera_s
-{
-    cl_float3   position;
-    cl_float3   direction;
+std::vector<camera_t> cam_vec;
+std::vector<sphere_t> sp_vec;
+std::vector<ambient_t> amb_vec;
+std::vector<point_t> pt_vec;
+std::vector<direct_t> dir_vec;
 
-    float       alpha;
-    float       theta;
-    cl_float3   rotate_matrix[3];
+cllib::CLarray<sphere_t> spheres;
+cllib::CLarray<camera_t> cameras;
+cllib::CLarray<ambient_t> ambients;
+cllib::CLarray<point_t> points;
+cllib::CLarray<direct_t> directs;
 
-    camera_s(cl_float3 position, cl_float3 d)
-        : position(position)
-    {
-        float length = 1.0f / sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
-        direction = {d.x * length, d.y * length, d.z * length};
+cllib::CLarray<unsigned int> canvas;
 
-        alpha = atan2f(d.x, d.z);
-        if (std::isinf(alpha) or std::isnan(alpha))
-            alpha = 0;
+const int width = 1000;
+const int height = 1000;
 
-        theta = atan2f(d.y, d.z * d.z + d.x * d.x);
-        if (std::isinf(theta) or std::isnan(theta))
-            theta = 0;
-
-        float	sin_alpha;
-        float   cos_alpha;
-        float   sin_theta;
-        float   cos_theta;
-
-        sincosf(alpha, &sin_alpha, &cos_alpha);
-        sincosf(theta, &sin_theta, &cos_theta);
-
-        rotate_matrix[0] = {cos_alpha, sin_alpha * sin_theta, sin_alpha * cos_theta};
-        rotate_matrix[1] = {0, cos_theta, sin_theta};
-        rotate_matrix[2] = {-sin_alpha, sin_theta * cos_alpha, cos_alpha * cos_theta};
-    }
-} PACKED camera_t;
-
-typedef struct ambient_s
-{
-    float   intensity;
-    cl_float3    color;
-
-    ambient_s(float intensity, cl_float3 color)
-        : intensity(intensity), color(color)
-    {}
-} PACKED ambient_t;
-
-typedef struct point_s
-{
-    cl_float3   position;
-    float       intensity;
-    cl_float3        color;
-
-    point_s(cl_float3 position, float intencity, cl_float3 color)
-        : position(position), intensity(intencity), color(color)
-    {}
-} PACKED point_t;
-
-typedef struct direct_s
-{
-    cl_float3   direction;
-    float       intensity;
-    cl_float3        color;
-
-    direct_s(cl_float3 d, float intensity, cl_float3 color)
-        : intensity(intensity), color(color)
-    {
-        float length = 1.0f / sqrtf(d.x * d.x + d.y * d.y + d.z * d.z);
-        direction = {d.x * length, d.y * length, d.z * length};
-    }
-} PACKED direct_t;
-
-typedef struct data_s
-{
-    int current_camera = 0;
-    const float move_step = 1.f;
-    std::vector<camera_t> &cam_vec;
-    cllib::CLarray<camera_t> &cams;
-    cllib::CLqueue &queue;
-    cllib::CLkernel &kernel;
-    cllib::CLarray<unsigned int> &canvas;
-    mlxlib::MLXimage &img;
-    mlxlib::MLXwindow &win;
-} data_t;
-
-float dot(const cl_float3 &v1, const cl_float3 &v2)
+FLOAT dot(const FLOAT3 &v1, const FLOAT3 &v2)
 {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
-void add_rotated_vec(cl_float3 &vec, const cl_float3 matrix[3], cl_float3 dir)
+void add_rotated_vec(FLOAT3 &vec, const FLOAT3 matrix[3], FLOAT3 dir)
 {
     vec.x += dot(matrix[0], dir);
     vec.y += dot(matrix[1], dir);
     vec.z += dot(matrix[2], dir);
 }
 
-void keyhook(int keycode, data_t *data)
+void keypress_hook(int keycode, void *)
 {
     std::cout << keycode << std::endl;
-
-    cl_float3 dir = {0, 0, 0};
     switch (keycode)
     {
-        case mlxlib::keys::KEY_W: dir.z = data->move_step; break ;
-        case mlxlib::keys::KEY_S: dir.z = -data->move_step; break ;
-        case mlxlib::keys::KEY_A: dir.x = -data->move_step; break ;
-        case mlxlib::keys::KEY_D: dir.x = data->move_step; break ;
+        case mlxlib::keys::KEY_W: move_direction.z = config::forward_move_step; break ;
+        case mlxlib::keys::KEY_S: move_direction.z = -config::forward_move_step; break ;
+        case mlxlib::keys::KEY_A: move_direction.x = -config::side_move_speed; break ;
+        case mlxlib::keys::KEY_D: move_direction.x = config::side_move_speed; break ;
+        case mlxlib::keys::KEY_SPACE: move_direction.y = config::vertical_move_speed; break ;
+        case mlxlib::keys::KEY_LSHIFT:
+        case mlxlib::keys::KEY_RSHIFT: move_direction.y = -config::vertical_move_speed; break ;
         default: break ;
     }
+}
+
+void keyrelease_hook(int keycode, void *)
+{
+    switch (keycode)
+    {
+        case mlxlib::keys::KEY_W:
+        case mlxlib::keys::KEY_S: move_direction.z = 0; break ;
+        case mlxlib::keys::KEY_A:
+        case mlxlib::keys::KEY_D: move_direction.x = 0; break ;
+        case mlxlib::keys::KEY_SPACE:
+        case mlxlib::keys::KEY_LSHIFT:
+        case mlxlib::keys::KEY_RSHIFT: move_direction.y = 0; break ;
+        default: break ;
+    }
+}
+
+template <typename T>
+void framehook(T *data)
+{
     add_rotated_vec(
-        data->cam_vec.at(data->current_camera).position,
-        data->cam_vec.at(data->current_camera).rotate_matrix,
-        dir
+        cam_vec.at(config::current_camera).position,
+        cam_vec.at(config::current_camera).rotate_matrix,
+        move_direction
     );
 
-    data->cams.fill(data->cam_vec, data->queue);
-    data->kernel.run(data->queue, false);
-    auto pix = data->canvas.dump(data->queue);
-    data->img.fill(pix);
+    cameras.fill(cam_vec, queue);
+    data->kernel.run(queue, false);
+    canvas.dump(data->img.raw_pixel_data(), queue);
     data->win.put_image(data->img);
 }
 
@@ -163,43 +97,40 @@ int main()
     auto platform = cllib::get_platforms().at(0);
     auto device = platform.get_devices().at(0);
 
-    cllib::CLcontext context(device);
-    cllib::CLqueue queue(context, device);
+    context = cllib::CLcontext(device);
+    queue = cllib::CLqueue(context, device);
 
-    cllib::CLprogram program(4, std::ifstream(fname), "ray_tracer", context);
+    cllib::CLprogram program(4, std::ifstream(config::fname), "ray_tracer", context);
     program.compile(device, true, "-D__OPENCL");
 
-    std::vector<sphere_t> sp_vec = {
+    sp_vec = {
             sphere_t({0,-1,3}, 1, Color::red, 500, 0.2f),
             sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2f),
-            sphere_t({-2, 0, 4}, 1, Color::green, 10, 1.f),
+            sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2f),
             sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2f)
     };
-    std::vector<camera_t> cam_vec = {
+    cam_vec = {
             camera_t({0, 0, -1}, {0, 0, 1})
     };
 
-    std::vector<ambient_t> amb_vec = {
+    amb_vec = {
             ambient_t(0.2, Color::white)
     };
-    std::vector<point_t> pt_vec = {
+    pt_vec = {
             point_t({2, 1, 0}, 0.6, Color::white)
     };
-    std::vector<direct_t> dir_vec = {
+    dir_vec = {
             direct_t({1, 4, 4}, 0.2, Color::white)
     };
 
-    cllib::CLarray<sphere_t> spheres(sp_vec, context, queue);
-    cllib::CLarray<camera_t> cameras(cam_vec, context, queue);
+    spheres = cllib::CLarray<sphere_t> (sp_vec, context, queue);
+    cameras = cllib::CLarray<camera_t>(cam_vec, context, queue);
 
-    cllib::CLarray<ambient_t> ambients(amb_vec, context, queue);
-    cllib::CLarray<point_t> points(pt_vec, context, queue);
-    cllib::CLarray<direct_t> directs(dir_vec, context, queue);
+    ambients = cllib::CLarray<ambient_t>(amb_vec, context, queue);
+    points = cllib::CLarray<point_t>(pt_vec, context, queue);
+    directs = cllib::CLarray<direct_t>(dir_vec, context, queue);
 
-    const int width = 2000;
-    const int height = 2000;
-
-    cllib::CLarray<unsigned int> canvas(width * height, context, queue);
+    canvas = cllib::CLarray<unsigned int>(width * height, context, queue);
     cllib::CLkernel kernel(program, {width, height});
 
     kernel.set_arg(0, canvas);
@@ -223,20 +154,15 @@ int main()
     mlxlib::MLXwindow win(core, width, height);
     mlxlib::MLXimage img(core, width, height);
 
-    data_t data = {
-        0,
-        0.2f,
-        cam_vec,
-        cameras,
-        queue,
-        kernel,
-        canvas,
-        img,
-        win
-    };
+    struct {
+        mlxlib::MLXwindow &win;
+        mlxlib::MLXimage &img;
+        cllib::CLkernel &kernel;
+    } data = {win, img, kernel};
 
-//    win.add_hook(keyhook, mlxlib::events::key_press, &data);
-    win.add_keyhook(keyhook, &data);
+    win.add_hook(keypress_hook, mlxlib::events::key_press);
+    win.add_hook(keyrelease_hook, mlxlib::events::key_release);
+    win.add_loop_hook(framehook, &data);
 
     img.fill(pixel_data);
 

@@ -22,22 +22,22 @@ endif()
 
 
 include_directories(.)
-include_directories(inc)
+include_directories(include)
 include_directories(cllib)
 include_directories(mlxlib)
 
 link_directories(.)
 link_directories(cllib)
 
-add_executable(old
-		old/GPUContext.cpp
-		old/GPUKernel.cpp
-		old/GPUArray.cpp
-
-#		old/window.cpp
-
-		old/main.cpp
-)
+#add_executable(old
+#		old/GPUContext.cpp
+#		old/GPUKernel.cpp
+#		old/GPUArray.cpp
+#
+##		old/window.cpp
+#
+#		old/main.cpp
+#)
 
 add_executable(test test.cpp)
 add_executable(cllib cllib/main.cpp)

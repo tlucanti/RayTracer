@@ -36,6 +36,11 @@ public:
             image_data[i] = pixel_data[i];
     }
 
+    WUR unsigned int *raw_pixel_data() const NOEXCEPT
+    {
+        return image_data;
+    }
+
 private:
     void    *mlx_ptr;
     void    *image_ptr;
