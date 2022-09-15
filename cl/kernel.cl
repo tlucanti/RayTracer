@@ -13,11 +13,14 @@ typedef unsigned int uint32_t;
 typedef int int32_t;
 typedef unsigned long int uint64_t;
 typedef long int int64_t;
-
-# define get_obj_color(obj_ptr) ((sphere_t *)(obj_ptr)->color)
-# define get_obj_specular(obj_ptr) ((sphere_t *)(obj_ptr)->specular)
-# define get_obj_reflective(obj_ptr) ((sphere_t *)(obj_ptr)->reflective)
 #endif /* not __CPP */
+
+# define as_sphere(obj_ptr) ((__constant sphere_t *)(obj_ptr))
+# define as_plane(obj_ptr) ((__constant plane_t *)(obj_ptr))
+
+# define get_obj_color(obj_ptr) as_sphere(obj_ptr)->color
+# define get_obj_specular(obj_ptr) as_sphere(obj_ptr)->specular
+# define get_obj_reflective(obj_ptr) as_sphere(obj_ptr)->reflective
 
 # define BLACK   (FLOAT3){0.f, 0.f, 0.f}
 # define EPS 1e-4
@@ -43,12 +46,16 @@ typedef struct sphere_s
 
 typedef struct plane_s
 {
-    FLOAT3  point;      // 0 -- 32
-    FLOAT3  normal;     // 32 -- 64
+    FLOAT3              color;              // 0  -- 32
+    uint32_t            specular;           // 32 --
+    UNUSED uint32_t     _padding0;          //    -- 40
+    FLOAT               reflective;         // 40 -- 48
+    FLOAT3              point;              // 48 -- 56
+    FLOAT3              normal;             // 32 -- 64
 
 #ifdef __CPP
-    plane_s(FLOAT3 point, FLOAT3 normal)
-            : point(point), normal(normal)
+    plane_s(FLOAT3 point, FLOAT3 normal, FLOAT3 color, uint32_t specular, FLOAT reflective)
+            : point(point), normal(normal), color(color), specular(specular), reflective(reflective)
     {
         normalize_ref(this->normal);
     }
@@ -167,8 +174,13 @@ typedef struct scene_s
     const uint32_t points_num;
     const uint32_t directs_num;
     const uint32_t cameras_num;
-
 } scene_t;
+
+typedef enum obj_type_e
+{
+    SPHERE,
+    PLANE
+} obj_type_t;
 
 CPP_UNUSED
 FLOAT3 rotate_vector(FLOAT3 vec, __constant const FLOAT3 *matrix)
@@ -204,22 +216,24 @@ FLOAT intersect_sphere(FLOAT3 camera, FLOAT3 direction, __constant const sphere_
 CPP_UNUSED
 FLOAT intersect_plane(FLOAT3 camera, FLOAT3 direction, __constant const plane_t *__restrict pl)
 {
-    FLOAT3  oc = camera - pl->point;
-    return dot(oc, pl->normal) / dot(direction, pl->normal);
+    FLOAT3 co = pl->point - camera;
+    return dot(co, pl->normal) / dot(direction, pl->normal);
 }
 
 CPP_UNUSED
-const __constant sphere_t *__restrict closest_intersection(
+const __constant void *__restrict closest_intersection(
         const scene_t *__restrict scene,
         FLOAT3 camera,
         FLOAT3 direction,
         FLOAT start,
         FLOAT end,
-        FLOAT *closest_t_ptr
+        FLOAT *closest_t_ptr,
+        obj_type_t *closest_type_ptr
     )
 {
     FLOAT closest_t = INFINITY;
-    __constant const sphere_t *closest_sphere = NULL;
+    __constant const void *closest_obj = NULL;
+    obj_type_t closest_type;
 
     for (uint32_t i=0; i < scene->spheres_num; ++i)
     {
@@ -230,13 +244,28 @@ const __constant sphere_t *__restrict closest_intersection(
         if (t < closest_t)
         {
             closest_t = t;
-            closest_sphere = scene->spheres + i;
+            closest_obj = scene->spheres + i;
+            closest_type = SPHERE;
         }
     }
 
+    for (uint32_t i=0; i < scene->planes_num; ++i)
+    {
+        FLOAT t = intersect_plane(camera, direction, scene->planes + i);
+
+        if (t < start || t > end) // maybe >= <= here
+            continue ;
+        if (t < closest_t)
+        {
+            closest_t = t;
+            closest_obj = scene->planes + i;
+            closest_type = PLANE;
+        }
+    }
 
     *closest_t_ptr = closest_t;
-    return closest_sphere;
+    *closest_type_ptr = closest_type;
+    return closest_obj;
 }
 
 CPP_UNUSED
@@ -333,28 +362,34 @@ FLOAT3    trace_ray(
         uint32_t recursion_depth
     )
 {
-    const __constant sphere_t *__restrict closest_sphere;
+    const __constant void *__restrict closest_obj;
     FLOAT closest_t;
     FLOAT3 color = BLACK;
     FLOAT reflective_prod = 1.f;
+    obj_type_t closest_type;
 
     while (recursion_depth > 0)
     {
         --recursion_depth;
-        closest_sphere = closest_intersection(scene, point, direction, EPS, INFINITY, &closest_t);
-        if (closest_sphere == NULL)
+        closest_obj = closest_intersection(scene, point, direction, EPS, INFINITY, &closest_t, &closest_type);
+        if (closest_obj == NULL)
             break ;
 
         point += direction * closest_t;
-        FLOAT3 normal = normalize(point - closest_sphere->center);
-        FLOAT factor = compute_lightning(scene, point, normal, direction, closest_sphere->specular);
-        FLOAT3 local_color = closest_sphere->color * factor;
+        FLOAT3 normal;
+        switch (closest_type)
+        {
+            case SPHERE: normal = normalize(point - as_sphere(closest_obj)->center); break ;
+            case PLANE: normal = as_plane(closest_obj)->normal; break ;
+        }
+        FLOAT factor = compute_lightning(scene, point, normal, direction, get_obj_specular(closest_obj));
+        FLOAT3 local_color = get_obj_color(closest_obj) * factor;
 
         if (recursion_depth == 0)
             color += local_color * reflective_prod /* * closest_sphere->reflective*/;
         else
-            color += local_color * (1.0f - closest_sphere->reflective) * reflective_prod;
-        reflective_prod *= closest_sphere->reflective;
+            color += local_color * (1.0f - get_obj_reflective(closest_obj)) * reflective_prod;
+        reflective_prod *= get_obj_reflective(closest_obj);
 
         direction = reflect_ray(-direction, normal);
     }

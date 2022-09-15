@@ -182,13 +182,13 @@ int main()
     program.compile(device, true, "-D__OPENCL");
 
     sp_vec = {
-            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2f),
-            sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2f),
-            sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2f),
-            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2f)
+            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
+            sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2),
+            sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2),
+//            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2)
     };
     pl_vec = {
-            plane_t({0, 0, 0}, {0, 1, 1})
+            plane_t({0, -1, 0}, {0, 1, 0}, Color::yellow, 1000, 0.2)
     };
     cam_vec = {
             camera_t({0, 0, -1}, {0, 0, 1})
