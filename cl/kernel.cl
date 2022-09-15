@@ -146,6 +146,24 @@ const __global sphere_t *__restrict closest_intersection(
     return closest_sphere;
 }
 
+bool shadow_intersection(
+        const scene_t *__restrict scene,
+        FLOAT3 camera,
+        FLOAT3 direction,
+        FLOAT start,
+        FLOAT end
+    )
+{
+    for (int i=0; i < scene->spheres_num; ++i)
+    {
+        FLOAT t = intersect_sphere(camera, direction, scene->spheres + i);
+
+        if (t > start && t < end) // maybe >= <= here
+            return true;
+    }
+    return false;
+}
+
 FLOAT3 reflect_ray(FLOAT3 ray, FLOAT3 normal)
 {
     return normal * (2 * dot(ray, normal)) - ray;
@@ -161,10 +179,12 @@ FLOAT compute_lightning_single(
 {
     FLOAT intensity = 0.f;
 
+    // diffuse lightning
     FLOAT normal_angle = dot(normal_vector, light_vector);
     if (normal_angle > EPS)
         intensity += light_intensity * normal_angle;
 
+    // specular light
     if (specular > 0)
     {
         FLOAT3 reflected = reflect_ray(light_vector, normal_vector);
@@ -185,7 +205,6 @@ FLOAT compute_lightning(
 {
     FLOAT intensity = 0.f;
     FLOAT3 light_vector;
-    FLOAT _;
 
     for (int i=0; i < scene->ambients_num; ++i)
         intensity += scene->ambients[i].intensity;
@@ -193,7 +212,7 @@ FLOAT compute_lightning(
     for (int i=0; i < scene->points_num; ++i)
     {
         light_vector = normalize(scene->points[i].position - point);
-        if (closest_intersection(scene, point, light_vector, EPS, 1.f - EPS, &_) != NULL)
+        if (shadow_intersection(scene, point, light_vector, EPS, 1.f - EPS))
             continue ;
         intensity += compute_lightning_single(light_vector, normal, direction, scene->points[i].intensity, specular);
     }
@@ -201,7 +220,7 @@ FLOAT compute_lightning(
     for (int i=0; i < scene->directs_num; ++i)
     {
         light_vector = scene->directs[i].direction;
-        if (closest_intersection(scene, point, light_vector, EPS, INFINITY, &_) != NULL)
+        if (shadow_intersection(scene, point, light_vector, EPS, INFINITY))
             continue ;
         intensity += compute_lightning_single(light_vector, normal, direction, scene->directs[i].intensity, specular);
     }
@@ -299,7 +318,7 @@ __kernel void ray_tracer(
         &scene,
         cameras[0].position,
         vec,
-        2
+        4
     );
     const unsigned int int_color =
             (unsigned int)(color.x) << 16

@@ -135,6 +135,15 @@ namespace keys
 # endif
 }
 
+namespace mouse
+{
+    inline constexpr int MOUSE_LEFT = 1;
+    inline constexpr int MOUSE_WHEEL = 2;
+    inline constexpr int MOUSE_RIGHT = 3;
+    inline constexpr int MOUSE_WHEEL_DOWN = 4;
+    inline constexpr int MOUSE_WHEEL_UP = 5;
+}
+
 namespace events
 {
     inline constexpr int key_press = 2;
@@ -204,6 +213,12 @@ public:
     {
         mlx_key_hook(window_ptr, reinterpret_cast<void (*)(int, void *)>(func), param);
     }
+
+    void add_mousehook(void (*func)(int button, int x, int y, void *param), void *param=nullptr)
+    {
+        mlx_mouse_hook(window_ptr, func, param);
+    }
+
 
     template <class T>
     void add_loop_hook(void (*func)(T *param), T *param=nullptr)

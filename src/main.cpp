@@ -24,9 +24,8 @@ namespace config
 FLOAT3 move_direction;
 FLOAT2 look_direction;
 cl_int2 mouse_pos;
-int started(0), ended(0);
 int do_update(0);
-bool is_updating(false);
+bool mouse_press(false);
 
 cllib::CLcontext context;
 cllib::CLqueue queue;
@@ -102,6 +101,8 @@ void keyrelease_hook(int keycode, void *)
 
 void mouse_hook(int x, int y, void *)
 {
+    if (not mouse_press)
+        return ;
     int dx = x - mouse_pos.x;
     int dy = y - mouse_pos.y;
     look_direction.x = dx * config::horizontal_look_speed;
@@ -118,6 +119,20 @@ void enter_hook(int x, int y, void *)
 {
     mouse_pos.x = x;
     mouse_pos.y = y;
+}
+
+void mousepress_hook(int button, int x, int y, void *)
+{
+    mouse_pos.x = x;
+    mouse_pos.y = y;
+    if (button == mlxlib::mouse::MOUSE_LEFT)
+        mouse_press = true;
+}
+
+void mouserelease_hook(int button, void *)
+{
+    if (button == mlxlib::mouse::MOUSE_LEFT)
+        mouse_press = false;
 }
 
 template <typename T>
@@ -230,8 +245,10 @@ int main()
     win.add_hook(keypress_hook, mlxlib::events::key_press, nullptr, mlxlib::masks::key_press);
     win.add_hook(keyrelease_hook, mlxlib::events::key_release, nullptr, mlxlib::masks::key_release);
     win.add_hook(mouse_hook, mlxlib::events::mouse_move, nullptr, mlxlib::masks::mouse_motion);
-    win.add_hook(enter_hook, mlxlib::events::mouse_enter_window, nullptr, mlxlib::masks::mouse_enter_window);
+//    win.add_hook(enter_hook, mlxlib::events::mouse_enter_window, nullptr, mlxlib::masks::mouse_enter_window);
     win.add_hook(exit, mlxlib::events::window_close, nullptr);
+    win.add_hook(mousepress_hook, mlxlib::events::mouse_press, nullptr, mlxlib::masks::mouse_press);
+    win.add_hook(mouserelease_hook, mlxlib::events::mouse_release, nullptr, mlxlib::masks::mouse_release);
     win.add_loop_hook(framehook, &data);
 
     img.fill(pixel_data);
