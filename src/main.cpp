@@ -6,11 +6,12 @@
 #include <sstream>
 #include <atomic>
 #include <unistd.h>
+#include "cl/kernel.cl"
 
 namespace config
 {
-    inline constexpr int width = 800;
-    inline constexpr int height = 800;
+    inline constexpr int width = 1000;
+    inline constexpr int height = 1000;
 
     const char *fname = "../cl/kernel.cl";
     int current_camera = 0;
@@ -32,24 +33,21 @@ cllib::CLqueue queue;
 
 std::vector<camera_t> cam_vec;
 std::vector<sphere_t> sp_vec;
+std::vector<plane_t> pl_vec;
 std::vector<ambient_t> amb_vec;
 std::vector<point_t> pt_vec;
 std::vector<direct_t> dir_vec;
 
-cllib::CLarray<sphere_t> spheres;
-cllib::CLarray<camera_t> cameras;
-cllib::CLarray<ambient_t> ambients;
-cllib::CLarray<point_t> points;
-cllib::CLarray<direct_t> directs;
+cllib::CLarray<camera_t, cllib::read_only_array> cameras;
+cllib::CLarray<sphere_t, cllib::read_only_array> spheres;
+cllib::CLarray<plane_t, cllib::read_only_array> planes;
+cllib::CLarray<ambient_t, cllib::read_only_array> ambients;
+cllib::CLarray<point_t, cllib::read_only_array> points;
+cllib::CLarray<direct_t, cllib::read_only_array> directs;
 
-cllib::CLarray<unsigned int> canvas;
+cllib::CLarray<unsigned int, cllib::write_only_array> canvas;
 
 struct timespec fps_meter;
-
-FLOAT dot(const FLOAT3 &v1, const FLOAT3 &v2)
-{
-    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-}
 
 void add_rotated_vec(FLOAT3 &vec, const FLOAT3 matrix[3], FLOAT3 dir)
 {
@@ -189,6 +187,9 @@ int main()
             sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2f),
             sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2f)
     };
+    pl_vec = {
+            plane_t({0, 0, 0}, {0, 1, 1})
+    };
     cam_vec = {
             camera_t({0, 0, -1}, {0, 0, 1})
     };
@@ -203,29 +204,33 @@ int main()
             direct_t({1, 4, 4}, 0.2, Color::white)
     };
 
-    spheres = cllib::CLarray<sphere_t> (sp_vec, context, queue);
-    cameras = cllib::CLarray<camera_t>(cam_vec, context, queue);
+    spheres = cllib::CLarray<sphere_t, cllib::read_only_array>(sp_vec, context, queue);
+    planes = cllib::CLarray<plane_t, cllib::read_only_array>(pl_vec, context, queue);
+    cameras = cllib::CLarray<camera_t, cllib::read_only_array>(cam_vec, context, queue);
 
-    ambients = cllib::CLarray<ambient_t>(amb_vec, context, queue);
-    points = cllib::CLarray<point_t>(pt_vec, context, queue);
-    directs = cllib::CLarray<direct_t>(dir_vec, context, queue);
+    ambients = cllib::CLarray<ambient_t, cllib::read_only_array>(amb_vec, context, queue);
+    points = cllib::CLarray<point_t, cllib::read_only_array>(pt_vec, context, queue);
+    directs = cllib::CLarray<direct_t, cllib::read_only_array>(dir_vec, context, queue);
 
-    canvas = cllib::CLarray<unsigned int>(config::width * config::height, context, queue);
+    canvas = cllib::CLarray<unsigned int, cllib::write_only_array>(config::width * config::height, context, queue);
     cllib::CLkernel kernel(program, {config::width, config::height});
 
-    kernel.set_arg(0, canvas);
-    kernel.set_arg(1, spheres);
-    kernel.set_arg(2, ambients);
-    kernel.set_arg(3, points);
-    kernel.set_arg(4, directs);
-    kernel.set_arg(5, cameras);
-    kernel.set_arg(6, static_cast<int>(spheres.size()));
-    kernel.set_arg(7, static_cast<int>(ambients.size()));
-    kernel.set_arg(8, static_cast<int>(points.size()));
-    kernel.set_arg(9, static_cast<int>(directs.size()));
-    kernel.set_arg(10, static_cast<int>(cameras.size()));
-    kernel.set_arg(11, config::width);
-    kernel.set_arg(12, config::height);
+    kernel.reset_args();
+    kernel.set_next_arg(canvas);
+    kernel.set_next_arg(spheres);
+    kernel.set_next_arg(planes);
+    kernel.set_next_arg(ambients);
+    kernel.set_next_arg(points);
+    kernel.set_next_arg(directs);
+    kernel.set_next_arg(cameras);
+    kernel.set_next_arg(static_cast<int>(spheres.size()));
+    kernel.set_next_arg(static_cast<int>(planes.size()));
+    kernel.set_next_arg(static_cast<int>(ambients.size()));
+    kernel.set_next_arg(static_cast<int>(points.size()));
+    kernel.set_next_arg( static_cast<int>(directs.size()));
+    kernel.set_next_arg(static_cast<int>(cameras.size()));
+    kernel.set_next_arg(config::width);
+    kernel.set_next_arg(config::height);
 
     clock_gettime(CLOCK_MONOTONIC, &fps_meter);
     kernel.run(queue);

@@ -22,7 +22,8 @@ public:
         size_t global_work_offset=0
     ) :
         kernel(),
-        argc(program.__get_argc())
+        argc(program.__get_argc()),
+        argi(0)
     {
         cl_int  error;
 
@@ -43,6 +44,7 @@ public:
     ) :
         kernel(),
         argc(program.__get_argc()),
+        argi(0),
         local_work_size_ptr(local_work_size.data()),
         global_work_offset_ptr(global_work_offset.data())
     {
@@ -128,22 +130,27 @@ public:
         global_work_offset_ptr = global_work_offset_vector.data();
     }
 
-    template <class type>
-    void set_arg(int argi, const CLarray<type> &array)
+    void reset_args()
+    {
+        argi = 0;
+    }
+
+    template <class type, cl_mem_flags flag>
+    void set_next_arg(const CLarray<type, flag> &array)
     {
         cl_int  error;
 
-        error = clSetKernelArg(kernel, argi, sizeof(cl_mem), &array.data());
+        error = clSetKernelArg(kernel, argi++, sizeof(cl_mem), &array.data());
         if (error != CL_SUCCESS)
             throw CLexception(error);
     }
 
     template <class type>
-    void set_arg(unsigned int argi, const type &arg)
+    void set_next_arg(const type &arg)
     {
         cl_int  error;
 
-        error = clSetKernelArg(kernel, argi, sizeof(type), &arg);
+        error = clSetKernelArg(kernel, argi++, sizeof(type), &arg);
         if (error != CL_SUCCESS)
             throw CLexception(error);
     }
@@ -223,6 +230,7 @@ private:
 
     cl_kernel   kernel;
     int         argc;
+    int         argi;
 
     std::vector<size_t>     global_work_size_vector;
     std::vector<size_t>     local_work_size_vector;
