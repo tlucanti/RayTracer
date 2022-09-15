@@ -4,23 +4,29 @@
 #include "struct.hpp"
 #include <ctime>
 #include <sstream>
+#include <atomic>
+#include <unistd.h>
 
 namespace config
 {
-    const int width = 1000;
-    const int height = 1000;
+    inline constexpr int width = 800;
+    inline constexpr int height = 800;
 
     const char *fname = "../cl/kernel.cl";
     int current_camera = 0;
-    const FLOAT forward_move_step = 0.1;
-    const FLOAT side_move_speed = 0.05;
-    const FLOAT vertical_move_speed = 0.05;
-    const FLOAT vertical_look_speed = 0.01;
-    const FLOAT horizontal_look_speed = 0.01;
+    inline constexpr FLOAT forward_move_step = 0.1;
+    inline constexpr FLOAT side_move_speed = 0.05;
+    inline constexpr FLOAT vertical_move_speed = 0.05;
+    inline constexpr FLOAT vertical_look_speed = 0.005;
+    inline constexpr FLOAT horizontal_look_speed = 0.005;
 }
 
 FLOAT3 move_direction;
 FLOAT2 look_direction;
+cl_int2 mouse_pos;
+int started(0), ended(0);
+int do_update(0);
+bool is_updating(false);
 
 cllib::CLcontext context;
 cllib::CLqueue queue;
@@ -55,7 +61,6 @@ void add_rotated_vec(FLOAT3 &vec, const FLOAT3 matrix[3], FLOAT3 dir)
 
 void keypress_hook(int keycode, void *)
 {
-//    std::cout << keycode << std::endl;
     switch (keycode)
     {
         case mlxlib::keys::KEY_W: move_direction.z = config::forward_move_step; break ;
@@ -65,13 +70,14 @@ void keypress_hook(int keycode, void *)
         case mlxlib::keys::KEY_SPACE: move_direction.y = config::vertical_move_speed; break ;
         case mlxlib::keys::KEY_LCTRL:
         case mlxlib::keys::KEY_RCTRL: move_direction.y = -config::vertical_move_speed; break ;
-        case mlxlib::keys::KEY_UP: look_direction.y = config::vertical_look_speed; break ;
-        case mlxlib::keys::KEY_DOWN: look_direction.y = -config::vertical_look_speed; break ;
+        case mlxlib::keys::KEY_UP: look_direction.y = -config::vertical_look_speed; break ;
+        case mlxlib::keys::KEY_DOWN: look_direction.y = config::vertical_look_speed; break ;
         case mlxlib::keys::KEY_LEFT: look_direction.x = -config::horizontal_look_speed; break ;
         case mlxlib::keys::KEY_RIGHT: look_direction.x = config::horizontal_look_speed; break ;
         case mlxlib::keys::KEY_ESCAPE: exit(0);
-        default: break ;
+        default: return ;
     }
+    do_update += 1;
 }
 
 void keyrelease_hook(int keycode, void *)
@@ -89,21 +95,40 @@ void keyrelease_hook(int keycode, void *)
         case mlxlib::keys::KEY_DOWN: look_direction.y = 0; break ;
         case mlxlib::keys::KEY_LEFT:
         case mlxlib::keys::KEY_RIGHT: look_direction.x = 0; break ;
-        default: break ;
+        default: return ;
     }
+    do_update -= 1;
 }
 
-void mouse_hook(int keycode, int x, int y, void *)
+void mouse_hook(int x, int y, void *)
 {
-    std::cout << keycode << ' ' << x << y << std::endl;
+    int dx = x - mouse_pos.x;
+    int dy = y - mouse_pos.y;
+    look_direction.x = dx * config::horizontal_look_speed;
+    look_direction.y = dy * config::vertical_look_speed;
+//    if (dx < 5)
+//        look_direction.x /= 5;
+//    if (dy < 5)
+//        look_direction.y /= 5;
+    mouse_pos.x = x;
+    mouse_pos.y = y;
+}
+
+void enter_hook(int x, int y, void *)
+{
+    mouse_pos.x = x;
+    mouse_pos.y = y;
 }
 
 template <typename T>
-void framehook(T *data)
-{
+void framehook(T *data) {
     static int fps_period = 0;
     static std::stringstream ss;
 
+//    if (not do_update)
+//        return ;
+
+    ++fps_period;
     camera_t &cur_cam = cam_vec.at(config::current_camera);
     cur_cam.alpha += look_direction.x;
     cur_cam.theta += look_direction.y;
@@ -113,23 +138,23 @@ void framehook(T *data)
         cur_cam.rotate_matrix,
         move_direction
     );
-//    std::cout <<
 
     cameras.fill(cam_vec, queue);
     data->kernel.run(queue, false);
     canvas.dump(data->img.raw_pixel_data(), queue);
     data->win.put_image(data->img);
-    ++fps_period;
     if (fps_period == 30)
     {
         double fps = static_cast<double>(fps_meter.tv_sec) + static_cast<double>(fps_meter.tv_nsec) * 1e-9;
         clock_gettime(CLOCK_MONOTONIC, &fps_meter);
         fps -= static_cast<double>(fps_meter.tv_sec) + static_cast<double>(fps_meter.tv_nsec) * 1e-9;
         ss.str("");
-        ss << "fps: " << -1. / (fps / 30);
+        ss << "fps: " << -30. / fps;
         fps_period = 0;
     }
     data->win.put_string(ss.str(), 10, 15);
+    look_direction.x = 0;
+    look_direction.y = 0;
 }
 
 int main()
@@ -201,10 +226,12 @@ int main()
         cllib::CLkernel &kernel;
     } data = {win, img, kernel};
 
-    win.add_hook(keypress_hook, mlxlib::events::key_press);
-    win.add_hook(keyrelease_hook, mlxlib::events::key_release);
-//    win.add_hook(mouse_hook, mlxlib::events::mouse_move);
-    win.add_hook(exit, mlxlib::events::window_close);
+//    win.add_keyhook(keypress_hook);
+    win.add_hook(keypress_hook, mlxlib::events::key_press, nullptr, mlxlib::masks::key_press);
+    win.add_hook(keyrelease_hook, mlxlib::events::key_release, nullptr, mlxlib::masks::key_release);
+    win.add_hook(mouse_hook, mlxlib::events::mouse_move, nullptr, mlxlib::masks::mouse_motion);
+    win.add_hook(enter_hook, mlxlib::events::mouse_enter_window, nullptr, mlxlib::masks::mouse_enter_window);
+    win.add_hook(exit, mlxlib::events::window_close, nullptr);
     win.add_loop_hook(framehook, &data);
 
     img.fill(pixel_data);

@@ -299,7 +299,7 @@ __kernel void ray_tracer(
         &scene,
         cameras[0].position,
         vec,
-        3
+        2
     );
     const unsigned int int_color =
             (unsigned int)(color.x) << 16

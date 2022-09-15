@@ -45,7 +45,7 @@ public:
         buffer(), buff_size(vec.size()), ref_cnt(new int(1))
     {
 //        static_assert(IS_ARITHMETIC(value_type), "array type can only be arithmetic");
-        cl_int  error;
+        cl_int  error = CL_SUCCESS;
 
         if (buff_size == 0)
             buffer = nullptr;

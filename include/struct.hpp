@@ -77,7 +77,7 @@ typedef struct camera_s
         sincos(theta, &sin_theta, &cos_theta);
 
         rotate_matrix[0] = {cos_alpha, sin_alpha * sin_theta, sin_alpha * cos_theta};
-        rotate_matrix[1] = {0, cos_theta, sin_theta};
+        rotate_matrix[1] = {0, cos_theta, -sin_theta};
         rotate_matrix[2] = {-sin_alpha, sin_theta * cos_alpha, cos_alpha * cos_theta};
     }
 } PACKED camera_t;
