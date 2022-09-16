@@ -62,6 +62,11 @@ typedef struct plane_s
 #endif /* __CPP */
 } PACKED ALIGNED16 plane_t;
 
+typedef struct cone_s
+{
+
+} PACKED ALIGNED16 cone_t;
+
 typedef struct ambient_s
 {
     FLOAT3      color;      // 0  -- 32
