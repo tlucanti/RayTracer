@@ -16,9 +16,10 @@ typedef unsigned long int uint64_t;
 typedef long int int64_t;
 # endif /* not __CPP */
 
-# define as_sphere(obj_ptr) ((__constant sphere_t *)(obj_ptr))
-# define as_plane(obj_ptr) ((__constant plane_t *)(obj_ptr))
-# define as_triangle(obj_ptr) ((__constant triangle_t *)(obj_ptr))
+# define as_sphere(obj_ptr) ((__constant const sphere_t *)(obj_ptr))
+# define as_plane(obj_ptr) ((__constant const plane_t *)(obj_ptr))
+# define as_triangle(obj_ptr) ((__constant const triangle_t *)(obj_ptr))
+# define as_cone(obj_ptr) ((__constant const cone_t *)(obj_ptr))
 
 # define get_obj_color(obj_ptr) as_sphere(obj_ptr)->color
 # define get_obj_specular(obj_ptr) as_sphere(obj_ptr)->specular
@@ -89,7 +90,20 @@ typedef struct triangle_s
 
 typedef struct cone_s
 {
+    FLOAT3          color;      // 0  -- 32
+    uint32_t        specular;   // 32 --
+    UNUSED uint32_t _padding;   //    -- 40
+    FLOAT           reflective;  // 40 -- 48
+    FLOAT           alpha;      // 48 -- 56
+    FLOAT           theta;      // 56 -- 64
+    FLOAT3          center;     // 64 -- 96
 
+
+# ifdef __CPP
+    cone_s(FLOAT3 center, FLOAT alpha, FLOAT theta, FLOAT3 color, uint32_t specular, FLOAT reflective)
+        : center(center), alpha(alpha), theta(theta), color(color), specular(specular), reflective(reflective)
+    {}
+# endif /* __CPP */
 } PACKED ALIGNED16 cone_t;
 
 typedef struct ambient_s
@@ -190,6 +204,7 @@ typedef struct scene_s
     __constant const sphere_t   *__restrict spheres;
     __constant const plane_t    *__restrict planes;
     __constant const triangle_t *__restrict triangles;
+    __constant const cone_t     *__restrict cones;
     __constant const ambient_t  *__restrict ambients;
     __constant const point_t    *__restrict points;
     __constant const direct_t   *__restrict directs;
@@ -198,6 +213,7 @@ typedef struct scene_s
     const uint32_t spheres_num;
     const uint32_t planes_num;
     const uint32_t triangles_num;
+    const uint32_t cones_num;
     const uint32_t ambients_num;
     const uint32_t points_num;
     const uint32_t directs_num;
@@ -208,7 +224,8 @@ typedef enum obj_type_e
 {
     SPHERE,
     PLANE,
-    TRIANGLE
+    TRIANGLE,
+    CONE
 } obj_type_t;
 
 CPP_UNUSED
@@ -264,6 +281,26 @@ FLOAT intersect_triangle(FLOAT3 camera, FLOAT3 direction, __constant const trian
     if ((A & B & C) | !(A | B | C))
         return t;
     return INFINITY;
+}
+
+CPP_UNUSED
+FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn)
+{
+    FLOAT a = direction.x * direction.x + direction.y * direction.y - direction.z * direction.z;
+    FLOAT b = camera.x * direction.x + camera.y * direction.y - camera.z * direction.z; // maybe here dot(camera, direction) - 2 * camera.z * direction.z
+    b *= 2;
+    FLOAT c = camera.x * camera.x + camera.y * camera.y - camera.z * camera.z;
+
+    FLOAT discriminant = b * b - 4 * a * c;
+    if (discriminant < 0)
+        return INFINITY;
+    discriminant = sqrt(discriminant);
+    FLOAT x1 = (-b + discriminant) / 2 / a; // firstly divide, then multiply
+    FLOAT x2 = (-b - discriminant) / 2 / a;
+    FLOAT mn = fmin(x1, x2);
+    if (mn < EPS)
+        return fmax(x1, x2);
+    return mn;
 }
 
 CPP_UNUSED
@@ -323,6 +360,20 @@ const __constant void *__restrict closest_intersection(
         }
     }
 
+    for (uint32_t i=0; i < scene->cones_num; ++i)
+    {
+        FLOAT t = intersect_cone(camera, direction, scene->cones + i);
+
+        if (t < start || t > end) // maybe >= <= here
+            continue ;
+        if (t < closest_t)
+        {
+            closest_t = t;
+            closest_obj = scene->cones + i;
+            closest_type = CONE;
+        }
+    }
+
     *closest_t_ptr = closest_t;
     *closest_type_ptr = closest_type;
     return closest_obj;
@@ -357,6 +408,14 @@ bool shadow_intersection(
         if (t > start && t < end)
             return true;
     }
+
+    for (uint32_t i=0; i < scene->cones_num; ++i)
+    {
+        FLOAT t = intersect_cone(camera, direction, scene->cones + i);
+        if (t > start && t < end)
+            return true;
+    }
+
     return false;
 }
 
@@ -455,6 +514,7 @@ FLOAT3    trace_ray(
             case SPHERE: normal = normalize(point - as_sphere(closest_obj)->center); break ;
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
+            case CONE: normal = (FLOAT3){1, 1, 1}; break ;
         }
         FLOAT factor = compute_lightning(scene, point, normal, direction, get_obj_specular(closest_obj));
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
@@ -478,6 +538,7 @@ __kernel void ray_tracer(
         __constant const sphere_t *__restrict spheres,
         __constant const plane_t *__restrict planes,
         __constant const triangle_t *__restrict triangles,
+        __constant const cone_t *__restrict cones,
         __constant const ambient_t *__restrict ambients,
         __constant const point_t *__restrict points,
         __constant const direct_t *__restrict directs,
@@ -486,6 +547,7 @@ __kernel void ray_tracer(
         const uint32_t spheres_num,
         const uint32_t planes_num,
         const uint32_t triangles_num,
+        const uint32_t cones_num,
         const uint32_t ambients_num,
         const uint32_t points_num,
         const uint32_t directs_num,
@@ -505,6 +567,7 @@ __kernel void ray_tracer(
         spheres,
         planes,
         triangles,
+        cones,
         ambients,
         points,
         directs,
@@ -513,6 +576,7 @@ __kernel void ray_tracer(
         spheres_num,
         planes_num,
         triangles_num,
+        cones_num,
         ambients_num,
         points_num,
         directs_num,
@@ -520,7 +584,7 @@ __kernel void ray_tracer(
     };
 
     FLOAT3 vec = (FLOAT3) {
-        (z - width / 2.) * rwidth,
+        (z - width / 2.) * rwidth, // open brakets
         (y - height / 2.) * rheight,
         1
     };

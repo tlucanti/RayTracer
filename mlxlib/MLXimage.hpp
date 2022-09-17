@@ -41,6 +41,11 @@ public:
         return image_data;
     }
 
+    void put_pixel(unsigned int x, unsigned int y, unsigned int color)
+    {
+        image_data[y * width + x] = color;
+    }
+
 private:
     void    *mlx_ptr;
     void    *image_ptr;
