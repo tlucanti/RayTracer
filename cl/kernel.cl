@@ -97,11 +97,11 @@ typedef struct cone_s
     FLOAT           alpha;      // 48 -- 56
     FLOAT           theta;      // 56 -- 64
     FLOAT3          center;     // 64 -- 96
-
+    FLOAT3          normal;     //
 
 # ifdef __CPP
-    cone_s(FLOAT3 center, FLOAT alpha, FLOAT theta, FLOAT3 color, uint32_t specular, FLOAT reflective)
-        : center(center), alpha(alpha), theta(theta), color(color), specular(specular), reflective(reflective)
+    cone_s(FLOAT3 center, FLOAT3 normal, FLOAT alpha, FLOAT theta, FLOAT3 color, uint32_t specular, FLOAT reflective)
+        : center(center), normal(normal), alpha(alpha), theta(theta), color(color), specular(specular), reflective(reflective)
     {}
 # endif /* __CPP */
 } PACKED ALIGNED16 cone_t;
@@ -514,7 +514,12 @@ FLOAT3    trace_ray(
             case SPHERE: normal = normalize(point - as_sphere(closest_obj)->center); break ;
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
-            case CONE: normal = (FLOAT3){1, 1, 1}; break ;
+            case CONE: {
+                FLOAT3 op = point - as_cone(closest_obj)->center;
+                op = normalize(op);
+                normal = as_cone(closest_obj)->normal - op * sqrt(2.0) * 0.5;
+                break;
+            }
         }
         FLOAT factor = compute_lightning(scene, point, normal, direction, get_obj_specular(closest_obj));
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;

@@ -204,7 +204,7 @@ int main()
 //            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
     };
     cn_vec = {
-            cone_t({0, 0, 0}, 0, 0, Color::purple, 0., 0.)
+            cone_t({0, 0, 0}, {0,1,0}, 0, 0, Color::purple, 0., 0.)
     };
     cam_vec = {
             camera_t({0, 0, -1}, {0, 0, 1})
