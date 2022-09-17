@@ -1,11 +1,12 @@
 
-#ifndef __CPP
-# define PACKED  __attribute__((packed))
-# define UNUSED  __attribute__((unused))
-# ifndef NULL
-#  define NULL    0
-# endif /* NULL */
-# define CPP_UNUSED
+#ifndef CL_KERNEL
+# define CL_KERNEL
+# ifndef __CPP
+#  define UNUSED  __attribute__((unused))
+#  ifndef NULL
+#   define NULL    0
+#  endif /* NULL */
+#  define CPP_UNUSED
 
 typedef double FLOAT;
 typedef double3 FLOAT3;
@@ -13,10 +14,11 @@ typedef unsigned int uint32_t;
 typedef int int32_t;
 typedef unsigned long int uint64_t;
 typedef long int int64_t;
-#endif /* not __CPP */
+# endif /* not __CPP */
 
 # define as_sphere(obj_ptr) ((__constant sphere_t *)(obj_ptr))
 # define as_plane(obj_ptr) ((__constant plane_t *)(obj_ptr))
+# define as_triangle(obj_ptr) ((__constant triangle_t *)(obj_ptr))
 
 # define get_obj_color(obj_ptr) as_sphere(obj_ptr)->color
 # define get_obj_specular(obj_ptr) as_sphere(obj_ptr)->specular
@@ -38,11 +40,11 @@ typedef struct sphere_s
     UNUSED uint64_t     _padding1;          // 56 -- 64
     FLOAT3              center;             // 64 -- 96
 
-#ifdef __CPP
+# ifdef __CPP
     sphere_s(FLOAT3 center, FLOAT radius, FLOAT3 color, uint32_t specular, FLOAT reflective)
             : center(center), radius(radius), color(color), specular(specular), reflective(reflective), _padding0(), _padding1()
     {}
-#endif /* __CPP */
+# endif /* __CPP */
 } PACKED ALIGNED16 sphere_t;
 
 typedef struct plane_s
@@ -51,17 +53,39 @@ typedef struct plane_s
     uint32_t            specular;           // 32 --
     UNUSED uint32_t     _padding0;          //    -- 40
     FLOAT               reflective;         // 40 -- 48
-    FLOAT3              point;              // 48 -- 56
-    FLOAT3              normal;             // 32 -- 64
+    FLOAT3              point;              // 48 -- 80
+    FLOAT3              normal;             // 80 -- 112
 
-#ifdef __CPP
+# ifdef __CPP
     plane_s(FLOAT3 point, FLOAT3 normal, FLOAT3 color, uint32_t specular, FLOAT reflective)
             : point(point), normal(normal), color(color), specular(specular), reflective(reflective)
     {
         normalize_ref(this->normal);
     }
-#endif /* __CPP */
+# endif /* __CPP */
 } PACKED ALIGNED16 plane_t;
+
+typedef struct triangle_s
+{
+    FLOAT3          color;      // 0  -- 32
+    uint32_t        specular;   // 32 --
+    UNUSED uint32_t _padding0;  //    -- 40
+    FLOAT           reflective;  // 40 -- 48
+    UNUSED uint64_t _padding1;  // 48 -- 56
+    UNUSED uint64_t _padding2;  // 56 -- 64
+    FLOAT3          normal;     // 64 -- 96
+    FLOAT3          a;          // 96 -- 128
+    FLOAT3          b;          // 128-- 160
+    FLOAT3          c;          // 160-- 192
+
+# ifdef __CPP
+    triangle_s(FLOAT3 p1, FLOAT3 p2, FLOAT3 p3, FLOAT3 color, uint32_t specular, FLOAT reflective)
+        : a(p1), b(p2), c(p3), color(color), specular(specular), reflective(reflective)
+    {
+        normal = cross(p2 - p1, p3 - p1);
+    }
+# endif /* __CPP */
+} PACKED ALIGNED16 triangle_t;
 
 typedef struct cone_s
 {
@@ -73,11 +97,11 @@ typedef struct ambient_s
     FLOAT3      color;      // 0  -- 32
     FLOAT       intensity;  // 32 -- 40
 
-#ifdef __CPP
+# ifdef __CPP
     ambient_s(FLOAT intensity, FLOAT3 color)
             : intensity(intensity), color(color)
     {}
-#endif /* __CPP */
+# endif /* __CPP */
 } PACKED ALIGNED16 ambient_t;
 
 typedef struct point_s
@@ -86,11 +110,11 @@ typedef struct point_s
     FLOAT3      position;   // 32 -- 64
     FLOAT       intensity;  // 64 -- 72
 
-#ifdef __CPP
+# ifdef __CPP
     point_s(FLOAT3 position, FLOAT intencity, FLOAT3 color)
             : position(position), intensity(intencity), color(color)
     {}
-#endif /* __CPP */
+# endif /* __CPP */
 } PACKED ALIGNED16 point_t;
 
 typedef struct direct_s
@@ -99,13 +123,13 @@ typedef struct direct_s
     FLOAT3      direction;  // 32 -- 64
     FLOAT       intensity;  // 64 -- 72
 
-#ifdef __CPP
+# ifdef __CPP
     direct_s(FLOAT3 dir, FLOAT intensity, FLOAT3 color)
             : direction(dir), intensity(intensity), color(color)
     {
         normalize_ref(direction);
     }
-#endif /* __CPP */
+# endif /* __CPP */
 } PACKED ALIGNED16 direct_t;
 
 typedef struct camera_s
@@ -117,7 +141,7 @@ typedef struct camera_s
     FLOAT    alpha;             // 96 -- 104
     FLOAT    theta;             // 104-- 112
 
-#ifdef __CPP
+# ifdef __CPP
     camera_s(FLOAT3 pos, FLOAT3 dir)
             : position(pos), direction(dir), rotate_matrix()
     {
@@ -147,28 +171,25 @@ typedef struct camera_s
         rotate_matrix[1] = {0, cos_theta, -sin_theta};
         rotate_matrix[2] = {-sin_alpha, sin_theta * cos_alpha, cos_alpha * cos_theta};
     }
-#endif /* __CPP */
+# endif /* __CPP */
 } PACKED ALIGNED16 camera_t;
 
-#ifdef __CPP
-# define __constant
-# define __global
-# define __kernel
-# define CPP_UNUSED __attribute__((unused))
-CPP_UNUSED FLOAT3 operator -(FLOAT3, FLOAT3) {return{};}
-CPP_UNUSED FLOAT3 operator *(FLOAT3, FLOAT) {return{};}
+# ifdef __CPP
+#  define __constant
+#  define __global
+#  define __kernel
+#  define CPP_UNUSED __attribute__((unused))
 CPP_UNUSED FLOAT3 normalize(FLOAT3) {return{};}
 CPP_UNUSED uint32_t get_global_id(uint32_t) {return{};}
 CPP_UNUSED FLOAT fmin(FLOAT, FLOAT) {return{};}
 CPP_UNUSED FLOAT fmax(FLOAT, FLOAT) {return{};}
-CPP_UNUSED FLOAT3 operator +=(FLOAT3, FLOAT3) {return{};}
-CPP_UNUSED FLOAT3 operator -(FLOAT3) {return{};}
-#endif /* __CPP */
+# endif /* __CPP */
 
 typedef struct scene_s
 {
     __constant const sphere_t   *__restrict spheres;
     __constant const plane_t    *__restrict planes;
+    __constant const triangle_t *__restrict triangles;
     __constant const ambient_t  *__restrict ambients;
     __constant const point_t    *__restrict points;
     __constant const direct_t   *__restrict directs;
@@ -176,6 +197,7 @@ typedef struct scene_s
 
     const uint32_t spheres_num;
     const uint32_t planes_num;
+    const uint32_t triangles_num;
     const uint32_t ambients_num;
     const uint32_t points_num;
     const uint32_t directs_num;
@@ -185,7 +207,8 @@ typedef struct scene_s
 typedef enum obj_type_e
 {
     SPHERE,
-    PLANE
+    PLANE,
+    TRIANGLE
 } obj_type_t;
 
 CPP_UNUSED
@@ -222,8 +245,25 @@ FLOAT intersect_sphere(FLOAT3 camera, FLOAT3 direction, __constant const sphere_
 CPP_UNUSED
 FLOAT intersect_plane(FLOAT3 camera, FLOAT3 direction, __constant const plane_t *__restrict pl)
 {
-    FLOAT3 co = pl->point - camera;
+    FLOAT3 co = pl->point - camera; // maybe not creating new object, and use camera object here
     return dot(co, pl->normal) / dot(direction, pl->normal);
+}
+
+CPP_UNUSED
+FLOAT intersect_triangle(FLOAT3 camera, FLOAT3 direction, __constant const triangle_t *__restrict tr)
+{
+    FLOAT3 co = tr->a - camera;
+    FLOAT t = dot(co, tr->normal) / dot(direction, tr->normal);
+    FLOAT3 p = camera + direction * t;
+    FLOAT3 ab = tr->b - tr->a;
+    FLOAT3 bc = tr->c - tr->b;
+    FLOAT3 ca = tr->a - tr->c;
+    bool A = cross(p - tr->a, ab).z > 0;
+    bool B = cross(p - tr->b, bc).z > 0;
+    bool C = cross(p - tr->c, ca).z > 0;
+    if ((A & B & C) | !(A | B | C))
+        return t;
+    return INFINITY;
 }
 
 CPP_UNUSED
@@ -269,6 +309,20 @@ const __constant void *__restrict closest_intersection(
         }
     }
 
+    for (uint32_t i=0; i < scene->triangles_num; ++i)
+    {
+        FLOAT t = intersect_triangle(camera, direction, scene->triangles + i);
+
+        if (t < start || t > end) // maybe >= <= here
+            continue ;
+        if (t < closest_t)
+        {
+            closest_t = t;
+            closest_obj = scene->triangles + i;
+            closest_type = TRIANGLE;
+        }
+    }
+
     *closest_t_ptr = closest_t;
     *closest_type_ptr = closest_type;
     return closest_obj;
@@ -286,8 +340,21 @@ bool shadow_intersection(
     for (uint32_t i=0; i < scene->spheres_num; ++i)
     {
         FLOAT t = intersect_sphere(camera, direction, scene->spheres + i);
-
         if (t > start && t < end) // maybe >= <= here
+            return true;
+    }
+
+    for (uint32_t i=0; i < scene->planes_num; ++i)
+    {
+        FLOAT t = intersect_plane(camera, direction, scene->planes + i);
+        if (t > start && t < end)
+            return true;
+    }
+
+    for (uint32_t i=0; i < scene->triangles_num; ++i)
+    {
+        FLOAT t = intersect_triangle(camera, direction, scene->triangles + i);
+        if (t > start && t < end)
             return true;
     }
     return false;
@@ -387,6 +454,7 @@ FLOAT3    trace_ray(
         {
             case SPHERE: normal = normalize(point - as_sphere(closest_obj)->center); break ;
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
+            case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
         }
         FLOAT factor = compute_lightning(scene, point, normal, direction, get_obj_specular(closest_obj));
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
@@ -409,6 +477,7 @@ __kernel void ray_tracer(
 
         __constant const sphere_t *__restrict spheres,
         __constant const plane_t *__restrict planes,
+        __constant const triangle_t *__restrict triangles,
         __constant const ambient_t *__restrict ambients,
         __constant const point_t *__restrict points,
         __constant const direct_t *__restrict directs,
@@ -416,6 +485,7 @@ __kernel void ray_tracer(
 
         const uint32_t spheres_num,
         const uint32_t planes_num,
+        const uint32_t triangles_num,
         const uint32_t ambients_num,
         const uint32_t points_num,
         const uint32_t directs_num,
@@ -434,6 +504,7 @@ __kernel void ray_tracer(
     const scene_t scene = (scene_t){
         spheres,
         planes,
+        triangles,
         ambients,
         points,
         directs,
@@ -441,6 +512,7 @@ __kernel void ray_tracer(
 
         spheres_num,
         planes_num,
+        triangles_num,
         ambients_num,
         points_num,
         directs_num,
@@ -466,3 +538,5 @@ __kernel void ray_tracer(
             | (uint32_t)(color.z);
     canvas[(height - y - 1) * width + z] = int_color;
 }
+
+#endif /* CL_KERNEL */

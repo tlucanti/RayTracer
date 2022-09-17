@@ -34,6 +34,7 @@ cllib::CLqueue queue;
 std::vector<camera_t> cam_vec;
 std::vector<sphere_t> sp_vec;
 std::vector<plane_t> pl_vec;
+std::vector<triangle_t> tr_vec;
 std::vector<ambient_t> amb_vec;
 std::vector<point_t> pt_vec;
 std::vector<direct_t> dir_vec;
@@ -41,6 +42,7 @@ std::vector<direct_t> dir_vec;
 cllib::CLarray<camera_t, cllib::read_only_array> cameras;
 cllib::CLarray<sphere_t, cllib::read_only_array> spheres;
 cllib::CLarray<plane_t, cllib::read_only_array> planes;
+cllib::CLarray<triangle_t, cllib::read_only_array> triangles;
 cllib::CLarray<ambient_t, cllib::read_only_array> ambients;
 cllib::CLarray<point_t, cllib::read_only_array> points;
 cllib::CLarray<direct_t, cllib::read_only_array> directs;
@@ -185,10 +187,19 @@ int main()
             sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
             sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2),
             sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2),
-            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2)
+            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2),
+            sphere_t({2,2,2},0.05,Color::red,0.,0.),
+            sphere_t({3,2,1},0.05,Color::red,0.,0.),
+            sphere_t({3,3,3},0.3,Color::red,0.,0.)
     };
     pl_vec = {
 //            plane_t({0, -1, 0}, {0, 1, 0}, Color::yellow, 1000, 0.2)
+    };
+    tr_vec = {
+//            triangle_t({2, 2, 2}, {3, 3, 3}, {3, 2, 1}, Color::grey, 10, 0.) // 1 2 3
+            triangle_t({3, 2, 1},{3, 3, 3},{2, 2, 2},   Color::grey, 300, 0.7) // 3 2 1
+//            triangle_t({2, 2, 2}, {3, 3, 3}, {3, 2, 1}, Color::grey, 10, 0.) // 1 2 3
+//            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
     };
     cam_vec = {
             camera_t({0, 0, -1}, {0, 0, 1})
@@ -206,6 +217,7 @@ int main()
 
     spheres = cllib::CLarray<sphere_t, cllib::read_only_array>(sp_vec, context, queue);
     planes = cllib::CLarray<plane_t, cllib::read_only_array>(pl_vec, context, queue);
+    triangles = cllib::CLarray<triangle_t, cllib::read_only_array>(tr_vec, context, queue);
     cameras = cllib::CLarray<camera_t, cllib::read_only_array>(cam_vec, context, queue);
 
     ambients = cllib::CLarray<ambient_t, cllib::read_only_array>(amb_vec, context, queue);
@@ -219,12 +231,14 @@ int main()
     kernel.set_next_arg(canvas);
     kernel.set_next_arg(spheres);
     kernel.set_next_arg(planes);
+    kernel.set_next_arg(triangles);
     kernel.set_next_arg(ambients);
     kernel.set_next_arg(points);
     kernel.set_next_arg(directs);
     kernel.set_next_arg(cameras);
     kernel.set_next_arg(static_cast<int>(spheres.size()));
     kernel.set_next_arg(static_cast<int>(planes.size()));
+    kernel.set_next_arg(static_cast<int>(triangles.size()));
     kernel.set_next_arg(static_cast<int>(ambients.size()));
     kernel.set_next_arg(static_cast<int>(points.size()));
     kernel.set_next_arg( static_cast<int>(directs.size()));
