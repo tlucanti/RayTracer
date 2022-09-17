@@ -2,7 +2,7 @@
 #ifndef CLLIB_CONTEXT_HPP
 # define CLLIB_CONTEXT_HPP
 
-# include "CLdefs.hpp"
+# include "CLcommon.hpp"
 # include "CLdevice.hpp"
 # include "CLexception.hpp"
 

@@ -24,26 +24,26 @@ endif()
 include_directories(.)
 include_directories(include)
 include_directories(cllib)
+include_directories(cllib/include)
 include_directories(mlxlib)
 
 link_directories(.)
 link_directories(cllib)
 
-#add_executable(old
-#		old/GPUContext.cpp
-#		old/GPUKernel.cpp
-#		old/GPUArray.cpp
-#
-##		old/window.cpp
-#
-#		old/main.cpp
-#)
-
 add_executable(test test.cpp)
 add_executable(cllib cllib/main.cpp)
 add_executable(mlxlib mlxlib/main.cpp)
 
-add_executable(RayTracer src/main.cpp)
+add_executable(RayTracer
+	src/main.cpp
+
+	cllib/src/CLbuiltinprog.cpp
+	cllib/src/CLcommon.cpp
+	cllib/src/CLcontext.cpp
+	cllib/src/CLdevice.cpp
+	cllib/src/CLexception.cpp
+	cllib/src/CLkernel.cpp
+)
 
 find_library(OPENCL_LIB OpenCL)
 #find_library(X11_LIB X11)

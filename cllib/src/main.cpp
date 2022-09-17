@@ -58,13 +58,13 @@ int main()
     cllib::CLarray<float> array1({1, 2, 3, 4, 5}, context, queue);
 //    cllib::CLarray<float> array2({10,20,30,40,50}, context, queue);
     float arg2 = 0.5;
-    cllib::CLarray<float> array3(5, context, queue);
+    cllib::CLarray<float> array3(5, context);
 
     cllib::CLkernel kernel(program, array1.size());
 
-    kernel.set_arg(0, array1);
-    kernel.set_arg(1, arg2);
-    kernel.set_arg(2, array3);
+    kernel.set_next_arg(array1);
+    kernel.set_next_arg(arg2);
+    kernel.set_next_arg(array3);
 
     kernel.run(queue);
 

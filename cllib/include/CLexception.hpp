@@ -2,7 +2,7 @@
 #ifndef CLLIB_EXCEPTION_HPP
 # define CLLIB_EXCEPTION_HPP
 
-# include "CLdefs.hpp"
+# include "CLcommon.hpp"
 
 #include <stdexcept>
 

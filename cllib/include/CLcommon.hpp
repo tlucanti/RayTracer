@@ -22,6 +22,10 @@
 # define CPP20		__cplusplus >= 202002L
 # define CPP23		__cplusplus >= 202003L
 
+# ifndef __VERBOSE
+#  define __VERBOSE 0
+# endif
+
 # ifndef WUR
 #  define WUR [[nodiscard]]
 # endif /* WUR */

@@ -2,7 +2,7 @@
 #ifndef CLLIB_PLATFORM_HPP
 # define CLLIB_PLATFORM_HPP
 
-# include "CLdefs.hpp"
+# include "CLcommon.hpp"
 # include "CLexception.hpp"
 # include "CLdevice.hpp"
 

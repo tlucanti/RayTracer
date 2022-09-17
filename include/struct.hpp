@@ -2,13 +2,12 @@
 #ifndef STRUCT_HPP
 # define STRUCT_HPP
 
-# include "cllib"
+# include <cllib>
 # ifdef __APPLE__
 #  include <math.h>
 #  define sincos __sincos
 # endif /* __APPLE__ */
 
-# define PACKED __attribute__((packed))
 # include <cmath>
 
 typedef double FLOAT;

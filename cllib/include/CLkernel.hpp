@@ -2,7 +2,7 @@
 #ifndef CLLIB_KERNEL_HPP
 # define CLLIB_KERNEL_HPP
 
-# include "CLdefs.hpp"
+# include "CLcommon.hpp"
 # include "CLexception.hpp"
 # include "CLprogram.hpp"
 # include "CLarray.hpp"

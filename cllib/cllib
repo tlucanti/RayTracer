@@ -2,7 +2,7 @@
 #ifndef CLLIB_HPP
 # define CLLIB_HPP
 
-# include "CLdefs.hpp"
+# include "CLcommon.hpp"
 # include "CLutils.hpp"
 # include "CLsources.hpp"
 # include "CLexception.hpp"

@@ -1,6 +1,6 @@
 
-#include "cllib"
-#include "mlxlib"
+#include <cllib>
+#include <mlxlib>
 #include "struct.hpp"
 #include <ctime>
 #include <sstream>
@@ -212,7 +212,7 @@ int main()
     points = cllib::CLarray<point_t, cllib::read_only_array>(pt_vec, context, queue);
     directs = cllib::CLarray<direct_t, cllib::read_only_array>(dir_vec, context, queue);
 
-    canvas = cllib::CLarray<unsigned int, cllib::write_only_array>(config::width * config::height, context, queue);
+    canvas = cllib::CLarray<unsigned int, cllib::write_only_array>(config::width * config::height, context);
     cllib::CLkernel kernel(program, {config::width, config::height});
 
     kernel.reset_args();

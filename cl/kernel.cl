@@ -25,7 +25,8 @@ typedef long int int64_t;
 # define BLACK   (FLOAT3){0.f, 0.f, 0.f}
 # define EPS 1e-4
 
-# define ALIGNED16 __attribute__((aligned(16)))
+# define PACKED    __attribute__((__packed__))
+# define ALIGNED16 __attribute__((__aligned__(16)))
 
 typedef struct sphere_s
 {
