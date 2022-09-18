@@ -34,12 +34,25 @@ FLOAT3 operator *(const FLOAT3 &a, FLOAT t)
     return {a.x * t + a.y * t, a.z * t, a.w * t};
 }
 
+FLOAT3 operator *(const FLOAT3 &a, const FLOAT3 &b)
+{
+    return {a.x * a.x, a.y * a.y, a.z * a.z};
+}
+
 FLOAT3 operator +=(FLOAT3 &a, const FLOAT3 &b)
 {
     a.x += b.x;
     a.y += b.y;
     a.z += b.z;
     a.w += b.w;
+    return a;
+}
+
+FLOAT3 operator *=(FLOAT3 &a, FLOAT b)
+{
+    a.x *= b;
+    a.y *= b;
+    a.z *= b;
     return a;
 }
 
@@ -82,6 +95,87 @@ void normalize_ref(FLOAT3 &vec)
     vec.x *= ln;
     vec.y *= ln;
     vec.z *= ln;
+}
+
+void compute_angles(const FLOAT3 &direction, FLOAT &alpha, FLOAT &theta)
+{
+    alpha = atan2(direction.x, direction.z);
+    if (std::isinf(alpha) or std::isnan(alpha))
+        alpha = 0;
+
+    theta = -atan2(direction.y, (direction.z * direction.z + direction.x * direction.x));
+    if (std::isinf(theta) or std::isnan(theta))
+        theta = 0;
+}
+
+void compute_angles_gamma(const FLOAT3 &direction, FLOAT3 &atg)
+{
+    atg.x = atan2(direction.y, direction.z);
+    if (std::isinf(atg.x) or std::isnan(atg.x))
+        atg.x = 0;
+
+    atg.y = atan2(direction.x, direction.z);
+    if (std::isinf(atg.y) or std::isnan(atg.y))
+        atg.y = 0;
+
+    atg.z = atan2(direction.y, direction.x);
+    if (std::isinf(atg.z) or std::isnan(atg.z))
+        atg.z = 0;
+}
+
+void compute_matrix(FLOAT3 rotate_matrix[3], FLOAT alpha, FLOAT theta)
+{
+    FLOAT	sin_alpha;
+    FLOAT   cos_alpha;
+    FLOAT   sin_theta;
+    FLOAT   cos_theta;
+
+    sincos(alpha, &sin_alpha, &cos_alpha);
+    sincos(theta, &sin_theta, &cos_theta);
+
+    rotate_matrix[0] = {cos_alpha, sin_alpha * sin_theta, sin_alpha * cos_theta};
+    rotate_matrix[1] = {0, cos_theta, -sin_theta};
+    rotate_matrix[2] = {-sin_alpha, sin_theta * cos_alpha, cos_alpha * cos_theta};
+}
+
+void compute_matrix_gamma(FLOAT3 rotate_matrix[3], FLOAT3 atg)
+{
+    FLOAT  _sin[3];
+    FLOAT  _cos[3];
+
+    sincos(atg.x, _sin, _cos);
+    sincos(atg.y, _sin + 1, _cos + 1);
+    sincos(atg.z, _sin + 2, _cos + 2);
+//     rotate_matrix[0] = {
+//         _cos[0] * _cos[1],
+//         _cos[0] * _sin[1] * _sin[2] - _sin[0] * _cos[2],
+//         _cos[0] * _sin[1] * _cos[2] + _sin[0] * _sin[2]
+//     };
+//     rotate_matrix[1] = {
+//         _sin[0] * _cos[1],
+//         _sin[0] * _sin[1] * _sin[2] + _cos[0] * _cos[2],
+//         _sin[0] * _sin[1] * _cos[2] - _cos[0] * _sin[2]
+//     };
+//     rotate_matrix[2] = {
+//         -_sin[1],
+//         _cos[1] * _sin[2],
+//         _cos[1] * _cos[2]
+//     };
+	rotate_matrix[0] = {
+		_cos[1] * _cos[2],
+		_sin[0] * _sin[1] * _cos[2] - _cos[0] * _sin[2],
+		_cos[0] * _sin[1] * _cos[2] + _sin[0] * _sin[2]
+	};
+	rotate_matrix[1] = {
+		_cos[1] * _sin[2],
+		_sin[0] * _sin[1] * _sin[2] + _cos[0] * _cos[2],
+		_cos[0] * _sin[1] * _sin[2] - _sin[0] * _cos[2]
+	};
+	rotate_matrix[2] = {
+		-_sin[1],
+		_sin[0] * _cos[1],
+		_cos[0] * _cos[1]
+	};
 }
 
 #endif /* STRUCT_HPP */

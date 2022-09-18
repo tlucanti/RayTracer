@@ -94,15 +94,18 @@ typedef struct cone_s
     uint32_t        specular;   // 32 --
     UNUSED uint32_t _padding;   //    -- 40
     FLOAT           reflective;  // 40 -- 48
-    FLOAT           alpha;      // 48 -- 56
-    FLOAT           theta;      // 56 -- 64
+//    FLOAT           alpha;      // 48 -- 56
+//    FLOAT           theta;      // 56 -- 64
+    FLOAT           width;
     FLOAT3          center;     // 64 -- 96
-    FLOAT3          normal;     //
+    FLOAT3          direction;     //
 
 # ifdef __CPP
-    cone_s(FLOAT3 center, FLOAT3 normal, FLOAT alpha, FLOAT theta, FLOAT3 color, uint32_t specular, FLOAT reflective)
-        : center(center), normal(normal), alpha(alpha), theta(theta), color(color), specular(specular), reflective(reflective)
-    {}
+    cone_s(FLOAT3 center, FLOAT3 direction, FLOAT width, FLOAT3 color, uint32_t specular, FLOAT reflective)
+        : center(center), direction(direction), width(1. / width), color(color), specular(specular), reflective(reflective)
+    {
+        normalize_ref(this->direction);
+    }
 # endif /* __CPP */
 } PACKED ALIGNED16 cone_t;
 
@@ -160,30 +163,13 @@ typedef struct camera_s
             : position(pos), direction(dir), rotate_matrix()
     {
         normalize_ref(direction);
-
-        alpha = atan2(direction.x, direction.z);
-        if (std::isinf(alpha) or std::isnan(alpha))
-            alpha = 0;
-
-        theta = atan2(direction.y, direction.z * direction.z + direction.x * direction.x);
-        if (std::isinf(theta) or std::isnan(theta))
-            theta = 0;
-        recompute_matrix();
+        compute_angles(dir, alpha, theta);
+        compute_matrix(rotate_matrix, alpha, theta);
     }
 
     void recompute_matrix()
     {
-        FLOAT	sin_alpha;
-        FLOAT   cos_alpha;
-        FLOAT   sin_theta;
-        FLOAT   cos_theta;
-
-        sincos(alpha, &sin_alpha, &cos_alpha);
-        sincos(theta, &sin_theta, &cos_theta);
-
-        rotate_matrix[0] = {cos_alpha, sin_alpha * sin_theta, sin_alpha * cos_theta};
-        rotate_matrix[1] = {0, cos_theta, -sin_theta};
-        rotate_matrix[2] = {-sin_alpha, sin_theta * cos_alpha, cos_alpha * cos_theta};
+        compute_matrix(rotate_matrix, alpha, theta);
     }
 # endif /* __CPP */
 } PACKED ALIGNED16 camera_t;
@@ -239,6 +225,40 @@ FLOAT3 rotate_vector(FLOAT3 vec, __constant const FLOAT3 *matrix)
 }
 
 CPP_UNUSED
+FLOAT3 rotate_vector_nonconst(FLOAT3 vec, const FLOAT3 *matrix)
+{
+    return (FLOAT3) {
+            dot(matrix[0], vec),
+            dot(matrix[1], vec),
+            dot(matrix[2], vec)
+    };
+}
+
+CPP_UNUSED
+void get_rotation_matrix(FLOAT3 *matr, FLOAT3 a, FLOAT3 b)
+{
+    FLOAT3 v = cross(a, b);
+    FLOAT s = sqrt(dot(v, v));
+    FLOAT c = 1 - dot(a, b);
+    FLOAT3 v2 = (FLOAT3){v.x * v.x, v.y * v.y, v.z * v.z};
+    matr[0] = (FLOAT3){1, 0, 0};
+    matr[1] = (FLOAT3){0, 1, 0};
+    matr[2] = (FLOAT3){0, 0, 1};
+
+    matr[0] += (FLOAT3){0, -v.z, v.y} * s;
+    matr[1] += (FLOAT3){v.z, 0, -v.x} * s;
+    matr[2] += (FLOAT3){-v.y, v.x, 0} * s;
+
+    matr[0] += (FLOAT3){-v2.x - v2.z, v.x * v.y, v.x * v.z} * c;
+    matr[1] += (FLOAT3){v.x * v.y, -v2.x - v2.z, v.y * v.z} * c;
+    matr[2] += (FLOAT3){v.x * v.z, v.y * v.z, -v2.x - v2.y} * c;
+
+//    matr[0] = (FLOAT3){1 + v2.y + v2.z, -v.z + v.x * v.y * c, v.y + v.x * v.z * c};
+//    matr[1] = (FLOAT3){v.z + v.x * v.y * c, 1 + v2.x + v2.z, -v.x + v.y * v.z * c};
+//    matr[2] = (FLOAT3){-v.y + v.x * v.z * c, v.x + v.y * v.z * c, 1 + v2.x + v2.y};
+}
+
+CPP_UNUSED
 FLOAT intersect_sphere(FLOAT3 camera, FLOAT3 direction, __constant const sphere_t *__restrict sp)
 {
    FLOAT3  oc = camera - sp->center;
@@ -286,6 +306,14 @@ FLOAT intersect_triangle(FLOAT3 camera, FLOAT3 direction, __constant const trian
 CPP_UNUSED
 FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn)
 {
+    FLOAT3 rot_matr[3];
+    get_rotation_matrix(rot_matr, cn->direction, (FLOAT3){0, 0, 1});
+    direction = rotate_vector_nonconst(direction, rot_matr);
+    camera = rotate_vector_nonconst(camera - cn->center, rot_matr);
+    direction.x *= cn->width;
+    direction.y *= cn->width;
+    camera.x *= cn->width;
+    camera.y *= cn->width;
     FLOAT a = direction.x * direction.x + direction.y * direction.y - direction.z * direction.z;
     FLOAT b = camera.x * direction.x + camera.y * direction.y - camera.z * direction.z; // maybe here dot(camera, direction) - 2 * camera.z * direction.z
     b *= 2;
@@ -459,7 +487,8 @@ FLOAT compute_lightning(
         FLOAT3 point,
         FLOAT3 normal,
         FLOAT3 direction,
-        uint32_t specular)
+        uint32_t specular
+    )
 {
     FLOAT intensity = 0.f;
     FLOAT3 light_vector;
@@ -517,7 +546,7 @@ FLOAT3    trace_ray(
             case CONE: {
                 FLOAT3 op = point - as_cone(closest_obj)->center;
                 op = normalize(op);
-                normal = as_cone(closest_obj)->normal - op * sqrt(2.0) * 0.5;
+                normal = as_cone(closest_obj)->direction - op * sqrt(2.0) * 0.5;
                 break;
             }
         }

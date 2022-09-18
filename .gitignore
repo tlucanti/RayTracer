@@ -7,3 +7,4 @@ dep
 *.a
 *.so
 a.out
+*.swp

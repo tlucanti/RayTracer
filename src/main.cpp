@@ -192,7 +192,14 @@ int main()
             sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2),
             sphere_t({2,2,2},0.05,Color::red,0.,0.),
             sphere_t({3,2,1},0.05,Color::red,0.,0.),
-            sphere_t({3,3,3},0.3,Color::red,0.,0.)
+            sphere_t({3,3,3},0.05,Color::red,0.,0.),
+            sphere_t({0,2,10},0.1,Color::green,0.,0.),
+            sphere_t({1,2,10},0.1,Color::green,0.,0.),
+            sphere_t({-1,2,10},0.1,Color::green,0.,0.),
+            sphere_t({0,3,10},0.1,Color::blue,0.,0.),
+            sphere_t({0,1,10},0.1,Color::blue,0.,0.),
+            sphere_t({0,2,11},0.1,Color::red,0.,0.),
+            sphere_t({0,2,9},0.1,Color::red,0.,0.)
     };
     pl_vec = {
 //            plane_t({0, -1, 0}, {0, 1, 0}, Color::yellow, 1000, 0.2)
@@ -204,10 +211,10 @@ int main()
 //            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
     };
     cn_vec = {
-            cone_t({0, 0, 0}, {0,1,0}, 0, 0, Color::purple, 0., 0.)
+            cone_t({0, 2, 10}, {0,1,0}, 0.2, Color::purple, 0., 0.)
     };
     cam_vec = {
-            camera_t({0, 0, -1}, {0, 0, 1})
+            camera_t({0, 0, -1}, {0, 0.4, 1})
     };
 
     amb_vec = {
@@ -219,6 +226,14 @@ int main()
     dir_vec = {
             direct_t({1, 4, 4}, 0.2, Color::white)
     };
+
+    FLOAT3 m[3];
+    get_rotation_matrix(m, {1, 0, 0}, {0, 1, 0});
+    std::cout << m[0].x << ' ' << m[0].y << ' ' << m[0].z << std::endl;
+    std::cout << m[1].x << ' ' << m[1].y << ' ' << m[1].z << std::endl;
+    std::cout << m[2].x << ' ' << m[2].y << ' ' << m[2].z << std::endl;
+    FLOAT3 v = rotate_vector({1, 1, 1}, m);
+    std::cout << v.x << ' ' << v.y << ' ' << v.z << std::endl;
 
     spheres = cllib::CLarray<sphere_t, cllib::read_only_array>(sp_vec, context, queue);
     planes = cllib::CLarray<plane_t, cllib::read_only_array>(pl_vec, context, queue);
