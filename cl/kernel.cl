@@ -339,7 +339,6 @@ CPP_UNUSED
 FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn)
 {
     direction = rotate_vector(direction, cn->matr);
-//    direction += (FLOAT3){1, 1, 1};
     camera = rotate_vector(camera - cn->center, cn->matr);
     direction.x *= cn->width;
     direction.y *= cn->width;
@@ -348,7 +347,7 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
     FLOAT a = direction.x * direction.x + direction.y * direction.y - direction.z * direction.z;
     FLOAT b = camera.x * direction.x + camera.y * direction.y - camera.z * direction.z; // maybe here dot(camera, direction) - 2 * camera.z * direction.z
     b *= 2;
-    FLOAT c = camera.x * camera.x + camera.y * camera.y - camera.z * camera.z;
+    FLOAT c = camera.x * camera.x + camera.y * camera.y - camera.z * camera.z + 100;
 
     FLOAT discriminant = b * b - 4 * a * c;
     if (discriminant < 0)

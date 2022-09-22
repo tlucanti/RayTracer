@@ -24,7 +24,7 @@ FLOAT3 operator +(const FLOAT3 &a, const FLOAT3 &b)
 
 FLOAT3 operator -(const FLOAT3 &a)
 {
-    return {-a.x, -a.y, -a.z, -a.w};
+    return {-a.x, -a.y, -a.z};
 }
 
 FLOAT3 operator -(const FLOAT3 &a, const FLOAT3 &b)
@@ -34,7 +34,7 @@ FLOAT3 operator -(const FLOAT3 &a, const FLOAT3 &b)
 
 FLOAT3 operator *(const FLOAT3 &a, FLOAT t)
 {
-    return {a.x * t, a.y * t, a.z * t, a.w * t};
+    return {a.x * t, a.y * t, a.z * t};
 }
 
 FLOAT3 operator *(const FLOAT3 &a, const FLOAT3 &b)
@@ -47,7 +47,6 @@ FLOAT3 &operator +=(FLOAT3 &a, const FLOAT3 &b)
     a.x += b.x;
     a.y += b.y;
     a.z += b.z;
-    a.w += b.w;
     return a;
 }
 

@@ -113,16 +113,6 @@ void mouse_hook(int x, int y, void *)
     int dy = y - mouse_pos.y;
     look_direction.x = dx * config::horizontal_look_speed;
     look_direction.y = dy * config::vertical_look_speed;
-//    if (dx < 5)
-//        look_direction.x /= 5;
-//    if (dy < 5)
-//        look_direction.y /= 5;
-    mouse_pos.x = x;
-    mouse_pos.y = y;
-}
-
-void enter_hook(int x, int y, void *)
-{
     mouse_pos.x = x;
     mouse_pos.y = y;
 }
@@ -146,8 +136,8 @@ void framehook(T *data) {
     static int fps_period = 0;
     static std::stringstream ss;
 
-//    if (not do_update)
-//        return ;
+    if (do_update == 0 and not mouse_press)
+        return ;
 
     ++fps_period;
     camera_t &cur_cam = cam_vec.at(config::current_camera);
@@ -215,10 +205,10 @@ int main()
 //            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
     };
     cn_vec = {
-            cone_t({0, 7, 5}, {-0.1,1,0.1}, 0.2, Color::purple, 500, 0.3)
+            cone_t({0, 7, 5}, {-0.1,1,0.1}, 0.5, Color::purple, 500, 0.3)
     };
     cy_vec = {
-            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)
+//            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)
     };
 
     cam_vec = {
@@ -226,7 +216,7 @@ int main()
     };
 
     amb_vec = {
-            ambient_t(0.05, Color::white)
+            ambient_t(0.1, Color::white)
     };
     pt_vec = {
             point_t({2, 7, 1}, 0.6, Color::white)
