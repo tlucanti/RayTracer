@@ -97,11 +97,25 @@ typedef struct cone_s
     FLOAT           width;
     FLOAT3          center;     // 64 -- 96
     FLOAT3          direction;
+    FLOAT           sec_alpha;
     FLOAT3          matr[3];     //
 
 # ifdef __CPP
-    cone_s(FLOAT3 center, FLOAT3 direction, FLOAT width, FLOAT3 color, uint32_t specular, FLOAT reflective)
-        : center(center), direction(direction), width(1. / width), color(color), specular(specular), reflective(reflective)
+    cone_s(
+        FLOAT3 center,
+        FLOAT3 direction,
+        FLOAT width,
+        FLOAT3 color,
+        uint32_t specular,
+        FLOAT reflective
+    ) :
+        center(center),
+        direction(direction),
+        width(1. / width),
+        color(color),
+        specular(specular),
+        reflective(reflective),
+        sec_alpha(1. / cos(width * PI / 2))
     {
         normalize_ref(this->direction);
         set_rotation_matrix(this->matr, this->direction, {0, 0, 1});
@@ -523,8 +537,12 @@ FLOAT3    trace_ray(
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
             case CONE: {
                 FLOAT3 op = point - as_cone(closest_obj)->center;
-                op = normalize(op);
-                normal = as_cone(closest_obj)->direction - op * sqrt(2.0) * 0.5;
+                op = normalize(op) * as_cone(closest_obj)->sec_alpha;
+                if (dot(op, as_cone(closest_obj)->direction) < 0)
+                    normal = op + as_cone(closest_obj)->direction;
+                else
+                    normal = op - as_cone(closest_obj)->direction;
+                normal = normalize(normal);
                 break;
             }
         }

@@ -186,45 +186,45 @@ int main()
     program.compile(device, true, "-D__OPENCL");
 
     sp_vec = {
-            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
-            sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2),
-            sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2),
-            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2),
-            sphere_t({2,2,2},0.05,Color::red,0.,0.),
-            sphere_t({3,2,1},0.05,Color::red,0.,0.),
-            sphere_t({3,3,3},0.05,Color::red,0.,0.),
-            sphere_t({0,2,10},0.1,Color::green,0.,0.),
-            sphere_t({1,2,10},0.1,Color::green,0.,0.),
-            sphere_t({-1,2,10},0.1,Color::green,0.,0.),
-            sphere_t({0,3,10},0.1,Color::blue,0.,0.),
-            sphere_t({0,1,10},0.1,Color::blue,0.,0.),
-            sphere_t({0,2,11},0.1,Color::red,0.,0.),
-            sphere_t({0,2,9},0.1,Color::red,0.,0.)
+//            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
+//            sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2),
+//            sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2),
+//            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2),
+//            sphere_t({2,2,2},0.05,Color::red,0.,0.),
+//            sphere_t({3,2,1},0.05,Color::red,0.,0.),
+//            sphere_t({3,3,3},0.05,Color::red,0.,0.),
+//            sphere_t({0,2,10},0.1,Color::green,0.,0.),
+//            sphere_t({1,2,10},0.1,Color::green,0.,0.),
+//            sphere_t({-1,2,10},0.1,Color::green,0.,0.),
+//            sphere_t({0,3,10},0.1,Color::blue,0.,0.),
+//            sphere_t({0,1,10},0.1,Color::blue,0.,0.),
+//            sphere_t({0,2,11},0.1,Color::red,0.,0.),
+//            sphere_t({0,2,9},0.1,Color::red,0.,0.)
     };
     pl_vec = {
 //            plane_t({0, -1, 0}, {0, 1, 0}, Color::yellow, 1000, 0.2)
     };
     tr_vec = {
 //            triangle_t({2, 2, 2}, {3, 3, 3}, {3, 2, 1}, Color::grey, 10, 0.) // 1 2 3
-            triangle_t({3, 2, 1},{3, 3, 3},{2, 2, 2},   Color::grey, 300, 0.7) // 3 2 1
+//            triangle_t({5, 1, 0},{0, 1, 0},{2, 2, 2},   Color::grey, 300, 0.7) // 3 2 1
 //            triangle_t({2, 2, 2}, {3, 3, 3}, {3, 2, 1}, Color::grey, 10, 0.) // 1 2 3
 //            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
     };
     cn_vec = {
-            cone_t({0, 2, 10}, {1,1,1}, 0.2, Color::purple, 0., 0.)
+            cone_t({0, 7, 5}, {0,1,0}, 0.2, Color::purple, 0., 0.)
     };
     cam_vec = {
             camera_t({0, 0, -1}, {0, 0.4, 1})
     };
 
     amb_vec = {
-            ambient_t(0.2, Color::white)
+//            ambient_t(0.2, Color::white)
     };
     pt_vec = {
-            point_t({2, 1, 0}, 0.6, Color::white)
+            point_t({2, 5, 0}, 0.6, Color::white)
     };
     dir_vec = {
-            direct_t({1, 4, 4}, 0.2, Color::white)
+//            direct_t({1, 4, 4}, 0.2, Color::white)
     };
 
 //    FLOAT3 m[3];

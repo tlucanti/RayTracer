@@ -11,6 +11,7 @@
 # include <cmath>
 
 # define EPS 1e-4
+# define PI M_PI
 
 typedef double FLOAT;
 typedef cl_double3 FLOAT3;
