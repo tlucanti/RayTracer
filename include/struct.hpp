@@ -10,6 +10,8 @@
 
 # include <cmath>
 
+# define EPS 1e-4
+
 typedef double FLOAT;
 typedef cl_double3 FLOAT3;
 typedef cl_double2 FLOAT2;
@@ -31,7 +33,7 @@ FLOAT3 operator -(const FLOAT3 &a, const FLOAT3 &b)
 
 FLOAT3 operator *(const FLOAT3 &a, FLOAT t)
 {
-    return {a.x * t + a.y * t, a.z * t, a.w * t};
+    return {a.x * t, a.y * t, a.z * t, a.w * t};
 }
 
 FLOAT3 operator *(const FLOAT3 &a, const FLOAT3 &b)
@@ -39,7 +41,7 @@ FLOAT3 operator *(const FLOAT3 &a, const FLOAT3 &b)
     return {a.x * a.x, a.y * a.y, a.z * a.z};
 }
 
-FLOAT3 operator +=(FLOAT3 &a, const FLOAT3 &b)
+FLOAT3 &operator +=(FLOAT3 &a, const FLOAT3 &b)
 {
     a.x += b.x;
     a.y += b.y;
@@ -48,7 +50,7 @@ FLOAT3 operator +=(FLOAT3 &a, const FLOAT3 &b)
     return a;
 }
 
-FLOAT3 operator *=(FLOAT3 &a, FLOAT b)
+FLOAT3 &operator *=(FLOAT3 &a, FLOAT b)
 {
     a.x *= b;
     a.y *= b;
@@ -176,6 +178,38 @@ void compute_matrix_gamma(FLOAT3 rotate_matrix[3], FLOAT3 atg)
 		_sin[0] * _cos[1],
 		_cos[0] * _cos[1]
 	};
+}
+
+void set_rotation_matrix(FLOAT3 *matrix, const FLOAT3 &v1, const FLOAT3 &v2)
+{
+    FLOAT3 k = cross(v1, v2);
+    FLOAT cos_theta = dot(v1, v2);
+    FLOAT sin_theta = sqrt(dot(k, k));
+    if (abs(sin_theta) < EPS)
+    {
+        FLOAT factor = -2. * sin_theta + 1;
+        matrix[0] = (FLOAT3){1, 0, 0} * factor;
+        matrix[1] = (FLOAT3){0, 1, 0} * factor;
+        matrix[2] = (FLOAT3){0, 0, 1} * factor;
+        return ;
+    }
+    normalize_ref(k);
+    FLOAT3 k2 = {k.x * k.x, k.y * k.y, k.z * k.z};
+
+    std::cout << "k " << k.x << ' ' << k.y << ' ' << k.z << std::endl;
+    std::cout << "k2 " << k2.x << ' ' << k2.y << ' ' << k2.z << std::endl;
+
+    matrix[0] = {1, 0, 0};
+    matrix[1] = {0, 1, 0};
+    matrix[2] = {0, 0, 1};
+
+    matrix[0] += (FLOAT3){0, -k.z, k.y} * sin_theta;
+    matrix[1] += (FLOAT3){k.z, 0, -k.x} * sin_theta;
+    matrix[2] += (FLOAT3){-k.y, k.x, 0} * sin_theta;
+
+    matrix[0] += (FLOAT3){-k2.y - k2.z, k.x * k.y, k.x * k.z} * (1 - cos_theta);
+    matrix[1] += (FLOAT3){k.x * k.y, -k2.x - k2.z, k.y * k.z} * (1 - cos_theta);
+    matrix[2] += (FLOAT3){k.x * k.z, k.y * k.z, -k2.x - k2.y} * (1 - cos_theta);
 }
 
 #endif /* STRUCT_HPP */

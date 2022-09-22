@@ -7,6 +7,7 @@
 #   define NULL    0
 #  endif /* NULL */
 #  define CPP_UNUSED
+#  define EPS 1e-4
 
 typedef double FLOAT;
 typedef double3 FLOAT3;
@@ -26,7 +27,6 @@ typedef long int int64_t;
 # define get_obj_reflective(obj_ptr) as_sphere(obj_ptr)->reflective
 
 # define BLACK   (FLOAT3){0.f, 0.f, 0.f}
-# define EPS 1e-4
 
 # define PACKED    __attribute__((__packed__))
 # define ALIGNED16 __attribute__((__aligned__(16)))
@@ -94,17 +94,21 @@ typedef struct cone_s
     uint32_t        specular;   // 32 --
     UNUSED uint32_t _padding;   //    -- 40
     FLOAT           reflective;  // 40 -- 48
-//    FLOAT           alpha;      // 48 -- 56
-//    FLOAT           theta;      // 56 -- 64
     FLOAT           width;
     FLOAT3          center;     // 64 -- 96
-    FLOAT3          direction;     //
+    FLOAT3          direction;
+    FLOAT3          matr[3];     //
 
 # ifdef __CPP
     cone_s(FLOAT3 center, FLOAT3 direction, FLOAT width, FLOAT3 color, uint32_t specular, FLOAT reflective)
         : center(center), direction(direction), width(1. / width), color(color), specular(specular), reflective(reflective)
     {
         normalize_ref(this->direction);
+        set_rotation_matrix(this->matr, this->direction, {0, 0, 1});
+
+        std::cout << matr[0].x << ' ' << matr[0].y << ' ' << matr[0].z << std::endl;
+        std::cout << matr[1].x << ' ' << matr[1].y << ' ' << matr[1].z << std::endl;
+        std::cout << matr[2].x << ' ' << matr[2].y << ' ' << matr[2].z << std::endl;
     }
 # endif /* __CPP */
 } PACKED ALIGNED16 cone_t;
@@ -228,34 +232,10 @@ CPP_UNUSED
 FLOAT3 rotate_vector_nonconst(FLOAT3 vec, const FLOAT3 *matrix)
 {
     return (FLOAT3) {
-            dot(matrix[0], vec),
-            dot(matrix[1], vec),
-            dot(matrix[2], vec)
+        dot(matrix[0], vec),
+        dot(matrix[1], vec),
+        dot(matrix[2], vec)
     };
-}
-
-CPP_UNUSED
-void get_rotation_matrix(FLOAT3 *matr, FLOAT3 a, FLOAT3 b)
-{
-    FLOAT3 v = cross(a, b);
-    FLOAT s = sqrt(dot(v, v));
-    FLOAT c = 1 - dot(a, b);
-    FLOAT3 v2 = (FLOAT3){v.x * v.x, v.y * v.y, v.z * v.z};
-    matr[0] = (FLOAT3){1, 0, 0};
-    matr[1] = (FLOAT3){0, 1, 0};
-    matr[2] = (FLOAT3){0, 0, 1};
-
-    matr[0] += (FLOAT3){0, -v.z, v.y} * s;
-    matr[1] += (FLOAT3){v.z, 0, -v.x} * s;
-    matr[2] += (FLOAT3){-v.y, v.x, 0} * s;
-
-    matr[0] += (FLOAT3){-v2.x - v2.z, v.x * v.y, v.x * v.z} * c;
-    matr[1] += (FLOAT3){v.x * v.y, -v2.x - v2.z, v.y * v.z} * c;
-    matr[2] += (FLOAT3){v.x * v.z, v.y * v.z, -v2.x - v2.y} * c;
-
-//    matr[0] = (FLOAT3){1 + v2.y + v2.z, -v.z + v.x * v.y * c, v.y + v.x * v.z * c};
-//    matr[1] = (FLOAT3){v.z + v.x * v.y * c, 1 + v2.x + v2.z, -v.x + v.y * v.z * c};
-//    matr[2] = (FLOAT3){-v.y + v.x * v.z * c, v.x + v.y * v.z * c, 1 + v2.x + v2.y};
 }
 
 CPP_UNUSED
@@ -306,10 +286,8 @@ FLOAT intersect_triangle(FLOAT3 camera, FLOAT3 direction, __constant const trian
 CPP_UNUSED
 FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn)
 {
-    FLOAT3 rot_matr[3];
-    get_rotation_matrix(rot_matr, cn->direction, (FLOAT3){0, 0, 1});
-    direction = rotate_vector_nonconst(direction, rot_matr);
-    camera = rotate_vector_nonconst(camera - cn->center, rot_matr);
+    direction = rotate_vector(direction, cn->matr);
+    camera = rotate_vector(camera - cn->center, cn->matr);
     direction.x *= cn->width;
     direction.y *= cn->width;
     camera.x *= cn->width;

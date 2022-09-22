@@ -211,7 +211,7 @@ int main()
 //            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
     };
     cn_vec = {
-            cone_t({0, 2, 10}, {0,1,0}, 0.2, Color::purple, 0., 0.)
+            cone_t({0, 2, 10}, {1,1,1}, 0.2, Color::purple, 0., 0.)
     };
     cam_vec = {
             camera_t({0, 0, -1}, {0, 0.4, 1})
@@ -227,13 +227,15 @@ int main()
             direct_t({1, 4, 4}, 0.2, Color::white)
     };
 
-    FLOAT3 m[3];
-    get_rotation_matrix(m, {1, 0, 0}, {0, 1, 0});
-    std::cout << m[0].x << ' ' << m[0].y << ' ' << m[0].z << std::endl;
-    std::cout << m[1].x << ' ' << m[1].y << ' ' << m[1].z << std::endl;
-    std::cout << m[2].x << ' ' << m[2].y << ' ' << m[2].z << std::endl;
-    FLOAT3 v = rotate_vector({1, 1, 1}, m);
-    std::cout << v.x << ' ' << v.y << ' ' << v.z << std::endl;
+//    FLOAT3 m[3];
+//    FLOAT3 a = {1, 0, 0};
+//    FLOAT3 b = {0, 1, 0};
+//    set_rotation_matrix(m, a, b);
+//    std::cout << m[0].x << ' ' << m[0].y << ' ' << m[0].z << std::endl;
+//    std::cout << m[1].x << ' ' << m[1].y << ' ' << m[1].z << std::endl;
+//    std::cout << m[2].x << ' ' << m[2].y << ' ' << m[2].z << std::endl;
+//    FLOAT3 v = rotate_vector(a, m);
+//    std::cout << v.x << ' ' << v.y << ' ' << v.z << std::endl;
 
     spheres = cllib::CLarray<sphere_t, cllib::read_only_array>(sp_vec, context, queue);
     planes = cllib::CLarray<plane_t, cllib::read_only_array>(pl_vec, context, queue);
