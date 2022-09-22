@@ -21,6 +21,7 @@ typedef long int int64_t;
 # define as_plane(obj_ptr) ((__constant const plane_t *)(obj_ptr))
 # define as_triangle(obj_ptr) ((__constant const triangle_t *)(obj_ptr))
 # define as_cone(obj_ptr) ((__constant const cone_t *)(obj_ptr))
+# define as_cylinder(obj_ptr) ((__constant const cylinder_t *)(obj_ptr))
 
 # define get_obj_color(obj_ptr) as_sphere(obj_ptr)->color
 # define get_obj_specular(obj_ptr) as_sphere(obj_ptr)->specular
@@ -29,6 +30,7 @@ typedef long int int64_t;
 # define BLACK   (FLOAT3){0, 0, 0}
 
 # define PACKED    __attribute__((__packed__))
+# define ALIGNED8  __attribute__((__aligned__(8)))
 # define ALIGNED16 __attribute__((__aligned__(16)))
 
 typedef struct sphere_s
@@ -46,7 +48,7 @@ typedef struct sphere_s
             : center(center), radius(radius), color(color), specular(specular), reflective(reflective), _padding0(), _padding1()
     {}
 # endif /* __CPP */
-} PACKED ALIGNED16 sphere_t;
+} PACKED ALIGNED8 sphere_t;
 
 typedef struct plane_s
 {
@@ -64,7 +66,7 @@ typedef struct plane_s
         normalize_ref(this->normal);
     }
 # endif /* __CPP */
-} PACKED ALIGNED16 plane_t;
+} PACKED ALIGNED8 plane_t;
 
 typedef struct triangle_s
 {
@@ -86,7 +88,7 @@ typedef struct triangle_s
         normal = cross(p2 - p1, p3 - p1);
     }
 # endif /* __CPP */
-} PACKED ALIGNED16 triangle_t;
+} PACKED ALIGNED8 triangle_t;
 
 typedef struct cone_s
 {
@@ -125,7 +127,38 @@ typedef struct cone_s
         std::cout << matr[2].x << ' ' << matr[2].y << ' ' << matr[2].z << std::endl;
     }
 # endif /* __CPP */
-} PACKED ALIGNED16 cone_t;
+} PACKED ALIGNED8 cone_t;
+
+typedef struct cylinder_s
+{
+    FLOAT3          color;      // 0  -- 32
+    uint32_t        specular;   // 32 --
+    UNUSED uint32_t _padding;   //    -- 40
+    FLOAT           reflective;  // 40 -- 48
+    FLOAT3          position;
+    FLOAT3          direction;
+    FLOAT           radius;
+
+# ifdef __CPP
+    cylinder_s(
+        const FLOAT3 &position,
+        const FLOAT3 &direction,
+        FLOAT radius,
+        const FLOAT3 &color,
+        uint32_t specular,
+        FLOAT reflective
+   ) :
+        position(position),
+        direction(direction),
+        radius(radius),
+        color(color),
+        specular(specular),
+        reflective(reflective)
+    {
+        normalize_ref(this->direction);
+    }
+# endif /* __CPP */
+} PACKED ALIGNED8 cylinder_t;
 
 typedef struct ambient_s
 {
@@ -137,7 +170,7 @@ typedef struct ambient_s
             : intensity(intensity), color(color)
     {}
 # endif /* __CPP */
-} PACKED ALIGNED16 ambient_t;
+} PACKED ALIGNED8 ambient_t;
 
 typedef struct point_s
 {
@@ -150,7 +183,7 @@ typedef struct point_s
             : position(position), intensity(intencity), color(color)
     {}
 # endif /* __CPP */
-} PACKED ALIGNED16 point_t;
+} PACKED ALIGNED8 point_t;
 
 typedef struct direct_s
 {
@@ -165,7 +198,7 @@ typedef struct direct_s
         normalize_ref(direction);
     }
 # endif /* __CPP */
-} PACKED ALIGNED16 direct_t;
+} PACKED ALIGNED8 direct_t;
 
 typedef struct camera_s
 {
@@ -190,7 +223,7 @@ typedef struct camera_s
         compute_matrix(rotate_matrix, alpha, theta);
     }
 # endif /* __CPP */
-} PACKED ALIGNED16 camera_t;
+} PACKED ALIGNED8 camera_t;
 
 # ifdef __CPP
 #  define __constant
@@ -209,6 +242,8 @@ typedef struct scene_s
     __constant const plane_t    *__restrict planes;
     __constant const triangle_t *__restrict triangles;
     __constant const cone_t     *__restrict cones;
+    __constant const cylinder_t *__restrict cylinders;
+
     __constant const ambient_t  *__restrict ambients;
     __constant const point_t    *__restrict points;
     __constant const direct_t   *__restrict directs;
@@ -218,6 +253,8 @@ typedef struct scene_s
     const uint32_t planes_num;
     const uint32_t triangles_num;
     const uint32_t cones_num;
+    const uint32_t cylinders_num;
+
     const uint32_t ambients_num;
     const uint32_t points_num;
     const uint32_t directs_num;
@@ -229,7 +266,8 @@ typedef enum obj_type_e
     SPHERE,
     PLANE,
     TRIANGLE,
-    CONE
+    CONE,
+    CYLINDER
 } obj_type_t;
 
 CPP_UNUSED
@@ -259,7 +297,7 @@ FLOAT intersect_sphere(FLOAT3 camera, FLOAT3 direction, __constant const sphere_
 
    FLOAT a = dot(direction, direction);
    FLOAT b = 2 * dot(oc, direction); // change to 2b
-   FLOAT c = dot(oc, oc) - sp->radius * sp->radius;
+   FLOAT c = dot(oc, oc) - sp->radius * sp->radius; // change to sp->r2
 
    FLOAT discriminant = b*b - 4*a*c;
    if (discriminant < EPS)
@@ -318,6 +356,31 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
     discriminant = sqrt(discriminant);
     FLOAT x1 = (-b + discriminant) / 2 / a; // firstly divide, then multiply
     FLOAT x2 = (-b - discriminant) / 2 / a;
+    FLOAT mn = fmin(x1, x2);
+    if (mn < EPS)
+        return fmax(x1, x2);
+    return mn;
+}
+
+CPP_UNUSED
+FLOAT intersect_cylinder(FLOAT3 camera, FLOAT3 direction, __constant const cylinder_t *__restrict cy)
+{
+    FLOAT3 oc = camera - cy->position;
+    FLOAT3 A = cross(oc, cy->direction);
+    FLOAT3 B = cross(direction, cy->direction);
+
+    FLOAT a = dot(B, B);
+    FLOAT b = 2 * dot(A, B);
+    FLOAT c = dot(A, A) - cy->radius * cy->radius;
+
+    FLOAT discriminant = b * b - 4. * a * c;
+    if (discriminant < EPS)
+        return INFINITY;
+
+    discriminant = sqrt(discriminant);
+    FLOAT x1 = -b + discriminant / (2. * a);
+    FLOAT x2 = -b - discriminant / (2. * a);
+
     FLOAT mn = fmin(x1, x2);
     if (mn < EPS)
         return fmax(x1, x2);
@@ -395,6 +458,20 @@ const __constant void *__restrict closest_intersection(
         }
     }
 
+    for (uint32_t i=0; i < scene->cylinders_num; ++i)
+    {
+        FLOAT t = intersect_cylinder(camera, direction, scene->cylinders + i);
+
+        if (t < start || t > end) // maybe >= <= here
+            continue ;
+        if (t < closest_t)
+        {
+            closest_t = t;
+            closest_obj = scene->cylinders + i;
+            closest_type = CYLINDER;
+        }
+    }
+
     *closest_t_ptr = closest_t;
     *closest_type_ptr = closest_type;
     return closest_obj;
@@ -433,6 +510,13 @@ bool shadow_intersection(
     for (uint32_t i=0; i < scene->cones_num; ++i)
     {
         FLOAT t = intersect_cone(camera, direction, scene->cones + i);
+        if (t > start && t < end)
+            return true;
+    }
+
+    for (uint32_t i=0; i < scene->cylinders_num; ++i)
+    {
+        FLOAT t = intersect_cylinder(camera, direction, scene->cylinders + i);
         if (t > start && t < end)
             return true;
     }
@@ -546,6 +630,13 @@ FLOAT3    trace_ray(
                 normal = normalize(normal);
                 break;
             }
+            case CYLINDER: {
+                FLOAT3 op = point - as_cylinder(closest_obj)->position;
+                FLOAT dt = dot(as_cylinder(closest_obj)->direction, op);
+                normal = op - as_cylinder(closest_obj)->direction * dt;
+                normal *= 1. / as_cylinder(closest_obj)->radius;
+                break ;
+            }
         }
         FLOAT factor = compute_lightning(scene, point, normal, direction, get_obj_specular(closest_obj));
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
@@ -570,6 +661,8 @@ __kernel void ray_tracer(
         __constant const plane_t *__restrict planes,
         __constant const triangle_t *__restrict triangles,
         __constant const cone_t *__restrict cones,
+        __constant const cylinder_t *__restrict cylinders,
+
         __constant const ambient_t *__restrict ambients,
         __constant const point_t *__restrict points,
         __constant const direct_t *__restrict directs,
@@ -579,6 +672,8 @@ __kernel void ray_tracer(
         const uint32_t planes_num,
         const uint32_t triangles_num,
         const uint32_t cones_num,
+        const uint32_t cylinders_num,
+
         const uint32_t ambients_num,
         const uint32_t points_num,
         const uint32_t directs_num,
@@ -599,6 +694,8 @@ __kernel void ray_tracer(
         planes,
         triangles,
         cones,
+        cylinders,
+
         ambients,
         points,
         directs,
@@ -608,6 +705,8 @@ __kernel void ray_tracer(
         planes_num,
         triangles_num,
         cones_num,
+        cylinders_num,
+
         ambients_num,
         points_num,
         directs_num,
