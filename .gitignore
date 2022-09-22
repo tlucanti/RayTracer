@@ -8,3 +8,7 @@ dep
 *.so
 a.out
 *.swp
+
+mlxlib/mlxlinux
+mlxlib/mlxosx
+json
