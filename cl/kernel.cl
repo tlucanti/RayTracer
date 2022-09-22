@@ -26,7 +26,7 @@ typedef long int int64_t;
 # define get_obj_specular(obj_ptr) as_sphere(obj_ptr)->specular
 # define get_obj_reflective(obj_ptr) as_sphere(obj_ptr)->reflective
 
-# define BLACK   (FLOAT3){0.f, 0.f, 0.f}
+# define BLACK   (FLOAT3){0, 0, 0}
 
 # define PACKED    __attribute__((__packed__))
 # define ALIGNED16 __attribute__((__aligned__(16)))
@@ -301,6 +301,7 @@ CPP_UNUSED
 FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn)
 {
     direction = rotate_vector(direction, cn->matr);
+//    direction += (FLOAT3){1, 1, 1};
     camera = rotate_vector(camera - cn->center, cn->matr);
     direction.x *= cn->width;
     direction.y *= cn->width;
@@ -454,7 +455,7 @@ FLOAT compute_lightning_single(
         uint32_t specular
     )
 {
-    FLOAT intensity = 0.f;
+    FLOAT intensity = 0;
 
     // diffuse lightning
     FLOAT normal_angle = dot(normal_vector, light_vector);
@@ -482,7 +483,7 @@ FLOAT compute_lightning(
         uint32_t specular
     )
 {
-    FLOAT intensity = 0.f;
+    FLOAT intensity = 0;
     FLOAT3 light_vector;
 
     for (uint32_t i=0; i < scene->ambients_num; ++i)
@@ -491,7 +492,7 @@ FLOAT compute_lightning(
     for (uint32_t i=0; i < scene->points_num; ++i)
     {
         light_vector = normalize(scene->points[i].position - point);
-        if (shadow_intersection(scene, point, light_vector, EPS, 1.f - EPS))
+        if (shadow_intersection(scene, point, light_vector, EPS, 1 - EPS))
             continue ;
         intensity += compute_lightning_single(light_vector, normal, direction, scene->points[i].intensity, specular);
     }
@@ -518,7 +519,7 @@ FLOAT3    trace_ray(
     const __constant void *__restrict closest_obj;
     FLOAT closest_t;
     FLOAT3 color = BLACK;
-    FLOAT reflective_prod = 1.f;
+    FLOAT reflective_prod = 1;
     obj_type_t closest_type;
 
     while (recursion_depth > 0)
@@ -537,8 +538,8 @@ FLOAT3    trace_ray(
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
             case CONE: {
                 FLOAT3 op = point - as_cone(closest_obj)->center;
-                op = normalize(op) * as_cone(closest_obj)->sec_alpha;
-                if (dot(op, as_cone(closest_obj)->direction) < 0)
+                op = normalize(op * as_cone(closest_obj)->sec_alpha);
+                if (dot(op, as_cone(closest_obj)->direction) < EPS)
                     normal = op + as_cone(closest_obj)->direction;
                 else
                     normal = op - as_cone(closest_obj)->direction;
@@ -552,7 +553,7 @@ FLOAT3    trace_ray(
         if (recursion_depth == 0)
             color += local_color * reflective_prod /* * closest_sphere->reflective*/;
         else
-            color += local_color * (1.0f - get_obj_reflective(closest_obj)) * reflective_prod;
+            color += local_color * (1.0 - get_obj_reflective(closest_obj)) * reflective_prod;
         reflective_prod *= get_obj_reflective(closest_obj);
 
         direction = reflect_ray(-direction, normal);

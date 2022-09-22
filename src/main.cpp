@@ -211,20 +211,20 @@ int main()
 //            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
     };
     cn_vec = {
-            cone_t({0, 7, 5}, {0,1,0}, 0.2, Color::purple, 0., 0.)
+            cone_t({0, 7, 5}, {-0.1,1,0.1}, 0.2, Color::purple, 0., 0.)
     };
     cam_vec = {
             camera_t({0, 0, -1}, {0, 0.4, 1})
     };
 
     amb_vec = {
-//            ambient_t(0.2, Color::white)
+            ambient_t(0.05, Color::white)
     };
     pt_vec = {
-            point_t({2, 5, 0}, 0.6, Color::white)
+            point_t({2, 7, 1}, 0.6, Color::white)
     };
     dir_vec = {
-//            direct_t({1, 4, 4}, 0.2, Color::white)
+            direct_t({1, 3, 4}, 0.2, Color::white)
     };
 
 //    FLOAT3 m[3];
