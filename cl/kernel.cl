@@ -122,9 +122,9 @@ typedef struct cone_s
         normalize_ref(this->direction);
         set_rotation_matrix(this->matr, this->direction, {0, 0, 1});
 
-        std::cout << matr[0].x << ' ' << matr[0].y << ' ' << matr[0].z << std::endl;
-        std::cout << matr[1].x << ' ' << matr[1].y << ' ' << matr[1].z << std::endl;
-        std::cout << matr[2].x << ' ' << matr[2].y << ' ' << matr[2].z << std::endl;
+//        std::cout << matr[0].x << ' ' << matr[0].y << ' ' << matr[0].z << std::endl;
+//        std::cout << matr[1].x << ' ' << matr[1].y << ' ' << matr[1].z << std::endl;
+//        std::cout << matr[2].x << ' ' << matr[2].y << ' ' << matr[2].z << std::endl;
     }
 # endif /* __CPP */
 } PACKED ALIGNED8 cone_t;

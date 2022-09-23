@@ -247,7 +247,10 @@ int main()
     directs = cllib::CLarray<direct_t, cllib::read_only_array>(dir_vec, context, queue);
 
     canvas = cllib::CLarray<unsigned int, cllib::write_only_array>(config::width * config::height, context);
+    int i;
+    clCreateKernel(program.__get_program(), program.get_program_name().c_str(), &i);
     cllib::CLkernel kernel(program, {config::width, config::height});
+//    cllib::CLkernel kernel;
 
     kernel.reset_args();
     kernel.set_next_arg(canvas);

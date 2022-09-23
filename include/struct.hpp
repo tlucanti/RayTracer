@@ -196,8 +196,8 @@ void set_rotation_matrix(FLOAT3 *matrix, const FLOAT3 &v1, const FLOAT3 &v2)
     normalize_ref(k);
     FLOAT3 k2 = {k.x * k.x, k.y * k.y, k.z * k.z};
 
-    std::cout << "k " << k.x << ' ' << k.y << ' ' << k.z << std::endl;
-    std::cout << "k2 " << k2.x << ' ' << k2.y << ' ' << k2.z << std::endl;
+//    std::cout << "k " << k.x << ' ' << k.y << ' ' << k.z << std::endl;
+//    std::cout << "k2 " << k2.x << ' ' << k2.y << ' ' << k2.z << std::endl;
 
     matrix[0] = {1, 0, 0};
     matrix[1] = {0, 1, 0};

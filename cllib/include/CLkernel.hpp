@@ -196,7 +196,7 @@ public:
 
     CLkernel()=delete;
 
-private:
+//private:
 //    template <size_t argi=0, class ...type>
 //    typename std::enable_if<argi == sizeof...(type), void>::type
 //    _set_args_req(const std::tuple<type...> &arg)
