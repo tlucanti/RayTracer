@@ -200,6 +200,29 @@ typedef struct direct_s
 # endif /* __CPP */
 } PACKED ALIGNED8 direct_t;
 
+typedef enum light_type_e
+{
+    AMBIENT,
+    DIRECT,
+    POINT
+} light_type_t;
+
+typedef struct light_s
+{
+    light_type_t    type;
+    FLOAT           intensity;
+    FLOAT3          color;
+    union {
+        FLOAT3      direction;
+        FLOAT3      position;
+    };
+# ifdef __CPP
+    light_s(light_type_t type, FLOAT intensity, FLOAT3 color)
+        : type(type), intensity(intensity), color(color)
+    {}
+# endif /* __CPP */
+} PACKED ALIGNED8 light_t;
+
 typedef struct camera_s
 {
     FLOAT3   position;          // 0  -- 32
