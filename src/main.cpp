@@ -38,9 +38,7 @@ std::vector<triangle_t> tr_vec;
 std::vector<cone_t> cn_vec;
 std::vector<cylinder_t> cy_vec;
 
-std::vector<ambient_t> amb_vec;
-std::vector<point_t> pt_vec;
-std::vector<direct_t> dir_vec;
+std::vector<light_t> li_vec;
 
 cllib::CLarray<camera_t, cllib::read_only_array> cameras;
 cllib::CLarray<sphere_t, cllib::read_only_array> spheres;
@@ -49,9 +47,7 @@ cllib::CLarray<triangle_t, cllib::read_only_array> triangles;
 cllib::CLarray<cone_t, cllib::read_only_array> cones;
 cllib::CLarray<cylinder_t, cllib::read_only_array> cylinders;
 
-cllib::CLarray<ambient_t, cllib::read_only_array> ambients;
-cllib::CLarray<point_t, cllib::read_only_array> points;
-cllib::CLarray<direct_t, cllib::read_only_array> directs;
+cllib::CLarray<light_t, cllib::read_only_array> lights;
 
 cllib::CLarray<unsigned int, cllib::write_only_array> canvas;
 
@@ -215,14 +211,10 @@ int main()
             camera_t({0, 0, -1}, {0, 0.4, 1})
     };
 
-    amb_vec = {
-            ambient_t(0.1, Color::white)
-    };
-    pt_vec = {
-            point_t({2, 7, 1}, 0.6, Color::white)
-    };
-    dir_vec = {
-            direct_t({1, 3, 4}, 0.2, Color::white)
+    li_vec = {
+            ambient_t(0.1, Color::white),
+            point_t(0.6, {2, 7, 1}, Color::white),
+            direct_t(0.2, {1, 3, 4}, Color::white)
     };
 
 //    FLOAT3 m[3];
@@ -242,15 +234,10 @@ int main()
     cylinders = cllib::CLarray<cylinder_t, cllib::read_only_array>(cy_vec, context, queue);
 
     cameras = cllib::CLarray<camera_t, cllib::read_only_array>(cam_vec, context, queue);
-    ambients = cllib::CLarray<ambient_t, cllib::read_only_array>(amb_vec, context, queue);
-    points = cllib::CLarray<point_t, cllib::read_only_array>(pt_vec, context, queue);
-    directs = cllib::CLarray<direct_t, cllib::read_only_array>(dir_vec, context, queue);
+    lights = cllib::CLarray<light_t, cllib::read_only_array>(li_vec, context, queue);
 
     canvas = cllib::CLarray<unsigned int, cllib::write_only_array>(config::width * config::height, context);
-    int i;
-    clCreateKernel(program.__get_program(), program.get_program_name().c_str(), &i);
     cllib::CLkernel kernel(program, {config::width, config::height});
-//    cllib::CLkernel kernel;
 
     kernel.reset_args();
     kernel.set_next_arg(canvas);
@@ -260,9 +247,7 @@ int main()
     kernel.set_next_arg(cones);
     kernel.set_next_arg(cylinders);
 
-    kernel.set_next_arg(ambients);
-    kernel.set_next_arg(points);
-    kernel.set_next_arg(directs);
+    kernel.set_next_arg(lights);
     kernel.set_next_arg(cameras);
 
     kernel.set_next_arg(static_cast<int>(spheres.size()));
@@ -271,9 +256,7 @@ int main()
     kernel.set_next_arg(static_cast<int>(cones.size()));
     kernel.set_next_arg(static_cast<int>(cylinders.size()));
 
-    kernel.set_next_arg(static_cast<int>(ambients.size()));
-    kernel.set_next_arg(static_cast<int>(points.size()));
-    kernel.set_next_arg( static_cast<int>(directs.size()));
+    kernel.set_next_arg(static_cast<int>(lights.size()));
     kernel.set_next_arg(static_cast<int>(cameras.size()));
     kernel.set_next_arg(config::width);
     kernel.set_next_arg(config::height);

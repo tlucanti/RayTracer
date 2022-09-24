@@ -160,46 +160,6 @@ typedef struct cylinder_s
 # endif /* __CPP */
 } PACKED ALIGNED8 cylinder_t;
 
-typedef struct ambient_s
-{
-    FLOAT3      color;      // 0  -- 32
-    FLOAT       intensity;  // 32 -- 40
-
-# ifdef __CPP
-    ambient_s(FLOAT intensity, FLOAT3 color)
-            : intensity(intensity), color(color)
-    {}
-# endif /* __CPP */
-} PACKED ALIGNED8 ambient_t;
-
-typedef struct point_s
-{
-    FLOAT3      color;      // 0  -- 32
-    FLOAT3      position;   // 32 -- 64
-    FLOAT       intensity;  // 64 -- 72
-
-# ifdef __CPP
-    point_s(FLOAT3 position, FLOAT intencity, FLOAT3 color)
-            : position(position), intensity(intencity), color(color)
-    {}
-# endif /* __CPP */
-} PACKED ALIGNED8 point_t;
-
-typedef struct direct_s
-{
-    FLOAT3      color;      // 0  -- 32
-    FLOAT3      direction;  // 32 -- 64
-    FLOAT       intensity;  // 64 -- 72
-
-# ifdef __CPP
-    direct_s(FLOAT3 dir, FLOAT intensity, FLOAT3 color)
-            : direction(dir), intensity(intensity), color(color)
-    {
-        normalize_ref(direction);
-    }
-# endif /* __CPP */
-} PACKED ALIGNED8 direct_t;
-
 typedef enum light_type_e
 {
     AMBIENT,
@@ -217,11 +177,25 @@ typedef struct light_s
         FLOAT3      position;
     };
 # ifdef __CPP
-    light_s(light_type_t type, FLOAT intensity, FLOAT3 color)
-        : type(type), intensity(intensity), color(color)
-    {}
+    light_s(light_type_t type, FLOAT intensity, FLOAT3 color, FLOAT3 vec={})
+        : type(type), intensity(intensity), color(color), direction(vec)
+    {
+        if (type != AMBIENT and type != DIRECT and type != POINT)
+            throw std::runtime_error("unknown light type");
+    }
 # endif /* __CPP */
 } PACKED ALIGNED8 light_t;
+
+# ifdef __CPP
+light_t ambient_t(FLOAT intensity, FLOAT3 color)
+{ return light_t(AMBIENT, intensity, color); }
+light_t direct_t(FLOAT intensity, FLOAT3 color, FLOAT3 direction)
+{ normalize_ref(direction); return light_t(DIRECT, intensity, color, direction); }
+light_t point_t(FLOAT intensity, FLOAT3 color, FLOAT3 position)
+{ return light_t(POINT, intensity, color, position); }
+# else /* no __CPP */
+typedef struct light_s light_t;
+# endif /* __CPP */
 
 typedef struct camera_s
 {
@@ -267,9 +241,7 @@ typedef struct scene_s
     __constant const cone_t     *__restrict cones;
     __constant const cylinder_t *__restrict cylinders;
 
-    __constant const ambient_t  *__restrict ambients;
-    __constant const point_t    *__restrict points;
-    __constant const direct_t   *__restrict directs;
+    __constant const light_t    *__restrict lights;
     __constant const camera_t   *__restrict cameras;
 
     const uint32_t spheres_num;
@@ -278,9 +250,7 @@ typedef struct scene_s
     const uint32_t cones_num;
     const uint32_t cylinders_num;
 
-    const uint32_t ambients_num;
-    const uint32_t points_num;
-    const uint32_t directs_num;
+    const uint32_t lights_num;
     const uint32_t cameras_num;
 } scene_t;
 
@@ -590,27 +560,30 @@ FLOAT compute_lightning(
     )
 {
     FLOAT intensity = 0;
+    FLOAT end;
     FLOAT3 light_vector;
 
-    for (uint32_t i=0; i < scene->ambients_num; ++i)
-        intensity += scene->ambients[i].intensity;
-
-    for (uint32_t i=0; i < scene->points_num; ++i)
+    for (uint32_t i=0; i < scene->lights_num; ++i)
     {
-        light_vector = normalize(scene->points[i].position - point);
-        if (shadow_intersection(scene, point, light_vector, EPS, 1 - EPS))
-            continue ;
-        intensity += compute_lightning_single(light_vector, normal, direction, scene->points[i].intensity, specular);
-    }
+        switch (scene->lights[i].type)
+        {
+            case AMBIENT:
+                intensity += scene->lights[i].intensity;
+                continue ;
+            case DIRECT:
+                light_vector = scene->lights[i].direction;
+                end = INFINITY;
+                break ;
+            case POINT:
+                light_vector = normalize(scene->lights[i].position - point);
+                end = 1 - EPS;
+                break ;
+        }
 
-    for (uint32_t i=0; i < scene->directs_num; ++i)
-    {
-        light_vector = scene->directs[i].direction;
-        if (shadow_intersection(scene, point, light_vector, EPS, INFINITY))
+        if (shadow_intersection(scene, point, light_vector, EPS, end))
             continue ;
-        intensity += compute_lightning_single(light_vector, normal, direction, scene->directs[i].intensity, specular);
+        intensity += compute_lightning_single(light_vector, normal, direction, scene->lights[i].intensity, specular);
     }
-
     return fmin(1 - EPS, intensity);
 }
 
@@ -685,9 +658,7 @@ __kernel void ray_tracer(
         __constant const cone_t *__restrict cones,
         __constant const cylinder_t *__restrict cylinders,
 
-        __constant const ambient_t *__restrict ambients,
-        __constant const point_t *__restrict points,
-        __constant const direct_t *__restrict directs,
+        __constant const light_t *__restrict lights,
         __constant const camera_t *__restrict cameras,
 
         const uint32_t spheres_num,
@@ -696,9 +667,7 @@ __kernel void ray_tracer(
         const uint32_t cones_num,
         const uint32_t cylinders_num,
 
-        const uint32_t ambients_num,
-        const uint32_t points_num,
-        const uint32_t directs_num,
+        const uint32_t lights_num,
         const uint32_t cameras_num,
 
         const uint32_t width,
@@ -718,9 +687,7 @@ __kernel void ray_tracer(
         cones,
         cylinders,
 
-        ambients,
-        points,
-        directs,
+        lights,
         cameras,
 
         spheres_num,
@@ -729,9 +696,7 @@ __kernel void ray_tracer(
         cones_num,
         cylinders_num,
 
-        ambients_num,
-        points_num,
-        directs_num,
+        lights_num,
         cameras_num
     };
 
