@@ -201,7 +201,7 @@ int main()
 //            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
     };
     cn_vec = {
-            cone_t({0, 7, 5}, {-0.1,1,0.1}, 0.5, Color::purple, 500, 0.3)
+            cone_t({0, 5, 7}, {0,1,0}, 0.5, {255, 149, 0}, 500, 0.3)
     };
     cy_vec = {
 //            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)
@@ -212,7 +212,7 @@ int main()
     };
 
     li_vec = {
-            ambient_t(0.1, Color::white),
+            ambient_t(0.2, Color::white),
             point_t(0.6, {2, 7, 1}, Color::white),
             direct_t(0.2, {1, 3, 4}, Color::white)
     };

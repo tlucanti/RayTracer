@@ -329,18 +329,20 @@ FLOAT intersect_triangle(FLOAT3 camera, FLOAT3 direction, __constant const trian
 }
 
 CPP_UNUSED
-FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn)
+FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn, FLOAT *param)
 {
+    FLOAT g = 0; // FIXME: move g to cone struct
+
     direction = rotate_vector(direction, cn->matr);
     camera = rotate_vector(camera - cn->center, cn->matr);
-    direction.x *= cn->width;
-    direction.y *= cn->width;
-    camera.x *= cn->width;
-    camera.y *= cn->width;
+//    direction.x *= cn->width;
+//    direction.y *= cn->width;
+//    camera.x *= cn->width;
+//    camera.y *= cn->width;
     FLOAT a = direction.x * direction.x + direction.y * direction.y - direction.z * direction.z;
     FLOAT b = camera.x * direction.x + camera.y * direction.y - camera.z * direction.z; // maybe here dot(camera, direction) - 2 * camera.z * direction.z
     b *= 2;
-    FLOAT c = camera.x * camera.x + camera.y * camera.y - camera.z * camera.z + 100;
+    FLOAT c = camera.x * camera.x + camera.y * camera.y - camera.z * camera.z + g;
 
     FLOAT discriminant = b * b - 4 * a * c;
     if (discriminant < 0)
@@ -348,10 +350,15 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
     discriminant = sqrt(discriminant);
     FLOAT x1 = (-b + discriminant) / 2 / a; // firstly divide, then multiply
     FLOAT x2 = (-b - discriminant) / 2 / a;
-    FLOAT mn = fmin(x1, x2);
-    if (mn < EPS)
-        return fmax(x1, x2);
-    return mn;
+    FLOAT ret = fmin(x1, x2);
+    if (ret < EPS)
+        ret = fmax(x1, x2);
+
+    if (param == NULL)
+        return ret;
+    FLOAT py = camera.y + ret * direction.y;
+    *param = sqrt(py * py - g) * (1 + 1); // maybe here is not just width
+    return ret;
 }
 
 CPP_UNUSED
@@ -387,7 +394,8 @@ const __constant void *__restrict closest_intersection(
         FLOAT start,
         FLOAT end,
         FLOAT *closest_t_ptr,
-        obj_type_t *closest_type_ptr
+        obj_type_t *closest_type_ptr,
+        FLOAT *param
     )
 {
     FLOAT closest_t = INFINITY;
@@ -438,7 +446,7 @@ const __constant void *__restrict closest_intersection(
 
     for (uint32_t i=0; i < scene->cones_num; ++i)
     {
-        FLOAT t = intersect_cone(camera, direction, scene->cones + i);
+        FLOAT t = intersect_cone(camera, direction, scene->cones + i, param);
 
         if (t < start || t > end) // maybe >= <= here
             continue ;
@@ -501,7 +509,7 @@ bool shadow_intersection(
 
     for (uint32_t i=0; i < scene->cones_num; ++i)
     {
-        FLOAT t = intersect_cone(camera, direction, scene->cones + i);
+        FLOAT t = intersect_cone(camera, direction, scene->cones + i, NULL);
         if (t > start && t < end)
             return true;
     }
@@ -595,16 +603,17 @@ FLOAT3    trace_ray(
         uint32_t recursion_depth
     )
 {
-    const __constant void *__restrict closest_obj;
-    FLOAT closest_t;
-    FLOAT3 color = BLACK;
-    FLOAT reflective_prod = 1;
-    obj_type_t closest_type;
+    const __constant void *__restrict   closest_obj;
+    FLOAT3      color = BLACK;
+    FLOAT       reflective_prod = 1;
+    FLOAT       closest_t;
+    obj_type_t  closest_type;
+    FLOAT       param;
 
     while (recursion_depth > 0)
     {
         --recursion_depth;
-        closest_obj = closest_intersection(scene, point, direction, EPS, INFINITY, &closest_t, &closest_type);
+        closest_obj = closest_intersection(scene, point, direction, EPS, INFINITY, &closest_t, &closest_type, &param);
         if (closest_obj == NULL)
             break ;
 
@@ -616,13 +625,8 @@ FLOAT3    trace_ray(
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
             case CONE: {
-                FLOAT3 op = point - as_cone(closest_obj)->center;
-                op = normalize(op * as_cone(closest_obj)->sec_alpha);
-                if (dot(op, as_cone(closest_obj)->direction) < EPS)
-                    normal = op + as_cone(closest_obj)->direction;
-                else
-                    normal = op - as_cone(closest_obj)->direction;
-                normal = normalize(normal);
+                FLOAT3 o = {0, param, 0};
+                normal = normalize(point - o);
                 break;
             }
             case CYLINDER: {
