@@ -63,6 +63,11 @@ FLOAT3 cross(const FLOAT3 &a, const FLOAT3 &b)
     return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
 }
 
+std::ostream &operator <<(std::ostream &out, const FLOAT3 &p)
+{
+    out << "(" << p.x << ", " << p.y << ", " << p.z << ')';
+    return out;
+}
 namespace Color
 {
     const FLOAT3 white = {255, 255, 255};

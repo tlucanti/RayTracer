@@ -113,11 +113,10 @@ typedef struct cone_s
     ) :
         center(center),
         direction(direction),
-        width(1. / width),
+        width(width),
         color(color),
         specular(specular),
-        reflective(reflective),
-        sec_alpha(1. / cos(width * PI / 2))
+        reflective(reflective)
     {
         normalize_ref(this->direction);
         set_rotation_matrix(this->matr, this->direction, {0, 0, 1});
@@ -162,9 +161,9 @@ typedef struct cylinder_s
 
 typedef enum light_type_e
 {
-    AMBIENT,
-    DIRECT,
-    POINT
+    AMBIENT = 0,
+    DIRECT  = 1,
+    POINT   = 2
 } light_type_t;
 
 typedef struct light_s
@@ -231,6 +230,7 @@ CPP_UNUSED FLOAT3 normalize(FLOAT3) {return{};}
 CPP_UNUSED uint32_t get_global_id(uint32_t) {return{};}
 CPP_UNUSED FLOAT fmin(FLOAT, FLOAT) {return{};}
 CPP_UNUSED FLOAT fmax(FLOAT, FLOAT) {return{};}
+CPP_UNUSED FLOAT fabs(FLOAT, FLOAT) {return{};}
 # endif /* __CPP */
 
 typedef struct scene_s
@@ -332,13 +332,14 @@ CPP_UNUSED
 FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn, FLOAT *param)
 {
     FLOAT g = 0; // FIXME: move g to cone struct
+    FLOAT r_width = 1. / sqrt(cn->width); // FIXME: use sqrt of width in structure
 
     direction = rotate_vector(direction, cn->matr);
     camera = rotate_vector(camera - cn->center, cn->matr);
-//    direction.x *= cn->width;
-//    direction.y *= cn->width;
-//    camera.x *= cn->width;
-//    camera.y *= cn->width;
+    direction.x *= r_width;
+    direction.y *= r_width;
+    camera.x *= r_width;
+    camera.y *= r_width;
     FLOAT a = direction.x * direction.x + direction.y * direction.y - direction.z * direction.z;
     FLOAT b = camera.x * direction.x + camera.y * direction.y - camera.z * direction.z; // maybe here dot(camera, direction) - 2 * camera.z * direction.z
     b *= 2;
@@ -356,8 +357,10 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
 
     if (param == NULL)
         return ret;
-    FLOAT py = camera.y + ret * direction.y;
-    *param = sqrt(py * py - g) * (1 + 1); // maybe here is not just width
+    FLOAT pz = camera.z + direction.z * ret;
+    *param = sqrt(pz * pz * r_width - g) * (1. + cn->width);
+    if (pz < 0)
+        *param = -*param;
     return ret;
 }
 
@@ -547,13 +550,13 @@ FLOAT compute_lightning_single(
         intensity += light_intensity * normal_angle;
 
     // specular light
-    if (specular > 0)
-    {
-        FLOAT3 reflected = reflect_ray(light_vector, normal_vector);
-        FLOAT reflected_angle = dot(reflected, direction);
-        if (reflected_angle < EPS)
-            intensity += light_intensity * pow(reflected_angle, specular);
-    }
+//    if (specular > 0)
+//    {
+//        FLOAT3 reflected = reflect_ray(light_vector, normal_vector);
+//        FLOAT reflected_angle = dot(reflected, direction);
+//        if (reflected_angle < EPS)
+//            intensity += light_intensity * pow(reflected_angle, specular);
+//    }
 
     return intensity;
 }
@@ -588,8 +591,8 @@ FLOAT compute_lightning(
                 break ;
         }
 
-        if (shadow_intersection(scene, point, light_vector, EPS, end))
-            continue ;
+//        if (shadow_intersection(scene, point, light_vector, EPS, end))
+//            continue ;
         intensity += compute_lightning_single(light_vector, normal, direction, scene->lights[i].intensity, specular);
     }
     return fmin(1 - EPS, intensity);
@@ -625,8 +628,11 @@ FLOAT3    trace_ray(
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
             case CONE: {
-                FLOAT3 o = {0, param, 0};
+                FLOAT3 o = as_cone(closest_obj)->center + as_cone(closest_obj)->direction * param;
                 normal = normalize(point - o);
+//                FLOAT g = 0;
+//                FLOAT sq = -1. / sqrt(point.x * point.x + point.y * point.y - g);
+//                normal = -normalize((FLOAT3){point.x * sq, point.y * sq, 1.});
                 break;
             }
             case CYLINDER: {

@@ -176,9 +176,13 @@ int main()
     program.compile(device, true, "-D__OPENCL");
 
     sp_vec = {
-            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
+            sphere_t({0 , 0, 0}, 0.2, Color::white, 0, 0),
+//            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
             sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2),
             sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2),
+            sphere_t({3,-1,0}, 1, Color::red, 500, 0.2),
+//            sphere_t({4, 0, 0}, 1, Color::blue, 500, 0.2),
+//            sphere_t({4, 0, -2}, 1, Color::green, 10, 0.2),
 //            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2),
 //            sphere_t({2,2,2},0.05,Color::red,0.,0.),
 //            sphere_t({3,2,1},0.05,Color::red,0.,0.),
@@ -201,21 +205,36 @@ int main()
 //            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
     };
     cn_vec = {
-            cone_t({0, 5, 7}, {0,1,0}, 0.5, {255, 149, 0}, 500, 0.3)
+//            cone_t({0, 5, 7}, {0,1,0}, 0.5, {255, 149, 0}, 500, 0.3)
+            cone_t({0, 0, 0}, {1,0,1}, 1000, {255, 149, 0}, 500, 0.3)
     };
     cy_vec = {
 //            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)
     };
 
     cam_vec = {
-            camera_t({0, 0, -1}, {0, 0.4, 1})
+            camera_t({7, 0, 0}, {-1, 0, 0})
     };
 
     li_vec = {
-            ambient_t(0.2, Color::white),
-            point_t(0.6, {2, 7, 1}, Color::white),
-            direct_t(0.2, {1, 3, 4}, Color::white)
+            ambient_t(0.1, Color::white),
+            point_t(0.6, Color::white, {3, 2, 0}),
+            direct_t(0.3, Color::white, {1, 3, 4})
     };
+
+    FLOAT t, p;
+    FLOAT3 cam = {0, 0, 1};
+    FLOAT3 dir = {0, 1, 0};
+    cone_t *cn = &cn_vec.at(0);
+    t = intersect_cone(cam, dir, cn, &p);
+    std::cout << "t: " << t << " p: " << p << std::endl;
+    FLOAT3 point = cam + dir * t;
+    FLOAT3 o = cn->center + cn->direction * p;
+    FLOAT3 normal = point - o;
+    std::cout << "point: " << point << std::endl;
+    std::cout << "o: " << o << std::endl;
+    std::cout << "normal: " << normal << std::endl;
+//    return 0;
 
 //    FLOAT3 m[3];
 //    FLOAT3 a = {1, 0, 0};
