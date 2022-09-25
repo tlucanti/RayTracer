@@ -177,6 +177,8 @@ int main()
 
     sp_vec = {
             sphere_t({0 , 0, 0}, 0.2, Color::white, 0, 0),
+            sphere_t({10 , 0, 0}, 0.2, Color::white, 0, 0),
+            sphere_t({10 , 0, 0}, 0.2, Color::white, 0, 0),
 //            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
             sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2),
             sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2),
@@ -206,7 +208,7 @@ int main()
     };
     cn_vec = {
 //            cone_t({0, 5, 7}, {0,1,0}, 0.5, {255, 149, 0}, 500, 0.3)
-            cone_t({0, 0, 0}, {1,0,1}, 1000, {255, 149, 0}, 500, 0.3)
+            cone_t({0, 0, 0}, {1,0,0}, 1, -100, {255, 149, 0}, 500, 0.3)
     };
     cy_vec = {
 //            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)

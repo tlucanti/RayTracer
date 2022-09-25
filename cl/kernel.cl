@@ -97,9 +97,9 @@ typedef struct cone_s
     UNUSED uint32_t _padding;   //    -- 40
     FLOAT           reflective;  // 40 -- 48
     FLOAT           width;
+    FLOAT           gamma;
     FLOAT3          center;     // 64 -- 96
     FLOAT3          direction;
-    FLOAT           sec_alpha;
     FLOAT3          matr[3];     //
 
 # ifdef __CPP
@@ -107,6 +107,7 @@ typedef struct cone_s
         FLOAT3 center,
         FLOAT3 direction,
         FLOAT width,
+        FLOAT gamma,
         FLOAT3 color,
         uint32_t specular,
         FLOAT reflective
@@ -114,6 +115,7 @@ typedef struct cone_s
         center(center),
         direction(direction),
         width(width),
+        gamma(gamma),
         color(color),
         specular(specular),
         reflective(reflective)
@@ -331,7 +333,6 @@ FLOAT intersect_triangle(FLOAT3 camera, FLOAT3 direction, __constant const trian
 CPP_UNUSED
 FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn, FLOAT *param)
 {
-    FLOAT g = 0; // FIXME: move g to cone struct
     FLOAT r_width = 1. / sqrt(cn->width); // FIXME: use sqrt of width in structure
 
     direction = rotate_vector(direction, cn->matr);
@@ -343,7 +344,7 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
     FLOAT a = direction.x * direction.x + direction.y * direction.y - direction.z * direction.z;
     FLOAT b = camera.x * direction.x + camera.y * direction.y - camera.z * direction.z; // maybe here dot(camera, direction) - 2 * camera.z * direction.z
     b *= 2;
-    FLOAT c = camera.x * camera.x + camera.y * camera.y - camera.z * camera.z + g;
+    FLOAT c = camera.x * camera.x + camera.y * camera.y - camera.z * camera.z + cn->gamma;
 
     FLOAT discriminant = b * b - 4 * a * c;
     if (discriminant < 0)
@@ -358,7 +359,7 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
     if (param == NULL)
         return ret;
     FLOAT pz = camera.z + direction.z * ret;
-    *param = sqrt(pz * pz * r_width - g) * (1. + cn->width);
+    *param = sqrt(pz * pz * r_width - cn->gamma) * (1. + cn->width);
     if (pz < 0)
         *param = -*param;
     return ret;
