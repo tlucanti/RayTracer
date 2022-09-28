@@ -2,7 +2,7 @@
 #ifndef MLXLIB_WINDOW_HPP
 # define MLXLIB_WINDOW_HPP
 
-# include "MLXdefs.hpp"
+# include "MLXcommon.hpp"
 # include "MLXutils.hpp"
 # include "MLXcore.hpp"
 # include "MLXexception.hpp"
@@ -197,7 +197,7 @@ public:
         mlx_put_image_to_window(mlx_ptr, window_ptr, image.image_ptr, x_offset, y_offset);
     }
 
-    void put_string(const std::string &str, int x, int y, int color=Color::white)
+    void put_string(const std::string &str, int x, int y, int color=color::white)
     {
         mlx_string_put(mlx_ptr, window_ptr, x, y, color, const_cast<char *>(str.c_str()));
     }

@@ -38,11 +38,17 @@ add_executable(RayTracer
 	src/main.cpp
 
 	cllib/src/CLbuiltinprog.cpp
-	cllib/src/CLcommon.cpp
 	cllib/src/CLcontext.cpp
 	cllib/src/CLdevice.cpp
 	cllib/src/CLexception.cpp
 	cllib/src/CLkernel.cpp
+
+	src/event_hooks.cpp
+	src/global.cpp
+	src/init_gpu.cpp
+	src/init_mlx.cpp
+	src/init_scene.cpp
+	src/linalg.cpp
 )
 
 find_library(OPENCL_LIB OpenCL)

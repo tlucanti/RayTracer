@@ -2,7 +2,7 @@
 #ifndef MLXLIB_HPP
 # define MLXLIB_HPP
 
-# include "MLXdefs.hpp"
+# include "MLXcommon.hpp"
 # include "MLXexception.hpp"
 # include "MLXutils.hpp"
 

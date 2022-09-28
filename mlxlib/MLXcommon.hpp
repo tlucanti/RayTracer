@@ -12,9 +12,21 @@
 #  define NORET [[noreturn]]
 # endif /* NORET */
 
+# ifndef WUR
+#  define WUR [[nodiscard]]
+# endif /* NODISCARD */
+
+# ifndef NOEXCEPT
+#  define NOEXCEPT noexcept
+# endif /* NOEXCEPT */
+
+# ifndef INLINE
+#  define INLINE inline
+# endif /* INLINE */
+
 MLXLIB_NAMESPACE_BEGIN
 
-namespace Color
+namespace color
 {
     const int white =   0xFFFFFF;
     const int black =   0x000000;

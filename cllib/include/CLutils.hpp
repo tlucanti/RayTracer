@@ -35,7 +35,7 @@ namespace __utils
 
 # ifndef __GET_STREAM_CONTENT
 #  define __GET_STREAM_CONTENT
-    std::string __get_stream_content(std::ifstream &stream)
+    inline std::string __get_stream_content(std::ifstream &stream)
     {
         std::streamsize start = stream.gcount();
         stream.ignore(std::numeric_limits<std::streamsize>::max());

@@ -2,7 +2,7 @@
 #ifndef MLXLIB_IMAGE_HPP
 # define MLXLIB_IMAGE_HPP
 
-# include "MLXdefs.hpp"
+# include "MLXcommon.hpp"
 # include "MLXcore.hpp"
 # include "MLXexception.hpp"
 

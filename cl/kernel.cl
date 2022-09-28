@@ -7,6 +7,7 @@
 #   define NULL    0
 #  endif /* NULL */
 #  define CPP_UNUSED
+#  define CPP_INLINE
 #  define EPS 1e-4
 
 typedef double FLOAT;
@@ -15,7 +16,10 @@ typedef unsigned int uint32_t;
 typedef int int32_t;
 typedef unsigned long int uint64_t;
 typedef long int int64_t;
-# endif /* not __CPP */
+# else /* __CPP */
+#  include <linalg.hpp>
+#  include <common.hpp>
+# endif /* __CPP */
 
 # define as_sphere(obj_ptr) ((__constant const sphere_t *)(obj_ptr))
 # define as_plane(obj_ptr) ((__constant const plane_t *)(obj_ptr))
@@ -63,7 +67,7 @@ typedef struct plane_s
     plane_s(FLOAT3 point, FLOAT3 normal, FLOAT3 color, uint32_t specular, FLOAT reflective)
             : point(point), normal(normal), color(color), specular(specular), reflective(reflective)
     {
-        normalize_ref(this->normal);
+        rtx::linalg::normalize_ref(this->normal);
     }
 # endif /* __CPP */
 } PACKED ALIGNED8 plane_t;
@@ -85,7 +89,7 @@ typedef struct triangle_s
     triangle_s(FLOAT3 p1, FLOAT3 p2, FLOAT3 p3, FLOAT3 color, uint32_t specular, FLOAT reflective)
         : a(p1), b(p2), c(p3), color(color), specular(specular), reflective(reflective)
     {
-        normal = cross(p2 - p1, p3 - p1);
+        normal = rtx::linalg::cross(p2 - p1, p3 - p1);
     }
 # endif /* __CPP */
 } PACKED ALIGNED8 triangle_t;
@@ -120,8 +124,8 @@ typedef struct cone_s
         specular(specular),
         reflective(reflective)
     {
-        normalize_ref(this->direction);
-        set_rotation_matrix(this->matr, this->direction, {0, 0, 1});
+        rtx::linalg::normalize_ref(this->direction);
+        rtx::linalg::set_rotation_matrix(this->matr, this->direction, {0, 0, 1});
     }
 # endif /* __CPP */
 } PACKED ALIGNED8 cone_t;
@@ -152,7 +156,7 @@ typedef struct cylinder_s
         specular(specular),
         reflective(reflective)
     {
-        normalize_ref(this->direction);
+        rtx::linalg::normalize_ref(this->direction);
     }
 # endif /* __CPP */
 } PACKED ALIGNED8 cylinder_t;
@@ -186,7 +190,7 @@ typedef struct torus_s
         specular(specular),
         reflective(reflective)
     {
-        normalize_ref(this->normal);
+        rtx::linalg::normalize_ref(this->normal);
     }
 # endif /* __CPP */
 } PACKED ALIGNED8 torus_t;
@@ -218,12 +222,25 @@ typedef struct light_s
 } PACKED ALIGNED8 light_t;
 
 # ifdef __CPP
-light_t ambient_t(FLOAT intensity, FLOAT3 color)
+#  define __constant
+#  define __global
+#  define __kernel
+#  define CPP_UNUSED __attribute__((unused))
+#  define CPP_INLINE inline
+CPP_UNUSED CPP_INLINE FLOAT3 normalize(FLOAT3) {return{};}
+CPP_UNUSED CPP_INLINE uint32_t get_global_id(uint32_t) {return{};}
+CPP_UNUSED CPP_INLINE FLOAT fmin(FLOAT, FLOAT) {return{};}
+CPP_UNUSED CPP_INLINE FLOAT fmax(FLOAT, FLOAT) {return{};}
+CPP_UNUSED CPP_INLINE FLOAT fabs(FLOAT, FLOAT) {return{};}
+
+CPP_INLINE light_t ambient_t(FLOAT intensity, FLOAT3 color)
 { return light_t(AMBIENT, intensity, color); }
-light_t direct_t(FLOAT intensity, FLOAT3 color, FLOAT3 direction)
-{ normalize_ref(direction); return light_t(DIRECT, intensity, color, direction); }
-light_t point_t(FLOAT intensity, FLOAT3 color, FLOAT3 position)
+CPP_INLINE light_t direct_t(FLOAT intensity, FLOAT3 color, FLOAT3 direction)
+{ rtx::linalg::normalize_ref(direction); return light_t(DIRECT, intensity, color, direction); }
+CPP_INLINE light_t point_t(FLOAT intensity, FLOAT3 color, FLOAT3 position)
 { return light_t(POINT, intensity, color, position); }
+#  define dot rtx::linalg::dot
+#  define cross rtx::linalg::cross
 # else /* no __CPP */
 typedef struct light_s light_t;
 # endif /* __CPP */
@@ -241,29 +258,17 @@ typedef struct camera_s
     camera_s(FLOAT3 pos, FLOAT3 dir)
             : position(pos), direction(dir), rotate_matrix()
     {
-        normalize_ref(direction);
-        compute_angles(dir, alpha, theta);
-        compute_matrix(rotate_matrix, alpha, theta);
+        rtx::linalg::normalize_ref(direction);
+        rtx::linalg::compute_angles(dir, alpha, theta);
+        rtx::linalg::compute_matrix(rotate_matrix, alpha, theta);
     }
 
     void recompute_matrix()
     {
-        compute_matrix(rotate_matrix, alpha, theta);
+        rtx::linalg::compute_matrix(rotate_matrix, alpha, theta);
     }
 # endif /* __CPP */
 } PACKED ALIGNED8 camera_t;
-
-# ifdef __CPP
-#  define __constant
-#  define __global
-#  define __kernel
-#  define CPP_UNUSED __attribute__((unused))
-CPP_UNUSED FLOAT3 normalize(FLOAT3) {return{};}
-CPP_UNUSED uint32_t get_global_id(uint32_t) {return{};}
-CPP_UNUSED FLOAT fmin(FLOAT, FLOAT) {return{};}
-CPP_UNUSED FLOAT fmax(FLOAT, FLOAT) {return{};}
-CPP_UNUSED FLOAT fabs(FLOAT, FLOAT) {return{};}
-# endif /* __CPP */
 
 typedef struct scene_s
 {
@@ -298,7 +303,7 @@ typedef enum obj_type_e
     TOR
 } obj_type_t;
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT3 rotate_vector(FLOAT3 vec, __constant const FLOAT3 *matrix)
 {
     return (FLOAT3) {
@@ -308,7 +313,7 @@ FLOAT3 rotate_vector(FLOAT3 vec, __constant const FLOAT3 *matrix)
     };
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT3 rotate_vector_nonconst(FLOAT3 vec, const FLOAT3 *matrix)
 {
     return (FLOAT3) {
@@ -318,7 +323,7 @@ FLOAT3 rotate_vector_nonconst(FLOAT3 vec, const FLOAT3 *matrix)
     };
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT intersect_sphere(FLOAT3 camera, FLOAT3 direction, __constant const sphere_t *__restrict sp)
 {
    FLOAT3  oc = camera - sp->position;
@@ -339,14 +344,14 @@ FLOAT intersect_sphere(FLOAT3 camera, FLOAT3 direction, __constant const sphere_
    return mn;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT intersect_plane(FLOAT3 camera, FLOAT3 direction, __constant const plane_t *__restrict pl)
 {
     FLOAT3 co = pl->point - camera; // maybe not creating new object, and use camera object here
     return dot(co, pl->normal) / dot(direction, pl->normal);
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT intersect_triangle(FLOAT3 camera, FLOAT3 direction, __constant const triangle_t *__restrict tr)
 {
     FLOAT3 co = tr->a - camera;
@@ -363,7 +368,7 @@ FLOAT intersect_triangle(FLOAT3 camera, FLOAT3 direction, __constant const trian
     return INFINITY;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn, FLOAT3 *param)
 {
     FLOAT r_width = 1. / sqrt(cn->width); // FIXME: use sqrt of width in structure
@@ -399,7 +404,7 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
     return ret;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT intersect_cylinder(FLOAT3 camera, FLOAT3 direction, __constant const cylinder_t *__restrict cy)
 {
     FLOAT3 oc = camera - cy->position;
@@ -424,7 +429,7 @@ FLOAT intersect_cylinder(FLOAT3 camera, FLOAT3 direction, __constant const cylin
     return mn;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT ferrari_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
 {
     FLOAT b2 = b * b;
@@ -437,7 +442,7 @@ FLOAT ferrari_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
     return 0;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT poly(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
 {
     FLOAT fx = a;
@@ -448,7 +453,7 @@ FLOAT poly(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
     return fx;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT newton_solve(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
 {
     const FLOAT h = 1e-3;
@@ -462,7 +467,7 @@ FLOAT newton_solve(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
     return x;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t *__restrict to, FLOAT3 *param)
 {
     FLOAT ksi = to->R * to->R - to->r * to->r; // move this to torus structure;
@@ -489,7 +494,7 @@ FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t 
     return newton_solve(EPS, A, B, C, D, E);
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 const __constant void *__restrict closest_intersection(
         const scene_t *__restrict scene,
         FLOAT3 camera,
@@ -594,7 +599,7 @@ const __constant void *__restrict closest_intersection(
     return closest_obj;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 bool shadow_intersection(
         const scene_t *__restrict scene,
         FLOAT3 camera,
@@ -648,13 +653,13 @@ bool shadow_intersection(
     return false;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT3 reflect_ray(FLOAT3 ray, FLOAT3 normal)
 {
     return normal * (2 * dot(ray, normal)) - ray;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT compute_lightning_single(
         FLOAT3 light_vector,
         FLOAT3 normal_vector,
@@ -682,7 +687,7 @@ FLOAT compute_lightning_single(
     return intensity;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT compute_lightning(
         const scene_t *scene,
         FLOAT3 point,
@@ -719,7 +724,7 @@ FLOAT compute_lightning(
     return fmin(1 - EPS, intensity);
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 FLOAT3    trace_ray(
         const scene_t *scene,
         FLOAT3 point,
@@ -773,7 +778,7 @@ FLOAT3    trace_ray(
     return color;
 }
 
-CPP_UNUSED
+CPP_UNUSED CPP_INLINE
 __kernel void ray_tracer(
         __global uint32_t *canvas,
 
@@ -848,5 +853,10 @@ __kernel void ray_tracer(
             | (uint32_t)(color.z);
     canvas[(height - y - 1) * width + z] = int_color;
 }
+
+# ifdef __CPP
+#  undef dot
+#  undef cross
+# endif /* __CPP */
 
 #endif /* CL_KERNEL */

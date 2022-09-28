@@ -20,7 +20,7 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-WUR std::vector<CLplatform> get_platforms(cl_uint num_platforms=-1)
+WUR INLINE std::vector<CLplatform> get_platforms(cl_uint num_platforms=-1)
 {
     cl_int  error;
 

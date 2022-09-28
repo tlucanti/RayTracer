@@ -42,6 +42,10 @@
 #  define NOEXCEPT noexcept
 # endif /* NOEXCEPT */
 
+# ifndef INLINE
+#  define INLINE inline
+# endif /* INLINE */
+
 # define IS_INTEGRAL(__type) std::is_integral<__type>::value
 # define IS_FLOATING(__type) std::is_floating_point<__type>::value
 # define IS_ARITHMETIC(__type) std::is_arithmetic<__type>::value

@@ -2,7 +2,7 @@
 #ifndef MLXLIB_CORE_HPP
 # define MLXLIB_CORE_HPP
 
-# include "MLXdefs.hpp"
+# include "MLXcommon.hpp"
 # include "MLXexception.hpp"
 
 MLXLIB_NAMESPACE_BEGIN

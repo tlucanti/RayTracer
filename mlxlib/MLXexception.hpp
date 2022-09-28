@@ -2,7 +2,7 @@
 #ifndef MLXLIB_EXCEPTION_HPP
 # define MLXLIB_EXCEPTION_HPP
 
-# include "MLXdefs.hpp"
+# include "MLXcommon.hpp"
 
 # include <stdexcept>
 # include <string>
