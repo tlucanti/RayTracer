@@ -331,9 +331,10 @@ FLOAT intersect_triangle(FLOAT3 camera, FLOAT3 direction, __constant const trian
 }
 
 CPP_UNUSED
-FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn, FLOAT *param)
+FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *__restrict cn, FLOAT3 *param)
 {
     FLOAT r_width = 1. / sqrt(cn->width); // FIXME: use sqrt of width in structure
+    FLOAT r_width2 = r_width * r_width;
 
     direction = rotate_vector(direction, cn->matr);
     camera = rotate_vector(camera - cn->center, cn->matr);
@@ -358,10 +359,8 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
 
     if (param == NULL)
         return ret;
-    FLOAT pz = camera.z + direction.z * ret;
-    *param = sqrt(pz * pz * r_width - cn->gamma) * (1. + cn->width);
-    if (pz < 0)
-        *param = -*param;
+    FLOAT3 point = camera + direction * ret;
+    *param = (FLOAT3){2 * point.x * r_width2, 2 * point.y * r_width2 * r_width2, -2 * point.z};
     return ret;
 }
 
@@ -399,7 +398,7 @@ const __constant void *__restrict closest_intersection(
         FLOAT end,
         FLOAT *closest_t_ptr,
         obj_type_t *closest_type_ptr,
-        FLOAT *param
+        FLOAT3 *param
     )
 {
     FLOAT closest_t = INFINITY;
@@ -612,7 +611,7 @@ FLOAT3    trace_ray(
     FLOAT       reflective_prod = 1;
     FLOAT       closest_t;
     obj_type_t  closest_type;
-    FLOAT       param;
+    FLOAT3      param;
 
     while (recursion_depth > 0)
     {
@@ -629,11 +628,7 @@ FLOAT3    trace_ray(
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
             case CONE: {
-                FLOAT3 o = as_cone(closest_obj)->center + as_cone(closest_obj)->direction * param;
-                normal = normalize(point - o);
-//                FLOAT g = 0;
-//                FLOAT sq = -1. / sqrt(point.x * point.x + point.y * point.y - g);
-//                normal = -normalize((FLOAT3){point.x * sq, point.y * sq, 1.});
+                normal = normalize(param);
                 break;
             }
             case CYLINDER: {

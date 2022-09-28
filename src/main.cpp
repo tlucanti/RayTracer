@@ -177,8 +177,7 @@ int main()
 
     sp_vec = {
             sphere_t({0 , 0, 0}, 0.2, Color::white, 0, 0),
-            sphere_t({10 , 0, 0}, 0.2, Color::white, 0, 0),
-            sphere_t({10 , 0, 0}, 0.2, Color::white, 0, 0),
+            sphere_t({3 , 2, 0}, 0.2, Color::white, 0, 0),
 //            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
             sphere_t({2, 0, 4}, 1, Color::blue, 500, 0.2),
             sphere_t({-2, 0, 4}, 1, Color::green, 10, 0.2),
@@ -208,7 +207,7 @@ int main()
     };
     cn_vec = {
 //            cone_t({0, 5, 7}, {0,1,0}, 0.5, {255, 149, 0}, 500, 0.3)
-            cone_t({0, 0, 0}, {1,0,0}, 1, -100, {255, 149, 0}, 500, 0.3)
+            cone_t({0, 0, 0}, {1,1,1}, 1, 0, {255, 149, 0}, 500, 0.3)
     };
     cy_vec = {
 //            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)
@@ -224,18 +223,18 @@ int main()
             direct_t(0.3, Color::white, {1, 3, 4})
     };
 
-    FLOAT t, p;
-    FLOAT3 cam = {0, 0, 1};
-    FLOAT3 dir = {0, 1, 0};
-    cone_t *cn = &cn_vec.at(0);
-    t = intersect_cone(cam, dir, cn, &p);
-    std::cout << "t: " << t << " p: " << p << std::endl;
-    FLOAT3 point = cam + dir * t;
-    FLOAT3 o = cn->center + cn->direction * p;
-    FLOAT3 normal = point - o;
-    std::cout << "point: " << point << std::endl;
-    std::cout << "o: " << o << std::endl;
-    std::cout << "normal: " << normal << std::endl;
+//    FLOAT t, p;
+//    FLOAT3 cam = {0, 0, 1};
+//    FLOAT3 dir = {0, 1, 0};
+//    cone_t *cn = &cn_vec.at(0);
+//    t = intersect_cone(cam, dir, cn, &p);
+//    std::cout << "t: " << t << " p: " << p << std::endl;
+//    FLOAT3 point = cam + dir * t;
+//    FLOAT3 o = cn->center + cn->direction * p;
+//    FLOAT3 normal = point - o;
+//    std::cout << "point: " << point << std::endl;
+//    std::cout << "o: " << o << std::endl;
+//    std::cout << "normal: " << normal << std::endl;
 //    return 0;
 
 //    FLOAT3 m[3];
