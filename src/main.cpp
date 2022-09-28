@@ -37,6 +37,7 @@ std::vector<plane_t> pl_vec;
 std::vector<triangle_t> tr_vec;
 std::vector<cone_t> cn_vec;
 std::vector<cylinder_t> cy_vec;
+std::vector<torus_t> to_vec;
 
 std::vector<light_t> li_vec;
 
@@ -46,6 +47,7 @@ cllib::CLarray<plane_t, cllib::read_only_array> planes;
 cllib::CLarray<triangle_t, cllib::read_only_array> triangles;
 cllib::CLarray<cone_t, cllib::read_only_array> cones;
 cllib::CLarray<cylinder_t, cllib::read_only_array> cylinders;
+cllib::CLarray<torus_t, cllib::read_only_array> torus;
 
 cllib::CLarray<light_t, cllib::read_only_array> lights;
 
@@ -207,10 +209,13 @@ int main()
     };
     cn_vec = {
 //            cone_t({0, 5, 7}, {0,1,0}, 0.5, {255, 149, 0}, 500, 0.3)
-            cone_t({0, 0, 0}, {1,1,1}, 1, 0, {255, 149, 0}, 500, 0.3)
+//            cone_t({0, 0, 0}, {1,1,1}, 1, 0, {255, 149, 0}, 500, 0.3)
     };
     cy_vec = {
 //            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)
+    };
+    to_vec = {
+            torus_t({0, 0, 0}, {0, 0, 1}, 0.2, 2, Color::cyan, 0, 0)
     };
 
     cam_vec = {
@@ -252,6 +257,7 @@ int main()
     triangles = cllib::CLarray<triangle_t, cllib::read_only_array>(tr_vec, context, queue);
     cones = cllib::CLarray<cone_t, cllib::read_only_array>(cn_vec, context, queue);
     cylinders = cllib::CLarray<cylinder_t, cllib::read_only_array>(cy_vec, context, queue);
+    torus = cllib::CLarray<torus_t, cllib::read_only_array>(to_vec, context, queue);
 
     cameras = cllib::CLarray<camera_t, cllib::read_only_array>(cam_vec, context, queue);
     lights = cllib::CLarray<light_t, cllib::read_only_array>(li_vec, context, queue);
@@ -266,6 +272,7 @@ int main()
     kernel.set_next_arg(triangles);
     kernel.set_next_arg(cones);
     kernel.set_next_arg(cylinders);
+    kernel.set_next_arg(torus);
 
     kernel.set_next_arg(lights);
     kernel.set_next_arg(cameras);
@@ -275,6 +282,7 @@ int main()
     kernel.set_next_arg(static_cast<int>(triangles.size()));
     kernel.set_next_arg(static_cast<int>(cones.size()));
     kernel.set_next_arg(static_cast<int>(cylinders.size()));
+    kernel.set_next_arg(static_cast<int>(torus.size()));
 
     kernel.set_next_arg(static_cast<int>(lights.size()));
     kernel.set_next_arg(static_cast<int>(cameras.size()));

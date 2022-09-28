@@ -15,8 +15,11 @@ mlxlinux_lib:
 	$(MAKE)	-C ${LIB_MLX_DIR}/${MLX_OSX_DIR}
 
 install:
-	tar		-xvf ${LIB_SRC_DIR}/${LIB_JSON_DIR}.tar.gz 
-	tar		-C ${LIB_MLX_DIR} -xvf ${LIB_SRC_DIR}/${MLX_OSX_DIR}.tar.gz 
-	tar		-C ${LIB_MLX_DIR} -xvf ${LIB_SRC_DIR}/${MLX_LINUX_DIR}.tar.gz
+	@printf		"[TAR] ${LIB_SRC_DIR}/${LIB_JSON_DIR}.tar.gz \n"
+	@tar		-xf ${LIB_SRC_DIR}/${LIB_JSON_DIR}.tar.gz
+	@printf		"[TAR] ${LIB_SRC_DIR}/${LIB_JSON_DIR}.tar.gz \n"
+	@tar		-C ${LIB_MLX_DIR} -xf ${LIB_SRC_DIR}/${MLX_OSX_DIR}.tar.gz
+	@printf		"[TAR] ${LIB_SRC_DIR}/${MLX_OSX_DIR}.tar.gz \n"
+	@tar		-C ${LIB_MLX_DIR} -xf ${LIB_SRC_DIR}/${MLX_LINUX_DIR}.tar.gz
 
 

@@ -41,11 +41,11 @@ typedef struct sphere_s
     FLOAT               reflective;         // 40 -- 48
     FLOAT               radius;             // 48 -- 56
     UNUSED uint64_t     _padding1;          // 56 -- 64
-    FLOAT3              center;             // 64 -- 96
+    FLOAT3              position;             // 64 -- 96
 
 # ifdef __CPP
-    sphere_s(FLOAT3 center, FLOAT radius, FLOAT3 color, uint32_t specular, FLOAT reflective)
-            : center(center), radius(radius), color(color), specular(specular), reflective(reflective), _padding0(), _padding1()
+    sphere_s(FLOAT3 position, FLOAT radius, FLOAT3 color, uint32_t specular, FLOAT reflective)
+            : position(position), radius(radius), color(color), specular(specular), reflective(reflective), _padding0(), _padding1()
     {}
 # endif /* __CPP */
 } PACKED ALIGNED8 sphere_t;
@@ -98,13 +98,13 @@ typedef struct cone_s
     FLOAT           reflective;  // 40 -- 48
     FLOAT           width;
     FLOAT           gamma;
-    FLOAT3          center;     // 64 -- 96
+    FLOAT3          position;     // 64 -- 96
     FLOAT3          direction;
     FLOAT3          matr[3];     //
 
 # ifdef __CPP
     cone_s(
-        FLOAT3 center,
+        FLOAT3 position,
         FLOAT3 direction,
         FLOAT width,
         FLOAT gamma,
@@ -112,7 +112,7 @@ typedef struct cone_s
         uint32_t specular,
         FLOAT reflective
     ) :
-        center(center),
+        position(position),
         direction(direction),
         width(width),
         gamma(gamma),
@@ -122,10 +122,6 @@ typedef struct cone_s
     {
         normalize_ref(this->direction);
         set_rotation_matrix(this->matr, this->direction, {0, 0, 1});
-
-//        std::cout << matr[0].x << ' ' << matr[0].y << ' ' << matr[0].z << std::endl;
-//        std::cout << matr[1].x << ' ' << matr[1].y << ' ' << matr[1].z << std::endl;
-//        std::cout << matr[2].x << ' ' << matr[2].y << ' ' << matr[2].z << std::endl;
     }
 # endif /* __CPP */
 } PACKED ALIGNED8 cone_t;
@@ -160,6 +156,40 @@ typedef struct cylinder_s
     }
 # endif /* __CPP */
 } PACKED ALIGNED8 cylinder_t;
+
+typedef struct torus_s
+{
+    FLOAT3          color;
+    uint32_t        specular;
+    UNUSED uint32_t _padding;
+    FLOAT           reflective;
+    FLOAT3          position;
+    FLOAT3          normal;
+    FLOAT           r;
+    FLOAT           R;
+
+# ifdef __CPP
+    torus_s(
+        const FLOAT3 &position,
+        const FLOAT3 &normal,
+        FLOAT r,
+        FLOAT R,
+        const FLOAT3 &color,
+        uint32_t specular,
+        FLOAT reflective
+    ) :
+        position(position),
+        normal(normal),
+        r(r),
+        R(R),
+        color(color),
+        specular(specular),
+        reflective(reflective)
+    {
+        normalize_ref(this->normal);
+    }
+# endif /* __CPP */
+} PACKED ALIGNED8 torus_t;
 
 typedef enum light_type_e
 {
@@ -242,6 +272,7 @@ typedef struct scene_s
     __constant const triangle_t *__restrict triangles;
     __constant const cone_t     *__restrict cones;
     __constant const cylinder_t *__restrict cylinders;
+    __constant const torus_t    *__restrict torus;
 
     __constant const light_t    *__restrict lights;
     __constant const camera_t   *__restrict cameras;
@@ -251,6 +282,7 @@ typedef struct scene_s
     const uint32_t triangles_num;
     const uint32_t cones_num;
     const uint32_t cylinders_num;
+    const uint32_t torus_num;
 
     const uint32_t lights_num;
     const uint32_t cameras_num;
@@ -262,7 +294,8 @@ typedef enum obj_type_e
     PLANE,
     TRIANGLE,
     CONE,
-    CYLINDER
+    CYLINDER,
+    TOR
 } obj_type_t;
 
 CPP_UNUSED
@@ -288,9 +321,9 @@ FLOAT3 rotate_vector_nonconst(FLOAT3 vec, const FLOAT3 *matrix)
 CPP_UNUSED
 FLOAT intersect_sphere(FLOAT3 camera, FLOAT3 direction, __constant const sphere_t *__restrict sp)
 {
-   FLOAT3  oc = camera - sp->center;
+   FLOAT3  oc = camera - sp->position;
 
-   FLOAT a = dot(direction, direction);
+   FLOAT a = dot(direction, direction); // FIXME: always equals to 1
    FLOAT b = 2 * dot(oc, direction); // change to 2b
    FLOAT c = dot(oc, oc) - sp->radius * sp->radius; // change to sp->r2
 
@@ -337,11 +370,13 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
     FLOAT r_width2 = r_width * r_width;
 
     direction = rotate_vector(direction, cn->matr);
-    camera = rotate_vector(camera - cn->center, cn->matr);
+    camera = rotate_vector(camera - cn->position, cn->matr);
     direction.x *= r_width;
     direction.y *= r_width;
     camera.x *= r_width;
     camera.y *= r_width;
+
+    // FIXME: make vector dir2 {x, y, -z} and use dot(dir, dir2)
     FLOAT a = direction.x * direction.x + direction.y * direction.y - direction.z * direction.z;
     FLOAT b = camera.x * direction.x + camera.y * direction.y - camera.z * direction.z; // maybe here dot(camera, direction) - 2 * camera.z * direction.z
     b *= 2;
@@ -387,6 +422,71 @@ FLOAT intersect_cylinder(FLOAT3 camera, FLOAT3 direction, __constant const cylin
     if (mn < EPS)
         return fmax(x1, x2);
     return mn;
+}
+
+CPP_UNUSED
+FLOAT ferrari_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
+{
+    FLOAT b2 = b * b;
+    FLOAT b3 = b2 * b;
+    FLOAT b4 = b3 * b;
+
+    FLOAT p = 3. * b2 / 8. + c;
+    FLOAT q = b3 / 3. - b * c / 2. + d;
+    FLOAT r = -3. * b4 / 256. + b2 * c / 16. - b * d / 14. + e;
+    return 0;
+}
+
+CPP_UNUSED
+FLOAT poly(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
+{
+    FLOAT fx = a;
+    fx = fx * x + b;
+    fx = fx * x + c;
+    fx = fx * x + d;
+    fx = fx * x + e;
+    return fx;
+}
+
+CPP_UNUSED
+FLOAT newton_solve(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
+{
+    const FLOAT h = 1e-3;
+
+    for (int i=0; i < 10; ++i)
+    {
+        FLOAT fx = poly(x, a, b, c, d, e);
+        FLOAT dx = (poly(x + h, a, b, c, d, e) - poly(x - h, a, b, c, d, e)) / (2. * h);
+        x = x - fx / dx;
+    }
+    return x;
+}
+
+CPP_UNUSED
+FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t *__restrict to, FLOAT3 *param)
+{
+    FLOAT ksi = to->R * to->R - to->r * to->r; // move this to torus structure;
+    FLOAT R4 = to->R * 4;
+
+    FLOAT a = dot(direction, direction); // FIXME: this is always equals 1
+    FLOAT b = 2 * dot(direction, camera);
+    FLOAT c = dot(camera, camera) + ksi;
+
+    camera.z = 0;
+    direction.z = 0;
+    FLOAT az = dot(direction, direction) * R4;
+    FLOAT bz = dot(direction, camera) * R4;
+    FLOAT cz = dot(camera, camera);
+
+    FLOAT A = a*a;
+    FLOAT B = 2 * a*b;
+    FLOAT C = b*b + 2*a*c + az;
+    FLOAT D = 2*b*c + bz;
+    FLOAT E = c*c + cz;
+
+    if (param != NULL)
+        *param = (FLOAT3){0.5, 0.5, 0.5};
+    return newton_solve(EPS, A, B, C, D, E);
 }
 
 CPP_UNUSED
@@ -475,6 +575,20 @@ const __constant void *__restrict closest_intersection(
         }
     }
 
+    for (uint32_t i=0; i < scene->torus_num; ++i)
+    {
+        FLOAT t = intersect_torus(camera, direction, scene->torus + i, param);
+
+        if (t < start || t > end) // maybe >= <= here
+            continue ;
+        if (t < closest_t)
+        {
+            closest_t = t;
+            closest_obj = scene->torus + i;
+            closest_type = TOR;
+        }
+    }
+
     *closest_t_ptr = closest_t;
     *closest_type_ptr = closest_type;
     return closest_obj;
@@ -520,6 +634,13 @@ bool shadow_intersection(
     for (uint32_t i=0; i < scene->cylinders_num; ++i)
     {
         FLOAT t = intersect_cylinder(camera, direction, scene->cylinders + i);
+        if (t > start && t < end)
+            return true;
+    }
+
+    for (uint32_t i=0; i < scene->torus_num; ++i)
+    {
+        FLOAT t = intersect_torus(camera, direction, scene->torus + i, NULL);
         if (t > start && t < end)
             return true;
     }
@@ -624,13 +745,10 @@ FLOAT3    trace_ray(
         FLOAT3 normal;
         switch (closest_type)
         {
-            case SPHERE: normal = normalize(point - as_sphere(closest_obj)->center); break ;
+            case SPHERE: normal = normalize(point - as_sphere(closest_obj)->position); break ;
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
-            case CONE: {
-                normal = normalize(param);
-                break;
-            }
+            case CONE: normal = normalize(param); break ;
             case CYLINDER: {
                 FLOAT3 op = point - as_cylinder(closest_obj)->position;
                 FLOAT dt = dot(as_cylinder(closest_obj)->direction, op);
@@ -638,6 +756,7 @@ FLOAT3    trace_ray(
                 normal *= 1. / as_cylinder(closest_obj)->radius;
                 break ;
             }
+            case TOR: normal = param; break ;
         }
         FLOAT factor = compute_lightning(scene, point, normal, direction, get_obj_specular(closest_obj));
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
@@ -663,6 +782,7 @@ __kernel void ray_tracer(
         __constant const triangle_t *__restrict triangles,
         __constant const cone_t *__restrict cones,
         __constant const cylinder_t *__restrict cylinders,
+        __constant const torus_t *__restrict torus,
 
         __constant const light_t *__restrict lights,
         __constant const camera_t *__restrict cameras,
@@ -672,6 +792,7 @@ __kernel void ray_tracer(
         const uint32_t triangles_num,
         const uint32_t cones_num,
         const uint32_t cylinders_num,
+        const uint32_t torus_num,
 
         const uint32_t lights_num,
         const uint32_t cameras_num,
@@ -692,6 +813,7 @@ __kernel void ray_tracer(
         triangles,
         cones,
         cylinders,
+        torus,
 
         lights,
         cameras,
@@ -701,6 +823,7 @@ __kernel void ray_tracer(
         triangles_num,
         cones_num,
         cylinders_num,
+        torus_num,
 
         lights_num,
         cameras_num
