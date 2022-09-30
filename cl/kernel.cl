@@ -464,6 +464,8 @@ FLOAT newton_solve(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
         FLOAT dx = (poly(x + h, a, b, c, d, e) - poly(x - h, a, b, c, d, e)) / (2. * h);
         x = x - fx / dx;
     }
+    if (fabs(poly(x, a, b, c, d, e)) > EPS)
+        return INFINITY;
     return x;
 }
 
@@ -471,7 +473,7 @@ CPP_UNUSED CPP_INLINE
 FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t *__restrict to, FLOAT3 *param)
 {
     FLOAT ksi = to->R * to->R - to->r * to->r; // move this to torus structure;
-    FLOAT R4 = to->R * 4;
+    FLOAT M4R2 = -4. * to->R * to->R;
 
     FLOAT a = dot(direction, direction); // FIXME: this is always equals 1
     FLOAT b = 2 * dot(direction, camera);
@@ -479,9 +481,9 @@ FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t 
 
     camera.z = 0;
     direction.z = 0;
-    FLOAT az = dot(direction, direction) * R4;
-    FLOAT bz = dot(direction, camera) * R4;
-    FLOAT cz = dot(camera, camera);
+    FLOAT az = dot(direction, direction) * M4R2;
+    FLOAT bz = dot(direction, camera) * M4R2;
+    FLOAT cz = dot(camera, camera) * M4R2;
 
     FLOAT A = a*a;
     FLOAT B = 2 * a*b;
@@ -491,7 +493,11 @@ FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t 
 
     if (param != NULL)
         *param = (FLOAT3){0.5, 0.5, 0.5};
-    return newton_solve(EPS, A, B, C, D, E);
+    FLOAT ret = newton_solve(EPS, A, B, C, D, E);
+//    printf("%f %f %f %f %f: (%f)\n", A, B, C, D, E, ret);
+    if (ret < EPS)
+        return INFINITY;
+    return ret;
 }
 
 CPP_UNUSED CPP_INLINE
