@@ -1,5 +1,12 @@
 
 {
+	"resolution": {
+		"width": 1000,
+		"height": 1000,
+		"fovx": 90,
+		"fovy": 90
+	},
+
 	"camera": [
 		{
 			"position":		[0, 0, -1],

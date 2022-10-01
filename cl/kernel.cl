@@ -229,9 +229,6 @@ typedef struct light_s
 #  define CPP_INLINE inline
 CPP_UNUSED CPP_INLINE FLOAT3 normalize(FLOAT3) {return{};}
 CPP_UNUSED CPP_INLINE uint32_t get_global_id(uint32_t) {return{};}
-CPP_UNUSED CPP_INLINE FLOAT fmin(FLOAT, FLOAT) {return{};}
-CPP_UNUSED CPP_INLINE FLOAT fmax(FLOAT, FLOAT) {return{};}
-CPP_UNUSED CPP_INLINE FLOAT fabs(FLOAT, FLOAT) {return{};}
 
 CPP_INLINE light_t ambient_t(FLOAT intensity, FLOAT3 color)
 { return light_t(AMBIENT, intensity, color); }
@@ -430,43 +427,113 @@ FLOAT intersect_cylinder(FLOAT3 camera, FLOAT3 direction, __constant const cylin
 }
 
 CPP_UNUSED CPP_INLINE
-FLOAT ferrari_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
-{
-    FLOAT b2 = b * b;
-    FLOAT b3 = b2 * b;
-    FLOAT b4 = b3 * b;
-
-    FLOAT p = 3. * b2 / 8. + c;
-    FLOAT q = b3 / 3. - b * c / 2. + d;
-    FLOAT r = -3. * b4 / 256. + b2 * c / 16. - b * d / 14. + e;
-    return 0;
-}
-
-CPP_UNUSED CPP_INLINE
-FLOAT poly(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
+FLOAT poly3(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 {
     FLOAT fx = a;
     fx = fx * x + b;
     fx = fx * x + c;
     fx = fx * x + d;
-    fx = fx * x + e;
     return fx;
 }
 
 CPP_UNUSED CPP_INLINE
-FLOAT newton_solve(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
+FLOAT newton_cubic_solve(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 {
-    const FLOAT h = 1e-3;
+    const FLOAT h = 1e-2;
 
     for (int i=0; i < 10; ++i)
     {
-        FLOAT fx = poly(x, a, b, c, d, e);
-        FLOAT dx = (poly(x + h, a, b, c, d, e) - poly(x - h, a, b, c, d, e)) / (2. * h);
+        FLOAT fx = poly3(x, a, b, c, d);
+        FLOAT dx = (poly3(x + h, a, b, c, d) - poly3(x - h, a, b, c, d)) / (2. * h);
         x = x - fx / dx;
     }
-    if (fabs(poly(x, a, b, c, d, e)) > EPS)
-        return INFINITY;
     return x;
+}
+
+CPP_UNUSED CPP_INLINE
+FLOAT cubic_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d)
+/*
+    finds any real root of cubic equation
+*/
+{
+    FLOAT a2 = a * a;
+    FLOAT b2 = b * b;
+
+    FLOAT p = (3.*a*c - b2)/(3.*a2);
+    FLOAT q = (2.*b2*b - 9.*a*b*c + 27.*a2*d) / (27.*a2*a);
+
+    FLOAT Q = p * p * p / 27. + q * q / 4.;
+    if (Q < 0.)
+    {
+        FLOAT discriminant = sqrt(b2 - 3.*a*c);
+        FLOAT x1 = (-b + discriminant) / (3.*a);
+        FLOAT x2 = (-b - discriminant) / (3.*a);
+        return newton_cubic_solve((x1 + x2) / 2., a, b, c, d);
+    }
+    Q = sqrt(Q);
+    q = -q/2;
+    FLOAT alpha = cbrt(q + Q);
+    FLOAT beta = cbrt(q - Q);
+
+    FLOAT x = alpha + beta;
+    return x - b / (3*a);
+}
+
+CPP_UNUSED CPP_INLINE
+FLOAT ferrari_solve_quadratic(FLOAT p, FLOAT q)
+{
+    FLOAT x = INFINITY;
+    FLOAT discriminant = p*p - 8.*q;
+    if (discriminant > 0.) // maybe EPS here
+    {
+        discriminant = sqrt(discriminant);
+        FLOAT x1 = (-p + discriminant) / 4.;
+        FLOAT x2 = (-p - discriminant) / 4.;
+
+        x = fmin(x1, x2);
+        if (x < EPS)
+            x = fmax(x1, x2);
+        if (x < EPS)
+            x = INFINITY;
+    }
+    return x;
+}
+
+CPP_UNUSED CPP_INLINE
+FLOAT ferrari_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
+/*
+    finds minimum positive root of quartic equation
+*/
+{
+    FLOAT a2 = a * a;
+    FLOAT a3 = a2 * a;
+
+    FLOAT y2 = -c / a;
+    FLOAT y1 = (b*d)/a2 - (4.*e)/a;
+    FLOAT y0 = (4.*c*e)/a2 - (b*b*e)/a3 - (d*d)/a2;
+
+    FLOAT y = cubic_solve(1., y2, y1, y0);
+
+    FLOAT p_sqrt = sqrt((b*b)/a2 - (4.*c)/a + 4.*y);
+    FLOAT q_sqrt = sqrt(y*y - (4.*e)/a);
+
+    FLOAT p = b/a + p_sqrt;
+    FLOAT q = y - q_sqrt;
+    FLOAT x = ferrari_solve_quadratic(p, q);
+
+    p = b/a - p_sqrt;
+    q = y + q_sqrt;
+    x = fmin(x, ferrari_solve_quadratic(p, q));
+
+    return x;
+
+//    FLOAT b2 = b * b;
+//    FLOAT b3 = b2 * b;
+//    FLOAT b4 = b3 * b;
+//
+//    FLOAT p = 3. * b2 / 8. + c;
+//    FLOAT q = b3 / 3. - b * c / 2. + d;
+//    FLOAT r = -3. * b4 / 256. + b2 * c / 16. - b * d / 14. + e;
 }
 
 CPP_UNUSED CPP_INLINE
@@ -476,27 +543,24 @@ FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t 
     FLOAT M4R2 = -4. * to->R * to->R;
 
     FLOAT a = dot(direction, direction); // FIXME: this is always equals 1
-    FLOAT b = 2 * dot(direction, camera);
+    FLOAT b = 2. * dot(direction, camera);
     FLOAT c = dot(camera, camera) + ksi;
 
-    camera.z = 0;
-    direction.z = 0;
-    FLOAT az = dot(direction, direction) * M4R2;
-    FLOAT bz = dot(direction, camera) * M4R2;
-    FLOAT cz = dot(camera, camera) * M4R2;
+    camera.z = 0.;
+    direction.z = 0.;
+    FLOAT d = dot(direction, direction) * M4R2;
+    FLOAT e = 2. * dot(direction, camera) * M4R2;
+    FLOAT f = dot(camera, camera) * M4R2;
 
     FLOAT A = a*a;
-    FLOAT B = 2 * a*b;
-    FLOAT C = b*b + 2*a*c + az;
-    FLOAT D = 2*b*c + bz;
-    FLOAT E = c*c + cz;
+    FLOAT B = 2.*a*b;
+    FLOAT C = b*b + 2.*a*c + d;
+    FLOAT D = 2.*b*c + e;
+    FLOAT E = c*c + f;
 
     if (param != NULL)
         *param = (FLOAT3){0.5, 0.5, 0.5};
-    FLOAT ret = newton_solve(EPS, A, B, C, D, E);
-//    printf("%f %f %f %f %f: (%f)\n", A, B, C, D, E, ret);
-    if (ret < EPS)
-        return INFINITY;
+    FLOAT ret = ferrari_solve(A, B, C, D, E);
     return ret;
 }
 

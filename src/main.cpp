@@ -57,6 +57,11 @@ NORET void rtx::collapse(int status)
 
 int main()
 {
+    std::cout << newton_cubic_solve(-2.3333, 0.2, 1.4, 0.6, -4.8) << std::endl;
+    std::cout << cubic_solve(2.1, -6.7, 10, -1.8) << std::endl;
+    std::cout << ferrari_solve(0.5, -5, 10, -6.3, 4.9) << std::endl;
+//    return 0;
+
 //    std::cout << newton_solve(0, 0.657082, -1.056095, 14.076677, -7.052426, 51.848435) << std::endl;
 //    return 0;
 

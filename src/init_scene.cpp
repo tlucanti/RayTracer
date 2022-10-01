@@ -39,7 +39,7 @@ inline static constexpr uint32_t src32_table[256] = {
     0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D,  // 248 [0xF8 .. 0xFF]
 };
 
-template<size_t idx>
+template<size_t idx=0>
 inline static constexpr uint32_t crc32(const char *str)
 {
     return (crc32<idx - 1>(str) >> 8) ^ src32_table[(crc32<idx - 1>(str) ^ str[idx]) & 0x000000FF];
@@ -51,7 +51,7 @@ inline static constexpr uint32_t crc32<size_t(-1)>(const char *str)
     return 0xFFFFFFFF;
 }
 
-uint32_t operator ""_hash(const char *str)
+inline static constexpr uint32_t operator ""_hash(const char *str, unsigned long)
 {
     return (crc32<sizeof(str) - 2>(str) ^ 0xFFFFFFFF);
 }
@@ -63,10 +63,25 @@ void rtx::parse_scene(const char *fname)
         throw std::runtime_error(std::string("cannot open `") + fname + "` file");
     nlohmann::json data = nlohmann::json::parse(stream);
     for (const auto &i : data.items())
+    {
         std::cout << "data: " << i.key() << ' ' << i.value() << std::endl;
-
-    switch (:)
-
+//        switch(crc32(i.key().c_str()))
+//        {
+//            case("resolution"_hash): parse_resolution(i.value()); break ;
+//            case("camera"_hash): parse_camera(i.value()); break ;
+//            case("sphere"_hash): parse_spheres(i.value()); break ;
+//            case("plane"_hash): parse_planes(i.value()); break ;
+//            case("triangle"_hash): parse_triangles(i.value()); break ;
+//            case("cone"_hash): parse_cones(i.value()); break ;
+//            case("cylinder"_hash): parse_cylinders(i.value()); break ;
+//            case("torus"_hash): parse_torus(i.value()); break ;
+//            case("light"_hash): parse_lights(i.value()); break ;
+//            default: rtx::Warning("unknown field `" + i.key() + "` (ignored)");
+//        }
+//
+//        if (rtx::config::height < 0)
+//            rtx::Error("");
+    }
 
     rtx::objects::sp_vec = {
             sphere_t({0 , 0, 0}, 0.2, rtx::color::white, 0, 0),
@@ -106,7 +121,7 @@ void rtx::parse_scene(const char *fname)
 //            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)
     };
     rtx::objects::to_vec = {
-            torus_t({0, 0, 0}, {0, 1, 0}, 0.2, 1, rtx::color::cyan, 0, 0)
+            torus_t({0, 0, 0}, {0, 1, 0}, 0.5, 3, rtx::color::cyan, 0, 0)
     };
 
     rtx::objects::cam_vec = {
