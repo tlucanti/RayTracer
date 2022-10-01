@@ -40,9 +40,4 @@ namespace objects
     std::vector<light_t> li_vec;
 } /* objects */
 
-namespace config
-{
-    int current_camera = 0;
-}
-
 RTX_NAMESPACE_END

@@ -25,17 +25,19 @@ namespace RTX_NAMESPACE
 {
     namespace config
     {
-        inline constexpr int width = 1000;
-        inline constexpr int height = 1000;
+        inline int width;
+        inline int height;
+        inline FLOAT fovx;
+        inline FLOAT fovy;
+        inline FLOAT forward_move_step;
+        inline FLOAT side_move_speed;
+        inline FLOAT vertical_move_speed;
+        inline FLOAT vertical_look_speed = 0.005;
+        inline FLOAT horizontal_look_speed = 0.005;
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
         inline constexpr const char *scene_fname = "../scenes/scene.json";
-        extern int current_camera;
-        inline constexpr FLOAT forward_move_step = 0.1;
-        inline constexpr FLOAT side_move_speed = 0.05;
-        inline constexpr FLOAT vertical_move_speed = 0.05;
-        inline constexpr FLOAT vertical_look_speed = 0.005;
-        inline constexpr FLOAT horizontal_look_speed = 0.005;
+        inline int current_camera;
     } /* config */
 
     namespace color
