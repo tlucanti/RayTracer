@@ -195,7 +195,7 @@ typedef struct torus_s
 # endif /* __CPP */
 } PACKED ALIGNED8 torus_t;
 
-typedef enum light_type_e
+typedef enum
 {
     AMBIENT = 0,
     DIRECT  = 1,

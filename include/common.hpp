@@ -51,7 +51,6 @@ namespace RTX_NAMESPACE
         inline constexpr FLOAT3 magenta = {255, 0, 255};
         inline constexpr FLOAT3 yellow = {255, 255, 0};
         inline constexpr FLOAT3 purple = magenta;
-
         inline constexpr FLOAT3 grey = {100, 100, 100};
     } /* color */
 

@@ -30,4 +30,6 @@ namespace linalg
 
 RTX_NAMESPACE_END
 
+std::ostream &operator <<(std::ostream &out, const FLOAT3 &p);
+
 #endif /* STRUCT_HPP */
