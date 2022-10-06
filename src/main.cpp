@@ -103,7 +103,7 @@ int main()
 //    return 0;
 
     try {
-        rtx::parse_scene(rtx::config::scene_fname); // run in thread
+//        rtx::parse_scene(rtx::config::scene_fname); // run in thread
 //    return 0;
         rtx::init_gpu(); // run in thread
         rtx::init_mlx(); // run in thread

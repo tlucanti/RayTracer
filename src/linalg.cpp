@@ -188,8 +188,10 @@ FLOAT3 &operator *=(FLOAT3 &a, FLOAT b)
     return a;
 }
 
+static inline constexpr FLOAT flt0(FLOAT q) { return fabs(q) < EPS ? 0 : q; }
+
 std::ostream &operator <<(std::ostream &out, const FLOAT3 &p)
 {
-    out << "(" << p.x << ", " << p.y << ", " << p.z << ')';
+    out << "(" << flt0(p.x) << ", " << flt0(p.y) << ", " << flt0(p.z) << ')';
     return out;
 }

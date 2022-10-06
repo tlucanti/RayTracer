@@ -4,18 +4,26 @@
 #include <rtx.hpp>
 #include <exception.hpp>
 
-namespace flags
+union Flags
 {
-    inline static bool config = false;
-    inline static bool cameras = false;
-    inline static bool spheres = false;
-    inline static bool planes = false;
-    inline static bool triangles = false;
-    inline static bool hyperboloids = false;
-    inline static bool cylinders = false;
-    inline static bool torus = false;
-    inline static bool lights = false;
-}
+    struct
+    {
+        unsigned spheres : 1;
+        unsigned planes : 1;
+        unsigned triangles : 1;
+        unsigned hyperboloids : 1;
+        unsigned cylinders : 1;
+        unsigned : 0;
+        unsigned config : 1;
+        unsigned cameras : 1;
+        unsigned torus : 1;
+        unsigned lights : 1;
+    };
+    unsigned objects;
+    unsigned long long all;
+};
+
+inline static Flags flags {.all=0ull};
 
 template <uintmax_t mod=10000000001191, uintmax_t prime=257>
 inline constexpr uintmax_t poly_hash(const char *str, size_t size, size_t idx)
@@ -69,10 +77,10 @@ static std::string to_string(const value_type &t)
 
 static FLOAT3 to_vec3(const nlohmann::json &v)
 {
-    return (FLOAT3){v.at(0), v.at(1), v.at(2)};
+    return (FLOAT3){v[0], v[1], v[2]};
 }
 
-static FLOAT3 to_vec3(const std::string &str)
+static FLOAT3 to_col3(const std::string &str)
 {
     std::stringstream ss;
     ss << std::hex << str;
@@ -165,7 +173,7 @@ static void parse_type_assert(const std::string &name, const nlohmann::json &val
 
 static void parse_unknown_notify(const std::string &name)
 {
-    parse_notify(true, "unknown field " + rtx::C[str(name)] + " (ignoring)");
+    parse_warn(true, "unknown field " + rtx::C[str(name)] + " (ignoring)");
 }
 
 template <class value_type>
@@ -191,12 +199,12 @@ static void parse_undefined_assert(const std::string &name, bool cond)
 
 static void parse_extra_defined_warn(const std::string &name, bool cond, const std::string &msg)
 {
-    parse_assert(cond, "value " + rtx::C[name] + " should not be defined" + msg);
+    parse_assert(not cond, "value " + rtx::C[name] + " should not be defined " + msg);
 }
 
 static void parse_vec3_singular_assert(const std::string &name, const FLOAT3 &vec)
 {
-    parse_assert(abs(rtx::linalg::dot(vec, vec)) > EPS, name + " is singular vector");
+    parse_assert(rtx::linalg::dot(vec, vec) > EPS, name + " is singular vector");
 }
 
 template <class item_type>
@@ -204,7 +212,7 @@ static void parse_vec3_point(const std::string &name, const item_type &item, boo
 {
     parse_type_assert(name, item.value(), VEC3_TYPE);
     parse_redefinition_notify(name, flag, item.value(), vec);
-    vec = to_vec3(item.key());
+    vec = to_vec3(item.value());
     flag = true;
 }
 
@@ -265,10 +273,10 @@ static void parse_color(const std::string &name, const item_type &item, bool &fl
     parse_type_assert(name, item.value(), COLOR_TYPE);
 
     if (item.value().is_array())
-        color = to_vec3(item.value());
+        color = to_col3(item.value());
     else if (item.value().is_string())
     {
-        switch(hash(item.value()))
+        switch(hash(std::string(item.value())))
         {
             case ("white"_hash): color = rtx::color::white; break ;
             case ("black"_hash): color = rtx::color::black; break ;
@@ -280,31 +288,31 @@ static void parse_color(const std::string &name, const item_type &item, bool &fl
             case ("yellow"_hash): color = rtx::color::yellow; break ;
             case ("grey"_hash): color = rtx::color::grey; break ;
             default: {
-                std::string str = item.value();
-                bool cond = not str.empty() and str.at(0) == '#';
+                std::string st = item.value();
+                bool cond = not st.empty() and st.at(0) == '#';
                 if (cond)
                 {
                     parse_type_assert(name, item.value(), HEX_TYPE);
-                    color = to_vec3(str.substr(1));
+                    color = to_col3(st.substr(1));
                 } else
-                    parse_assert(false, "unknown color "
-                        + rtx::C[item.value()]);
+                    parse_assert(false, "unknown color " + rtx::C[str(std::string(item.value()))]);
                 break ;
             };
         }
     }
+    flag = true;
 }
 
 template <class item_type>
 static void parse_light_type(const std::string &name, const item_type &item, bool &flag, light_type_t &type)
 {
     parse_type_assert(name, item.value(), STRING_TYPE);
-    switch (hash(item.value()))
+    switch (hash(std::string(item.value())))
     {
         case ("ambient"_hash): type = AMBIENT; break ;
         case ("point"_hash): type = POINT; break ;
         case ("direct"_hash): type = DIRECT; break ;
-        default: parse_assert(false, "unknown " + name + rtx::C[item.value()]); break ;
+        default: parse_assert(false, "unknown " + name + ' ' + rtx::C[str(std::string(item.value()))]); return ;
     }
     flag = true;
 }
@@ -341,8 +349,8 @@ static void parse_config(const nlohmann::json &res)
     rtx::config::forward_move_step = rtx::config::forward_move_step / 2.;
     parse_undefined_warn_set("mouse sensitivity", look_speed, 0.005, rtx::config::vertical_look_speed);
     rtx::config::horizontal_look_speed = rtx::config::vertical_look_speed;
-    flags::config = true;
-    parse_ok(true, "scene::config parsed");
+    flags.config = true;
+    parse_ok(true, "scene::config "_W + "parsed"_G);
 }
 
 static void parse_cameras_single(const nlohmann::json &camera)
@@ -373,8 +381,8 @@ static void parse_cameras(const nlohmann::json &cameras)
     parse_type_assert("cameras array", cameras, ARRAY_TYPE);
     for (const auto &item : cameras)
         parse_cameras_single(item);
-    flags::cameras = true;
-    parse_ok(true, "scene::cameras parsed");
+    flags.cameras = true;
+    parse_ok(true, "scene::cameras "_W + "parsed"_G);
 }
 
 static void parse_sphere_single(const nlohmann::json &sphere)
@@ -419,8 +427,8 @@ static void parse_spheres(const nlohmann::json &spheres)
     parse_type_assert("spheres array", spheres, ARRAY_TYPE);
     for (const auto &item : spheres)
         parse_sphere_single(item);
-    flags::spheres = true;
-    parse_ok(true, "scene::spheres parsed");
+    flags.spheres = true;
+    parse_ok(true, "scene::spheres "_W + "parsed"_G);
 }
 
 static void parse_plane_single(const nlohmann::json &plane)
@@ -465,8 +473,8 @@ static void parse_planes(const nlohmann::json &planes)
     parse_type_assert("planes array", planes, ARRAY_TYPE);
     for (const auto &item : planes)
         parse_plane_single(item);
-    flags::planes = true;
-    parse_ok(true, "scene::planes parsed");
+    flags.planes = true;
+    parse_ok(true, "scene::planes "_W + "parsed"_G);
 }
 
 static void parse_triangle_single(const nlohmann::json &triangle)
@@ -515,8 +523,8 @@ static void parse_triangles(const nlohmann::json &triangles)
     parse_type_assert("triangles array", triangles, ARRAY_TYPE);
     for (const auto &item : triangles)
         parse_triangle_single(item);
-    flags::triangles = true;
-    parse_ok(true, "scene::triangles parsed");
+    flags.triangles = true;
+    parse_ok(true, "scene::triangles "_W + "parsed"_G);
 }
 
 static void parse_hyperboloid_single(const nlohmann::json &hyper)
@@ -569,8 +577,8 @@ static void parse_hyperboloids(const nlohmann::json &cones)
     parse_type_assert("hyperboloids array", cones, ARRAY_TYPE);
     for (const auto &item : cones)
         parse_hyperboloid_single(item);
-    flags::hyperboloids = true;
-    parse_ok(true, "scene::hyperboloids parsed");
+    flags.hyperboloids = true;
+    parse_ok(true, "scene::hyperboloids "_W + "parsed"_G);
 }
 
 static void parse_cylinder_single(const nlohmann::json &cylinder)
@@ -620,8 +628,8 @@ static void parse_cylinders(const nlohmann::json &cylinders)
     parse_type_assert("cylinders array", cylinders, ARRAY_TYPE);
     for (const auto &item : cylinders)
         parse_cylinder_single(item);
-    flags::cylinders = true;
-    parse_ok(true, "scene::cylinders parsed");
+    flags.cylinders = true;
+    parse_ok(true, "scene::cylinders "_W + "parsed"_G);
 }
 
 static void parse_torus_single(const nlohmann::json &torus)
@@ -652,7 +660,7 @@ static void parse_torus_single(const nlohmann::json &torus)
             case ("specular"_hash): parse_int_positive("torus specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("torus reflective", item, got_reflective, reflective); break ;
             case ("position"_hash): parse_vec3_point("torus position", item, got_position, position); break ;
-            case ("direction"_hash): parse_vec3_unit("torus normal", item, got_normal, normal); break ;
+            case ("normal"_hash): parse_vec3_unit("torus normal", item, got_normal, normal); break ;
             case ("inner_radius"_hash): parse_float_positive("torus inner radius", item, got_inner, inner); break ;
             case ("outer_radius"_hash): parse_float_positive("torus outer radius", item, got_outer, outer); break ;
             default: parse_unknown_notify(item.key()); break ;
@@ -675,8 +683,8 @@ static void parse_torus(const nlohmann::json &torus)
     parse_type_assert("torus array", torus, ARRAY_TYPE);
     for (const auto &item : torus)
         parse_torus_single(item);
-    flags::torus = true;
-    parse_ok(true, "scene::torus parsed");
+    flags.torus = true;
+    parse_ok(true, "scene::torus "_W + "parsed"_G);
 }
 
 static void parse_light_single(const nlohmann::json &light)
@@ -688,11 +696,11 @@ static void parse_light_single(const nlohmann::json &light)
     FLOAT3 color;
     FLOAT3 vec;
 
-    bool got_type;
-    bool got_intensity;
-    bool got_color;
-    bool got_position;
-    bool got_direction;
+    bool got_type = false;
+    bool got_intensity = false;
+    bool got_color = false;
+    bool got_position = false;
+    bool got_direction = false;
 
     for (const auto &item : light.items())
     {
@@ -732,6 +740,7 @@ static void parse_light_single(const nlohmann::json &light)
                 parse_undefined_assert("light direction", got_direction);
                 if (not got_position and got_direction)
                     rtx::objects::li_vec.push_back(direct_t(intensity, color, vec));
+                break ;
             }
             default:throw std::runtime_error(
                 rtx::R["[INTERNAL ERROR]: init_scene::parse_light_single: unexpected light type " + str(type)]);
@@ -744,88 +753,93 @@ static void parse_lights(const nlohmann::json &lights)
     parse_type_assert("lights array", lights, ARRAY_TYPE);
     for (const auto &item : lights)
         parse_light_single(item);
-    flags::lights = true;
+    flags.lights = true;
     parse_ok(true, "scene::lights parsed");
 }
 
 void rtx::parse_scene(const char *fname)
 {
-//    std::ifstream stream(fname);
-//    if (not stream.is_open())
-//        throw Exception("std::string("cannot open `") + fname + "` file");
-//    nlohmann::json data = nlohmann::json::parse(stream);
-//    for (const auto &i : data.items())
-//    {
-//        std::cout << "data: " << i.key() << ' ' << i.value() << std::endl;
-//        switch(hash(i.key()))
-//        {
-//            case("resolution"_hash): parse_config(i.value()); break ;
-//            case("cameras"_hash): parse_cameras(i.value()); break ;
-//            case("spheres"_hash): parse_spheres(i.value()); break ;
-//            case("planes"_hash): parse_planes(i.value()); break ;
-//            case("triangles"_hash): parse_triangles(i.value()); break ;
-//            case("cones"_hash): parse_hyperboloids(i.value()); break ;
-//            case("cylinders"_hash): parse_cylinders(i.value()); break ;
-//            case("torus"_hash): parse_torus(i.value()); break ;
-//            case("lights"_hash): parse_lights(i.value()); break ;
-//            default: parse_unknown_notify(i.key());
-//        }
-//    }
+    std::ifstream stream(fname);
+    if (not stream.is_open())
+        throw Exception(std::string("cannot open `") + fname + "` file");
+    nlohmann::json data = nlohmann::json::parse(stream);
+    for (const auto &i : data.items())
+    {
+        switch(hash(i.key()))
+        {
+            case("config"_hash): parse_config(i.value()); break ;
+            case("cameras"_hash): parse_cameras(i.value()); break ;
+            case("spheres"_hash): parse_spheres(i.value()); break ;
+            case("planes"_hash): parse_planes(i.value()); break ;
+            case("triangles"_hash): parse_triangles(i.value()); break ;
+            case("cones"_hash): parse_hyperboloids(i.value()); break ;
+            case("cylinders"_hash): parse_cylinders(i.value()); break ;
+            case("torus"_hash): parse_torus(i.value()); break ;
+            case("lights"_hash): parse_lights(i.value()); break ;
+            default: parse_unknown_notify(i.key());
+        }
+    }
+    parse_notify(flags.config, "config parameters are not set, setting to default values");
+    parse_warn(flags.lights, "your scene don`t have any light sources, you will not see anything");
+    parse_warn(flags.objects, "your scene don`t have any objects, you will not see anything");
+    parse_assert(flags.cameras, "your scene don`t have any cameras in scene");
+    if (not flags.cameras)
+        throw rtx::Exception("cannot start due to scene errors");
 
-    rtx::objects::sp_vec = {
-            sphere_t({0, 0, 0}, 0.2, rtx::color::white, 0, 0),
-            sphere_t({0, 1., 0}, 0.2, rtx::color::white, 0, 0),
-            sphere_t({0, 1.5, 0}, 0.2, rtx::color::white, 0, 0),
-            sphere_t({0, 2., 0}, 0.2, rtx::color::white, 0, 0),
-            sphere_t({0, 2.5, 0}, 0.2, rtx::color::white, 0, 0),
-            sphere_t({3 , 2.0, 0}, 0.2, rtx::color::white, 0, 0),
-//            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
-            sphere_t({2, 0, 4}, 1, rtx::color::blue, 500, 0.2),
-            sphere_t({-2, 0, 4}, 1, rtx::color::green, 10, 0.2),
-            sphere_t({3,-1,0}, 1, rtx::color::red, 500, 0.2),
-//            sphere_t({4, 0, 0}, 1, Color::blue, 500, 0.2),
-//            sphere_t({4, 0, -2}, 1, Color::green, 10, 0.2),
-//            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2),
-//            sphere_t({2,2,2},0.05,Color::red,0.,0.),
-//            sphere_t({3,2,1},0.05,Color::red,0.,0.),
-//            sphere_t({3,3,3},0.05,Color::red,0.,0.),
-//            sphere_t({0,2,10},0.1,Color::green,0.,0.),
-//            sphere_t({1,2,10},0.1,Color::green,0.,0.),
-//            sphere_t({-1,2,10},0.1,Color::green,0.,0.),
-//            sphere_t({0,3,10},0.1,Color::blue,0.,0.),
-//            sphere_t({0,1,10},0.1,Color::blue,0.,0.),
-//            sphere_t({0,2,11},0.1,Color::red,0.,0.),
-//            sphere_t({0,2,9},0.1,Color::red,0.,0.)
-    };
-    rtx::objects::pl_vec = {
-//            plane_t({0, -1, 0}, {0, 1, 0}, Color::yellow, 1000, 0.2)
-    };
-    rtx::objects::tr_vec = {
-//            triangle_t({2, 2, 2}, {3, 3, 3}, {3, 2, 1}, Color::grey, 10, 0.) // 1 2 3
-//            triangle_t({5, 1, 0},{0, 1, 0},{2, 2, 2},   Color::grey, 300, 0.7) // 3 2 1
-//            triangle_t({2, 2, 2}, {3, 3, 3}, {3, 2, 1}, Color::grey, 10, 0.) // 1 2 3
-//            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
-    };
-    rtx::objects::cn_vec = {
-//            cone_t({0, 5, 7}, {0,1,0}, 0.5, {255, 149, 0}, 500, 0.3)
-//            cone_t({0, 0, 0}, {1,1,1}, 1, 0, {255, 149, 0}, 500, 0.3)
-    };
-    rtx::objects::cy_vec = {
-//            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)
-    };
-    rtx::objects::to_vec = {
-            torus_t({0, 0, 0}, {0, 1, 0}, 0.5, 3, rtx::color::cyan, 0, 0)
-    };
-
-    rtx::objects::cam_vec = {
-            camera_t({-5, 0, 0}, {1, 0, 0})
-    };
-
-    rtx::objects::li_vec = {
-            ambient_t(0.1, rtx::color::white),
-            point_t(0.6, rtx::color::white, {3, 2, 0}),
-            direct_t(0.3, rtx::color::white, {1, 3, 4})
-    };
+//    rtx::objects::sp_vec = {
+//            sphere_t({0, 0, 0}, 0.2, rtx::color::white, 0, 0),
+//            sphere_t({0, 1., 0}, 0.2, rtx::color::white, 0, 0),
+//            sphere_t({0, 1.5, 0}, 0.2, rtx::color::white, 0, 0),
+//            sphere_t({0, 2., 0}, 0.2, rtx::color::white, 0, 0),
+//            sphere_t({0, 2.5, 0}, 0.2, rtx::color::white, 0, 0),
+//            sphere_t({3 , 2.0, 0}, 0.2, rtx::color::white, 0, 0),
+////            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
+//            sphere_t({2, 0, 4}, 1, rtx::color::blue, 500, 0.2),
+//            sphere_t({-2, 0, 4}, 1, rtx::color::green, 10, 0.2),
+//            sphere_t({3,-1,0}, 1, rtx::color::red, 500, 0.2),
+////            sphere_t({4, 0, 0}, 1, Color::blue, 500, 0.2),
+////            sphere_t({4, 0, -2}, 1, Color::green, 10, 0.2),
+////            sphere_t({0, -5001, 0}, 5000, Color::yellow, 1000, 0.2),
+////            sphere_t({2,2,2},0.05,Color::red,0.,0.),
+////            sphere_t({3,2,1},0.05,Color::red,0.,0.),
+////            sphere_t({3,3,3},0.05,Color::red,0.,0.),
+////            sphere_t({0,2,10},0.1,Color::green,0.,0.),
+////            sphere_t({1,2,10},0.1,Color::green,0.,0.),
+////            sphere_t({-1,2,10},0.1,Color::green,0.,0.),
+////            sphere_t({0,3,10},0.1,Color::blue,0.,0.),
+////            sphere_t({0,1,10},0.1,Color::blue,0.,0.),
+////            sphere_t({0,2,11},0.1,Color::red,0.,0.),
+////            sphere_t({0,2,9},0.1,Color::red,0.,0.)
+//    };
+//    rtx::objects::pl_vec = {
+////            plane_t({0, -1, 0}, {0, 1, 0}, Color::yellow, 1000, 0.2)
+//    };
+//    rtx::objects::tr_vec = {
+////            triangle_t({2, 2, 2}, {3, 3, 3}, {3, 2, 1}, Color::grey, 10, 0.) // 1 2 3
+////            triangle_t({5, 1, 0},{0, 1, 0},{2, 2, 2},   Color::grey, 300, 0.7) // 3 2 1
+////            triangle_t({2, 2, 2}, {3, 3, 3}, {3, 2, 1}, Color::grey, 10, 0.) // 1 2 3
+////            triangle_t({3, 3, 3},{2, 2, 2}, {3, 2, 1},  Color::grey, 10, 0.) // 3 1 2
+//    };
+//    rtx::objects::cn_vec = {
+////            cone_t({0, 5, 7}, {0,1,0}, 0.5, {255, 149, 0}, 500, 0.3)
+////            cone_t({0, 0, 0}, {1,1,1}, 1, 0, {255, 149, 0}, 500, 0.3)
+//    };
+//    rtx::objects::cy_vec = {
+////            cylinder_t({0, 0, 10}, {1, 0, 0}, 1, Color::yellow, 0, 0)
+//    };
+//    rtx::objects::to_vec = {
+//            torus_t({0, 0, 0}, {0, 1, 0}, 0.5, 3, rtx::color::cyan, 0, 0)
+//    };
+//
+//    rtx::objects::cam_vec = {
+//            camera_t({-5, 0, 0}, {1, 0, 0})
+//    };
+//
+//    rtx::objects::li_vec = {
+//            ambient_t(0.1, rtx::color::white),
+//            point_t(0.6, rtx::color::white, {3, 2, 0}),
+//            direct_t(0.3, rtx::color::white, {1, 3, 4})
+//    };
 
 //    FLOAT t, p;
 //    FLOAT3 cam = {0, 0, 1};

@@ -17,24 +17,29 @@ struct Exception : public std::runtime_error
     {}
 };
 
+inline void __Msg(const std::string &status, const std::string &parent, const std::string &message)
+{
+    std::cout << status << ": "_W << P[parent] << ": "_W << message << rtx::Color::reset << std::endl;
+}
+
 inline void Info(const std::string &parent, const std::string &message)
 {
-    std::cout << "[INFO]"_B << ": "_W << P[parent] << message << rtx::Color::reset << std::endl;
+    __Msg("[INFO]"_B, parent, message);
 }
 
 inline void Ok(const std::string &parent, const std::string &message)
 {
-    std::cout << "[ OK ]"_G << ": "_W << P[parent] << message << rtx::Color::reset << std::endl;
+    __Msg("[ OK ]"_G, parent, message);
 }
 
 inline void Warning(const std::string &parent, const std::string &message)
 {
-    std::cout << "[WARN]"_Y << ": "_W << P[parent] << message << rtx::Color::reset << std::endl;
+    __Msg("[WARN]"_Y, parent, message);
 }
 
 inline void Error(const std::string &parent, const std::string &message)
 {
-    std::cout << "[FAIL]"_R << ": "_W << P[parent] << message << rtx::Color::reset << std::endl;
+    __Msg("[FAIL]"_R, parent, message);
 }
 
 RTX_NAMESPACE_END

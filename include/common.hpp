@@ -28,8 +28,8 @@ namespace RTX_NAMESPACE
     {
         inline int width {1000};
         inline int height {1000};
-        inline FLOAT fovx;
-        inline FLOAT fovy;
+        inline FLOAT fovx {90};
+        inline FLOAT fovy {90};
         inline FLOAT forward_move_step {0.1};
         inline FLOAT side_move_speed {0.05};
         inline FLOAT vertical_move_speed {0.05};
@@ -37,7 +37,8 @@ namespace RTX_NAMESPACE
         inline FLOAT horizontal_look_speed {0.005};
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
-        inline constexpr const char *scene_fname = "../scenes/scene.json";
+//        inline constexpr const char *scene_fname = "../scenes/scene.json";
+        inline constexpr const char *scene_fname = "../scenes/spheres.json";
         inline int current_camera;
     } /* config */
 
