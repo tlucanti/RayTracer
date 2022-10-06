@@ -49,13 +49,16 @@ public:
 
         cl_int  error = CL_SUCCESS;
 
-        buffer = clCreateBuffer(
-            context.__get_context(),
-            flag,
-            size * sizeof(value_type),
-            host_ptr,
-            &error
-        );
+//        if (size == 0)
+//            buffer = nullptr;
+//        else
+            buffer = clCreateBuffer(
+                context.__get_context(),
+                flag,
+                size * sizeof(value_type),
+                host_ptr,
+                &error
+            );
         if (error != CL_SUCCESS)
             throw CLexception(error);
         if (__VERBOSE)

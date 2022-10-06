@@ -18,6 +18,7 @@
 # define PI M_PI
 
 typedef double FLOAT;
+typedef cl_double4 FLOAT4;
 typedef cl_double3 FLOAT3;
 typedef cl_double2 FLOAT2;
 
@@ -25,15 +26,15 @@ namespace RTX_NAMESPACE
 {
     namespace config
     {
-        inline int width;
-        inline int height;
+        inline int width {1000};
+        inline int height {1000};
         inline FLOAT fovx;
         inline FLOAT fovy;
-        inline FLOAT forward_move_step;
-        inline FLOAT side_move_speed;
-        inline FLOAT vertical_move_speed;
-        inline FLOAT vertical_look_speed = 0.005;
-        inline FLOAT horizontal_look_speed = 0.005;
+        inline FLOAT forward_move_step {0.1};
+        inline FLOAT side_move_speed {0.05};
+        inline FLOAT vertical_move_speed {0.05};
+        inline FLOAT vertical_look_speed {0.005};
+        inline FLOAT horizontal_look_speed {0.005};
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
         inline constexpr const char *scene_fname = "../scenes/scene.json";

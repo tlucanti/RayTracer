@@ -750,31 +750,35 @@ static void parse_lights(const nlohmann::json &lights)
 
 void rtx::parse_scene(const char *fname)
 {
-    std::ifstream stream(fname);
-    if (not stream.is_open())
-        throw std::runtime_error(std::string("cannot open `") + fname + "` file");
-    nlohmann::json data = nlohmann::json::parse(stream);
-    for (const auto &i : data.items())
-    {
-        std::cout << "data: " << i.key() << ' ' << i.value() << std::endl;
-        switch(hash(i.key()))
-        {
-            case("resolution"_hash): parse_config(i.value()); break ;
-            case("cameras"_hash): parse_cameras(i.value()); break ;
-            case("spheres"_hash): parse_spheres(i.value()); break ;
-            case("planes"_hash): parse_planes(i.value()); break ;
-            case("triangles"_hash): parse_triangles(i.value()); break ;
-            case("cones"_hash): parse_hyperboloids(i.value()); break ;
-            case("cylinders"_hash): parse_cylinders(i.value()); break ;
-            case("torus"_hash): parse_torus(i.value()); break ;
-            case("lights"_hash): parse_lights(i.value()); break ;
-            default: parse_unknown_notify(i.key());
-        }
-    }
+//    std::ifstream stream(fname);
+//    if (not stream.is_open())
+//        throw Exception("std::string("cannot open `") + fname + "` file");
+//    nlohmann::json data = nlohmann::json::parse(stream);
+//    for (const auto &i : data.items())
+//    {
+//        std::cout << "data: " << i.key() << ' ' << i.value() << std::endl;
+//        switch(hash(i.key()))
+//        {
+//            case("resolution"_hash): parse_config(i.value()); break ;
+//            case("cameras"_hash): parse_cameras(i.value()); break ;
+//            case("spheres"_hash): parse_spheres(i.value()); break ;
+//            case("planes"_hash): parse_planes(i.value()); break ;
+//            case("triangles"_hash): parse_triangles(i.value()); break ;
+//            case("cones"_hash): parse_hyperboloids(i.value()); break ;
+//            case("cylinders"_hash): parse_cylinders(i.value()); break ;
+//            case("torus"_hash): parse_torus(i.value()); break ;
+//            case("lights"_hash): parse_lights(i.value()); break ;
+//            default: parse_unknown_notify(i.key());
+//        }
+//    }
 
     rtx::objects::sp_vec = {
-            sphere_t({0 , 0, 0}, 0.2, rtx::color::white, 0, 0),
-            sphere_t({3 , 2, 0}, 0.2, rtx::color::white, 0, 0),
+            sphere_t({0, 0, 0}, 0.2, rtx::color::white, 0, 0),
+            sphere_t({0, 1., 0}, 0.2, rtx::color::white, 0, 0),
+            sphere_t({0, 1.5, 0}, 0.2, rtx::color::white, 0, 0),
+            sphere_t({0, 2., 0}, 0.2, rtx::color::white, 0, 0),
+            sphere_t({0, 2.5, 0}, 0.2, rtx::color::white, 0, 0),
+            sphere_t({3 , 2.0, 0}, 0.2, rtx::color::white, 0, 0),
 //            sphere_t({0,-1,3}, 1, Color::red, 500, 0.2),
             sphere_t({2, 0, 4}, 1, rtx::color::blue, 500, 0.2),
             sphere_t({-2, 0, 4}, 1, rtx::color::green, 10, 0.2),

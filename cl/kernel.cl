@@ -11,7 +11,9 @@
 #  define EPS 1e-4
 
 typedef double FLOAT;
+typedef double4 FLOAT4;
 typedef double3 FLOAT3;
+typedef double2 FLOAT2;
 typedef unsigned int uint32_t;
 typedef int int32_t;
 typedef unsigned long int uint64_t;
@@ -229,6 +231,7 @@ typedef struct light_s
 #  define CPP_INLINE inline
 CPP_UNUSED CPP_INLINE FLOAT3 normalize(FLOAT3) {return{};}
 CPP_UNUSED CPP_INLINE uint32_t get_global_id(uint32_t) {return{};}
+CPP_UNUSED CPP_INLINE FLOAT length(FLOAT3) {return {};}
 
 CPP_INLINE light_t ambient_t(FLOAT intensity, FLOAT3 color)
 { return light_t(AMBIENT, intensity, color); }
@@ -238,8 +241,6 @@ CPP_INLINE light_t point_t(FLOAT intensity, FLOAT3 color, FLOAT3 position)
 { return light_t(POINT, intensity, color, position); }
 #  define dot rtx::linalg::dot
 #  define cross rtx::linalg::cross
-# else /* no __CPP */
-typedef struct light_s light_t;
 # endif /* __CPP */
 
 typedef struct camera_s
@@ -318,6 +319,18 @@ FLOAT3 rotate_vector_nonconst(FLOAT3 vec, const FLOAT3 *matrix)
         dot(matrix[1], vec),
         dot(matrix[2], vec)
     };
+}
+
+CPP_UNUSED CPP_INLINE
+bool check_sphere(FLOAT3 camera, FLOAT3 direction, FLOAT3 position, FLOAT radius)
+{
+    FLOAT3 oc = camera - position;
+
+    FLOAT a = dot(direction, direction); // FIXME: always equals to 1
+    FLOAT b = 2 * dot(oc, direction); // change to 2b
+    FLOAT c = dot(oc, oc) - radius * radius; // change to sp->r2
+
+    return (b*b - 4*a*c) > 0;
 }
 
 CPP_UNUSED CPP_INLINE
@@ -439,9 +452,9 @@ FLOAT poly3(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 CPP_UNUSED CPP_INLINE
 FLOAT newton_cubic_solve(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 {
-    const FLOAT h = 1e-2;
+    const FLOAT h = 1e-3;
 
-    for (int i=0; i < 10; ++i)
+    for (int i=0; i < 20; ++i)
     {
         FLOAT fx = poly3(x, a, b, c, d);
         FLOAT dx = (poly3(x + h, a, b, c, d) - poly3(x - h, a, b, c, d)) / (2. * h);
@@ -451,7 +464,7 @@ FLOAT newton_cubic_solve(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 }
 
 CPP_UNUSED CPP_INLINE
-FLOAT cubic_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d)
+FLOAT cardano_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d) // maybe use here FLOAT4
 /*
     finds any real root of cubic equation
 */
@@ -480,11 +493,36 @@ FLOAT cubic_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 }
 
 CPP_UNUSED CPP_INLINE
+FLOAT cubic_solve_iterative(FLOAT a, FLOAT b, FLOAT c, FLOAT d)
+{
+    FLOAT discriminant = b*b - 3.*a*c;
+    if (discriminant < EPS)
+        return newton_cubic_solve(0, a, b, c, d);
+    discriminant = sqrt(discriminant);
+    FLOAT x1 = (-b + discriminant) / (3.*a);
+    FLOAT x2 = (-b - discriminant) / (3.*a);
+    return newton_cubic_solve((x1 + x2) / 2., a, b, c, d);
+}
+
+CPP_UNUSED CPP_INLINE
+FLOAT cardano2_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d)
+{
+    FLOAT Q = (3.*a*c - b*b) / (9.*a*a);
+    FLOAT R = (9.*a*b*c - 27.*a*a*d - 2.*b*b*b) / (54.*a*a*a);
+
+    Q = Q * Q * Q;
+    FLOAT S = cbrt(R + sqrt(Q + R*R));
+    FLOAT T = cbrt(R - sqrt(Q + R*R));
+
+    return S + T - b/(3.*a);
+}
+
+CPP_UNUSED CPP_INLINE
 FLOAT ferrari_solve_quadratic(FLOAT p, FLOAT q)
 {
     FLOAT x = INFINITY;
     FLOAT discriminant = p*p - 8.*q;
-    if (discriminant > 0.) // maybe EPS here
+    if (discriminant > EPS)
     {
         discriminant = sqrt(discriminant);
         FLOAT x1 = (-p + discriminant) / 4.;
@@ -512,21 +550,24 @@ FLOAT ferrari_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
     FLOAT y1 = (b*d)/a2 - (4.*e)/a;
     FLOAT y0 = (4.*c*e)/a2 - (b*b*e)/a3 - (d*d)/a2;
 
-    FLOAT y = cubic_solve(1., y2, y1, y0);
+//    FLOAT y = cubic_solve(1., y2, y1, y0);
+    FLOAT y = cardano_solve(1., y2, y1, y0);
 
     FLOAT p_sqrt = sqrt((b*b)/a2 - (4.*c)/a + 4.*y);
     FLOAT q_sqrt = sqrt(y*y - (4.*e)/a);
 
     FLOAT p = b/a + p_sqrt;
     FLOAT q = y - q_sqrt;
-    FLOAT x = ferrari_solve_quadratic(p, q);
+    FLOAT x1 = ferrari_solve_quadratic(p, q);
 
     p = b/a - p_sqrt;
     q = y + q_sqrt;
-    x = fmin(x, ferrari_solve_quadratic(p, q));
+    FLOAT x2 = ferrari_solve_quadratic(p, q);
 
-    return x;
-
+    FLOAT ret = fmin(x1, x2);
+    if (ret < 0)
+        ret = fmax(x1, x2);
+    return ret;
 //    FLOAT b2 = b * b;
 //    FLOAT b3 = b2 * b;
 //    FLOAT b4 = b3 * b;
@@ -537,8 +578,51 @@ FLOAT ferrari_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
 }
 
 CPP_UNUSED CPP_INLINE
+FLOAT depressed_quartic_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
+{
+    FLOAT a2 = a*a;
+    FLOAT b2 = b*b;
+    FLOAT b3 = b2*b;
+    FLOAT a3 = a2*a;
+
+    // FIXME: divide all coefficients to A (and set A to 1.) to prevent extra computation
+    // solving ax^4 + bx^3 + cx^2 + dx + e
+    FLOAT A = -3.*b2/(8.*a2) + c/a;
+    FLOAT B = b3/(8.*a3) - b*c/(2.*a2) + d/a;
+    FLOAT C = -3.*b3*b/(256.*a3*a) + c*b2/(16.*a3) - b*d/(4.*a2) + e/a;
+    FLOAT u = -b / (4. * a);
+
+    // solving x^3 + Ax^2 + Bx + C
+    FLOAT y = cardano_solve(2., -A, -2.*C, A*C - B*B/4.);
+
+    FLOAT s1 = sqrt(2.*y - A);
+    FLOAT s2 = 2.*B / s1;
+    // x1 = (-s1 + sqrt(-2y - a + s2)) / 2 + u
+    // x2 = (-s1 - sqrt(-2y - a + s2)) / 2 + u
+    // x3 = (+s1 + sqrt(-2y - a - s2)) / 2 + u
+    // x4 = (+s1 - sqrt(-2y - a - s2)) / 2 + u
+
+    FLOAT x1 = (-s1 + sqrt(-2.*y - A + s2) / 2.) + u;
+    FLOAT x2 = (-s1 - sqrt(-2.*y - A + s2) / 2.) + u;
+    FLOAT x3 = (+s1 + sqrt(-2.*y - A - s2) / 2.) + u;
+    FLOAT x4 = (+s1 - sqrt(-2.*y - A - s2) / 2.) + u;
+    if (isnan(x1) || x1 < EPS)
+        x1 = INFINITY;
+    if (isnan(x2) || x2 < EPS)
+        x2 = INFINITY;
+    if (isnan(x3) || x3 < EPS)
+        x3 = INFINITY;
+    if (isnan(x4) || x4 < EPS)
+        x4 = INFINITY;
+    return fmin(fmin(x1, x2), fmin(x3, x4));
+}
+
+CPP_UNUSED CPP_INLINE
 FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t *__restrict to, FLOAT3 *param)
 {
+//    if (!check_sphere(camera, direction, to->position, to->R + to->r))
+//        return INFINITY;
+
     FLOAT ksi = to->R * to->R - to->r * to->r; // move this to torus structure;
     FLOAT M4R2 = -4. * to->R * to->R;
 
@@ -558,10 +642,19 @@ FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t 
     FLOAT D = 2.*b*c + e;
     FLOAT E = c*c + f;
 
+    B /= A;
+    C /= A;
+    D /= A;
+    E /= A;
+
     if (param != NULL)
         *param = (FLOAT3){0.5, 0.5, 0.5};
-    FLOAT ret = ferrari_solve(A, B, C, D, E);
-    return ret;
+    FLOAT res = depressed_quartic_solve(A, B, C, D, E);
+    return res;
+//    FLOAT4 koefs = (FLOAT4){E, D, C, B};
+//    FLOAT2 res;
+//    fourth_degree_equation_solver(koefs, &res);
+//    return res.x;
 }
 
 CPP_UNUSED CPP_INLINE

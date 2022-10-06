@@ -138,7 +138,7 @@
 			"type":			"direct",
 			"intensity":	0.1,
 			"color":		"white",
-			"direction":	[1, 4, 4],
+			"direction":	[1, 4, 4]
 		}
 	]
 }

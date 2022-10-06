@@ -55,25 +55,62 @@ NORET void rtx::collapse(int status)
     exit(status);
 }
 
+double poly4(double x, double a, double b, double c, double d, double e)
+{
+    double fx = a;
+    fx = fx * x + b;
+    fx = fx * x + c;
+    fx = fx * x + d;
+    fx = fx * x + e;
+    return fx;
+}
+
+double rnd() {return (rand() % 200) - 100;}
+void test_ferrari()
+{
+    srand(0);
+    for (int i=0; i < 1000; ++i)
+    {
+        double a = 1.;
+        double b = rnd();
+        double c = rnd();
+        double d = rnd();
+        double e = rnd();
+
+        double x = ferrari_solve(a, b, c, d, e);
+        double v = poly4(x, a, b, c, d, e);
+        if (fabs(v) > 1e-3)
+            std::cout << i << ": " << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << " x: " << x << " v: " << v << std::endl;
+    }
+}
+
 #include <json>
 int main()
 {
+//    test_ferrari();
+//    return 0;
+
     nlohmann::json a = R"({"a": 123, "a": 432})"_json;
     std::cout << a["a"] << std::endl;
-    return 0;
+//    return 0;
 
     std::cout << newton_cubic_solve(-2.3333, 0.2, 1.4, 0.6, -4.8) << std::endl;
-    std::cout << cubic_solve(2.1, -6.7, 10, -1.8) << std::endl;
-    std::cout << ferrari_solve(0.5, -5, 10, -6.3, 4.9) << std::endl;
+//    std::cout << cubic_solve(2.1, -6.7, 10, -1.8) << std::endl;
+//    std::cout << ferrari_solve(0.5, -5, 10, -6.3, 4.9) << std::endl;
 //    return 0;
 
 //    std::cout << newton_solve(0, 0.657082, -1.056095, 14.076677, -7.052426, 51.848435) << std::endl;
 //    return 0;
 
-    rtx::parse_scene(rtx::config::scene_fname); // run in thread
+    try {
+        rtx::parse_scene(rtx::config::scene_fname); // run in thread
 //    return 0;
-    rtx::init_gpu(); // run in thread
-    rtx::init_mlx(); // run in thread
+        rtx::init_gpu(); // run in thread
+        rtx::init_mlx(); // run in thread
+    } catch (std::exception &e) {
+        std::cout << e.what();
+        return 1;
+    }
 
     init_scene();
     init_kernel(*rtx::data::kernel);
