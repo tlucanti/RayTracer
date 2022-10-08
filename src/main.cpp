@@ -87,12 +87,12 @@ void test_ferrari()
 #include <json>
 int main()
 {
-    COMPLEX x1, x2;
+//    COMPLEX x1, x2;
 //    cubic_complex_solve(-10/3., 14/3., 27/3., &x1, &x2);
 //    std::cout << x1 << ' ' << x2 << std::endl;
 //    cubic_complex_solve(-21.25, 122.75, 0, &x1, &x2);
 //    std::cout << x1 << ' ' << x2 << std::endl;
-    std::cout << quartic_complex_solve(2, -41, -42, 360);
+//    std::cout << quartic_complex_solve(2, -41, -42, 360);
 //    return 0;
 
 //    test_ferrari();

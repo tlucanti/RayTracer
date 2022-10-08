@@ -7,20 +7,16 @@
 # define RTX_NAMESPACE_END }
 
 # include <cllib>
+# include <cmath>
 # ifdef __APPLE__
 #  include <math.h>
-#  define sincos __sincos
 # endif /* __APPLE__ */
-
-# include <cmath>
-
-# define EPS 1e-4
-# define PI M_PI
 
 typedef double FLOAT;
 typedef cl_double4 FLOAT4;
 typedef cl_double3 FLOAT3;
 typedef cl_double2 COMPLEX;
+typedef const FLOAT3 &FL3_CREF;
 
 namespace RTX_NAMESPACE
 {
@@ -37,9 +33,9 @@ namespace RTX_NAMESPACE
         inline FLOAT horizontal_look_speed {0.005};
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
-        inline constexpr const char *scene_fname = "../scenes/torus.json";
+//        inline constexpr const char *scene_fname = "../scenes/torus.json";
 //        inline constexpr const char *scene_fname = "../scenes/scene.json";
-//        inline constexpr const char *scene_fname = "../scenes/spheres.json";
+        inline constexpr const char *scene_fname = "../scenes/spheres.json";
         inline int current_camera;
     } /* config */
 
@@ -58,5 +54,25 @@ namespace RTX_NAMESPACE
     } /* color */
 
 } /* rtx */
+
+
+# ifdef __APPLE__
+#  define sincos __sincos
+# endif /* __APPLE__ */
+
+# define EPS 1e-4
+# define PI M_PI
+
+# ifndef ATTRIBUTE
+#  define ATTRIBUTE(__attr) __attribute__((__attr))
+# ifndef PACKED
+#  define PACKED
+# endif /* PACKED */
+# ifndef ALIGNED8
+#  define ALIGNED8 ATTRIBUTE(__aligned__(8))
+# endif /* ALIGNED8 */
+# ifndef ALIGNED16
+#  define ALIGNED16 ATTRIBUTE(__aligned__(16))
+# endif /* ALIGNED16 */
 
 #endif /* COMMON_HPP */

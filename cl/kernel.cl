@@ -1,28 +1,8 @@
 
 #ifndef CL_KERNEL
 # define CL_KERNEL
-# ifndef __CPP
-#  define UNUSED  __attribute__((unused))
-#  ifndef NULL
-#   define NULL    0
-#  endif /* NULL */
-#  define CPP_UNUSED
-#  define CPP_INLINE
-#  define EPS 1e-4
-
-typedef double FLOAT;
-typedef double4 FLOAT4;
-typedef double3 FLOAT3;
-typedef double2 FLOAT2;
-typedef FLOAT2 COMPLEX;
-typedef unsigned int uint32_t;
-typedef int int32_t;
-typedef unsigned long int uint64_t;
-typedef long int int64_t;
-# else /* __CPP */
-#  include <linalg.hpp>
-#  include <common.hpp>
-# endif /* __CPP */
+# include "kernel.h"
+# include "objects.hpp"
 
 # define as_sphere(obj_ptr) ((__constant const sphere_t *)(obj_ptr))
 # define as_plane(obj_ptr) ((__constant const plane_t *)(obj_ptr))
@@ -36,193 +16,11 @@ typedef long int int64_t;
 
 # define BLACK   (FLOAT3){0, 0, 0}
 
-# define PACKED    __attribute__((__packed__))
-# define ALIGNED8  __attribute__((__aligned__(8)))
-# define ALIGNED16 __attribute__((__aligned__(16)))
 
-typedef struct sphere_s
-{
-    FLOAT3              color;              // 0  -- 32
-    uint32_t            specular;           // 32 --
-    UNUSED uint32_t     _padding0;          //    -- 40
-    FLOAT               reflective;         // 40 -- 48
-    FLOAT               radius;             // 48 -- 56
-    UNUSED uint64_t     _padding1;          // 56 -- 64
-    FLOAT3              position;             // 64 -- 96
 
-# ifdef __CPP
-    sphere_s(FLOAT3 position, FLOAT radius, FLOAT3 color, uint32_t specular, FLOAT reflective)
-            : position(position), radius(radius), color(color), specular(specular), reflective(reflective), _padding0(), _padding1()
-    {}
-# endif /* __CPP */
-} PACKED ALIGNED8 sphere_t;
 
-typedef struct plane_s
-{
-    FLOAT3              color;              // 0  -- 32
-    uint32_t            specular;           // 32 --
-    UNUSED uint32_t     _padding0;          //    -- 40
-    FLOAT               reflective;         // 40 -- 48
-    FLOAT3              point;              // 48 -- 80
-    FLOAT3              normal;             // 80 -- 112
 
-# ifdef __CPP
-    plane_s(FLOAT3 point, FLOAT3 normal, FLOAT3 color, uint32_t specular, FLOAT reflective)
-            : point(point), normal(normal), color(color), specular(specular), reflective(reflective)
-    {
-        rtx::linalg::normalize_ref(this->normal);
-    }
-# endif /* __CPP */
-} PACKED ALIGNED8 plane_t;
 
-typedef struct triangle_s
-{
-    FLOAT3          color;      // 0  -- 32
-    uint32_t        specular;   // 32 --
-    UNUSED uint32_t _padding0;  //    -- 40
-    FLOAT           reflective;  // 40 -- 48
-    UNUSED uint64_t _padding1;  // 48 -- 56
-    UNUSED uint64_t _padding2;  // 56 -- 64
-    FLOAT3          normal;     // 64 -- 96
-    FLOAT3          a;          // 96 -- 128
-    FLOAT3          b;          // 128-- 160
-    FLOAT3          c;          // 160-- 192
-
-# ifdef __CPP
-    triangle_s(FLOAT3 p1, FLOAT3 p2, FLOAT3 p3, FLOAT3 color, uint32_t specular, FLOAT reflective)
-        : a(p1), b(p2), c(p3), color(color), specular(specular), reflective(reflective)
-    {
-        normal = rtx::linalg::cross(p2 - p1, p3 - p1);
-    }
-# endif /* __CPP */
-} PACKED ALIGNED8 triangle_t;
-
-typedef struct cone_s
-{
-    FLOAT3          color;      // 0  -- 32
-    uint32_t        specular;   // 32 --
-    UNUSED uint32_t _padding;   //    -- 40
-    FLOAT           reflective;  // 40 -- 48
-    FLOAT           width;
-    FLOAT           gamma;
-    FLOAT3          position;     // 64 -- 96
-    FLOAT3          direction;
-    FLOAT3          matr[3];     //
-
-# ifdef __CPP
-    cone_s(
-        FLOAT3 position,
-        FLOAT3 direction,
-        FLOAT width,
-        FLOAT gamma,
-        FLOAT3 color,
-        uint32_t specular,
-        FLOAT reflective
-    ) :
-        position(position),
-        direction(direction),
-        width(width),
-        gamma(gamma),
-        color(color),
-        specular(specular),
-        reflective(reflective)
-    {
-        rtx::linalg::normalize_ref(this->direction);
-        rtx::linalg::set_rotation_matrix(this->matr, this->direction, {0, 0, 1});
-    }
-# endif /* __CPP */
-} PACKED ALIGNED8 cone_t;
-
-typedef struct cylinder_s
-{
-    FLOAT3          color;      // 0  -- 32
-    uint32_t        specular;   // 32 --
-    UNUSED uint32_t _padding;   //    -- 40
-    FLOAT           reflective;  // 40 -- 48
-    FLOAT3          position;
-    FLOAT3          direction;
-    FLOAT           radius;
-
-# ifdef __CPP
-    cylinder_s(
-        const FLOAT3 &position,
-        const FLOAT3 &direction,
-        FLOAT radius,
-        const FLOAT3 &color,
-        uint32_t specular,
-        FLOAT reflective
-   ) :
-        position(position),
-        direction(direction),
-        radius(radius),
-        color(color),
-        specular(specular),
-        reflective(reflective)
-    {
-        rtx::linalg::normalize_ref(this->direction);
-    }
-# endif /* __CPP */
-} PACKED ALIGNED8 cylinder_t;
-
-typedef struct torus_s
-{
-    FLOAT3          color;
-    uint32_t        specular;
-    UNUSED uint32_t _padding;
-    FLOAT           reflective;
-    FLOAT3          position;
-    FLOAT3          normal;
-    FLOAT           r;
-    FLOAT           R;
-
-# ifdef __CPP
-    torus_s(
-        const FLOAT3 &position,
-        const FLOAT3 &normal,
-        FLOAT r,
-        FLOAT R,
-        const FLOAT3 &color,
-        uint32_t specular,
-        FLOAT reflective
-    ) :
-        position(position),
-        normal(normal),
-        r(r),
-        R(R),
-        color(color),
-        specular(specular),
-        reflective(reflective)
-    {
-        rtx::linalg::normalize_ref(this->normal);
-    }
-# endif /* __CPP */
-} PACKED ALIGNED8 torus_t;
-
-typedef enum
-{
-    AMBIENT = 0,
-    DIRECT  = 1,
-    POINT   = 2
-} light_type_t;
-
-typedef struct light_s
-{
-    light_type_t    type;
-    FLOAT           intensity;
-    FLOAT3          color;
-    union {
-        FLOAT3      direction;
-        FLOAT3      position;
-    };
-# ifdef __CPP
-    light_s(light_type_t type, FLOAT intensity, FLOAT3 color, FLOAT3 vec={})
-        : type(type), intensity(intensity), color(color), direction(vec)
-    {
-        if (type != AMBIENT and type != DIRECT and type != POINT)
-            throw std::runtime_error("unknown light type");
-    }
-# endif /* __CPP */
-} PACKED ALIGNED8 light_t;
 
 # ifdef __CPP
 #  define __constant
@@ -411,7 +209,10 @@ FLOAT intersect_cone(FLOAT3 camera, FLOAT3 direction, __constant const cone_t *_
     if (param == NULL)
         return ret;
     FLOAT3 point = camera + direction * ret;
-    *param = (FLOAT3){2 * point.x * r_width2, 2 * point.y * r_width2 * r_width2, -2 * point.z};
+    *param = (FLOAT3){
+        point.x * r_width2,
+        point.y * r_width2 * r_width2,
+        -point.z};
     return ret;
 }
 
@@ -804,18 +605,17 @@ FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t 
     E /= A;
 
     FLOAT res = quartic_complex_solve(B, C, D, E);
-    if (param != NULL)
-    {
-        FLOAT3 point = camera + direction * res;
-        FLOAT dt = dot(point, point);
-        FLOAT R2 = to->R * to->R;
-        FLOAT r2 = to->r * to->r;
-        *param = (FLOAT3){
-            4. * point.x * (-R2 - r2 + dt),
-            4. * point.y * (-R2 - r2 + dt),
-            4. * point.z * (R2 - r2 + dt)
-        };
-    }
+    if (param == NULL)
+        return res;
+    FLOAT3 point = camera + direction * res;
+    FLOAT dt = dot(point, point);
+    FLOAT R2 = to->R * to->R;
+    FLOAT r2 = to->r * to->r;
+    *param = (FLOAT3){
+        point.x * (-R2 - r2 + dt),
+        point.y * (-R2 - r2 + dt),
+        point.z * (R2 - r2 + dt)
+    };
     return res;
 }
 
@@ -1001,13 +801,13 @@ FLOAT compute_lightning_single(
         intensity += light_intensity * normal_angle;
 
     // specular light
-//    if (specular > 0)
-//    {
-//        FLOAT3 reflected = reflect_ray(light_vector, normal_vector);
-//        FLOAT reflected_angle = dot(reflected, direction);
-//        if (reflected_angle < EPS)
-//            intensity += light_intensity * pow(reflected_angle, specular);
-//    }
+    if (specular > 0)
+    {
+        FLOAT3 reflected = reflect_ray(light_vector, normal_vector);
+        FLOAT reflected_angle = dot(reflected, direction);
+        if (reflected_angle < EPS)
+            intensity += light_intensity * pow(reflected_angle, specular);
+    }
 
     return intensity;
 }

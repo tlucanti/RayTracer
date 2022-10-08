@@ -49,6 +49,7 @@ add_executable(RayTracer
 	src/init_mlx.cpp
 	src/init_scene.cpp
 	src/linalg.cpp
+	src/objects.cpp
 )
 
 find_library(OPENCL_LIB OpenCL)
