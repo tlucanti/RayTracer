@@ -1,0 +1,27 @@
+
+{
+  "cameras": [
+    {
+      "position": [0, 0, 0],
+      "direction": [0, 0, 1]
+    }
+  ],
+
+  "torus": [
+    {
+      "position": [0, 0, 5],
+      "normal": [0, 0, 1],
+      "color": "cyan",
+      "inner_radius": 0.6,
+      "outer_radius": 2
+    }
+  ],
+
+  "lights": [
+    {
+      "type": "ambient",
+      "intensity": 0.8,
+      "color": "white"
+    }
+  ]
+}

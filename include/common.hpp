@@ -20,7 +20,7 @@
 typedef double FLOAT;
 typedef cl_double4 FLOAT4;
 typedef cl_double3 FLOAT3;
-typedef cl_double2 FLOAT2;
+typedef cl_double2 COMPLEX;
 
 namespace RTX_NAMESPACE
 {
@@ -37,8 +37,9 @@ namespace RTX_NAMESPACE
         inline FLOAT horizontal_look_speed {0.005};
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
+        inline constexpr const char *scene_fname = "../scenes/torus.json";
 //        inline constexpr const char *scene_fname = "../scenes/scene.json";
-        inline constexpr const char *scene_fname = "../scenes/spheres.json";
+//        inline constexpr const char *scene_fname = "../scenes/spheres.json";
         inline int current_camera;
     } /* config */
 

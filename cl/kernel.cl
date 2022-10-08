@@ -14,6 +14,7 @@ typedef double FLOAT;
 typedef double4 FLOAT4;
 typedef double3 FLOAT3;
 typedef double2 FLOAT2;
+typedef FLOAT2 COMPLEX;
 typedef unsigned int uint32_t;
 typedef int int32_t;
 typedef unsigned long int uint64_t;
@@ -229,18 +230,18 @@ typedef struct light_s
 #  define __kernel
 #  define CPP_UNUSED __attribute__((unused))
 #  define CPP_INLINE inline
-CPP_UNUSED CPP_INLINE FLOAT3 normalize(FLOAT3) {return{};}
 CPP_UNUSED CPP_INLINE uint32_t get_global_id(uint32_t) {return{};}
-CPP_UNUSED CPP_INLINE FLOAT length(FLOAT3) {return {};}
-
 CPP_INLINE light_t ambient_t(FLOAT intensity, FLOAT3 color)
 { return light_t(AMBIENT, intensity, color); }
 CPP_INLINE light_t direct_t(FLOAT intensity, FLOAT3 color, FLOAT3 direction)
 { rtx::linalg::normalize_ref(direction); return light_t(DIRECT, intensity, color, direction); }
 CPP_INLINE light_t point_t(FLOAT intensity, FLOAT3 color, FLOAT3 position)
 { return light_t(POINT, intensity, color, position); }
-#  define dot rtx::linalg::dot
-#  define cross rtx::linalg::cross
+
+using rtx::linalg::length;
+using rtx::linalg::normalize;
+using rtx::linalg::dot;
+using rtx::linalg::cross;
 # endif /* __CPP */
 
 typedef struct camera_s
@@ -464,6 +465,23 @@ FLOAT newton_cubic_solve(FLOAT x, FLOAT a, FLOAT b, FLOAT c, FLOAT d)
 }
 
 CPP_UNUSED CPP_INLINE
+FLOAT negative_resolvent_solve(FLOAT p, FLOAT q)
+{
+    FLOAT alpha;
+//    return 2. * cbrt(fabs(q / 2.));
+
+        alpha = cbrt(fabs(q / 2.));
+        return alpha - p / (3. * alpha);
+
+//    if (q <= 0)
+//        alpha = cbrt(-q / 2.);
+//    else
+//        // 2 * cbrt(q / 2) * cos(pi / 3) == 2 * cbrt(q / 2) * 1/2
+//        alpha = cbrt(q / 2.);
+//    return alpha - p / (3. * alpha);
+}
+
+CPP_UNUSED CPP_INLINE
 FLOAT cardano_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d) // maybe use here FLOAT4
 /*
     finds any real root of cubic equation
@@ -477,7 +495,9 @@ FLOAT cardano_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d) // maybe use here FLOAT4
 
     FLOAT Q = p * p * p / 27. + q * q / 4.;
     if (Q < 0.)
+//        return negative_resolvent_solve(p, q);
     {
+        return INFINITY;
         FLOAT discriminant = sqrt(b2 - 3.*a*c);
         FLOAT x1 = (-b + discriminant) / (3.*a);
         FLOAT x2 = (-b - discriminant) / (3.*a);
@@ -618,10 +638,146 @@ FLOAT depressed_quartic_solve(FLOAT a, FLOAT b, FLOAT c, FLOAT d, FLOAT e)
 }
 
 CPP_UNUSED CPP_INLINE
+COMPLEX cmul(COMPLEX a, COMPLEX b)
+{
+    return (COMPLEX){a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x};
+}
+
+CPP_UNUSED CPP_INLINE
+COMPLEX cdiv(COMPLEX a, COMPLEX b)
+{
+    FLOAT rlen = 1. / dot(b, b);
+    return (COMPLEX){
+        dot(a, b) * rlen,
+        (a.y * b.x - a.x * b.y) * rlen
+    };
+}
+
+CPP_UNUSED CPP_INLINE
+COMPLEX csqrt(COMPLEX a)
+{
+    FLOAT len_half = length(a) / 2.;
+    FLOAT ysign = copysign(1., a.y);
+    FLOAT x_half = a.x / 2.;
+
+    return (COMPLEX){
+        sqrt(len_half + x_half),
+        ysign * sqrt(len_half - x_half)
+    };
+}
+
+CPP_UNUSED CPP_INLINE
+FLOAT rcbrt(FLOAT a)
+{
+    return copysign(1., a) * cbrt(fabs(a));
+}
+
+#define SWAP(a, b) do {  \
+    FLOAT ___c = a;     \
+    (a) = b;            \
+    (b) = ___c;         \
+} while (false);
+
+CPP_UNUSED CPP_INLINE
+void cubic_complex_solve(FLOAT b, FLOAT c, FLOAT d, COMPLEX *y1, COMPLEX *y2)
+{
+    // solving x^3 + bx^2 + cx + d
+
+    FLOAT b2 = b * b;
+    FLOAT b3 = b2 * b;
+
+    FLOAT f = c - b2/3.;
+    FLOAT g = 2.*b3/27. - b*c/3. + d;
+    FLOAT h = g*g/4. + f*f*f / 27.;
+
+    if (h <= 0)
+    {
+        FLOAT i = sqrt(g*g/4. - h);
+        FLOAT j = cbrt(i);
+        FLOAT k = acos(-g / (2.*i));
+
+        FLOAT L = -j;
+        FLOAT M = cos(k/3.);
+        FLOAT N = sqrt(3.) * sin(k/3.);
+        FLOAT P = -b/3.;
+
+        FLOAT x1 = 2 * j * M + P;
+        FLOAT x2 = L * (M + N) + P;
+        FLOAT x3 = L * (M - N) + P;
+
+        if (x1 > x3)
+            SWAP(x1, x3);
+        if (x1 > x2)
+            SWAP(x1, x2);
+
+        *y1 = (COMPLEX){x2, 0.};
+        *y2 = (COMPLEX){x3, 0.};
+    } else {
+        h = sqrt(h);
+        FLOAT R = -g/2. + h;
+        FLOAT T = -g/2. - h;
+        FLOAT S = rcbrt(R);
+        FLOAT U = rcbrt(T);
+
+        FLOAT sqrt3_2 = sqrt(3.) / 2.;
+        FLOAT REAL = (S + U)/-2. - b/3.;
+        FLOAT IMAG = (S - U) * sqrt3_2;
+        *y1 = (COMPLEX){REAL, IMAG};
+        *y2 = (COMPLEX){REAL, -IMAG};
+    }
+}
+
+CPP_UNUSED CPP_INLINE
+FLOAT quartic_complex_solve(FLOAT b, FLOAT c, FLOAT d, FLOAT e)
+{
+    // solving x^4 + bx^3 + cx^2 + dx + e
+
+    FLOAT b2 = b * b;
+    FLOAT b3 = b2 * b;
+    FLOAT b4 = b3 * b;
+
+    FLOAT f = c - 3.*b2/8.;
+    FLOAT g = d + b3/8. - b*c/2.;
+    FLOAT h = e - 3.*b4/256. + b2*c/16. - b*d/4.;
+
+    FLOAT B = f/2.;
+    FLOAT C = (f*f - 4.*h) / 16.;
+    FLOAT D = -g*g / 64.;
+    // solving x^3 + Bx^2 + Cx + D
+
+    COMPLEX p, q;
+    cubic_complex_solve(B, C, D, &p, &q);
+    p = csqrt(p);
+    q = csqrt(q);
+
+    COMPLEX r = cdiv((COMPLEX){-g, 0.}, cmul(8. * p, q));
+    COMPLEX s = (COMPLEX){b / 4., 0.};
+
+    COMPLEX x1c = p + q + r - s;
+    COMPLEX x2c = p - q - r - s;
+    COMPLEX x3c = -p + q - r - s;
+    COMPLEX x4c = -p - q + r - s;
+
+    FLOAT x1 = x1c.x;
+    FLOAT x2 = x2c.x;
+    FLOAT x3 = x3c.x;
+    FLOAT x4 = x4c.x;
+    if (fabs(x1c.y) > EPS || x1c.x < EPS)
+        x1 = INFINITY;
+    if (fabs(x2c.y) > EPS || x2c.x < EPS)
+        x2 = INFINITY;
+    if (fabs(x3c.y) > EPS || x3c.x < EPS)
+        x3 = INFINITY;
+    if (fabs(x4c.y) > EPS || x4c.x < EPS)
+        x4 = INFINITY;
+    return fmin(fmin(x1, x2), fmin(x3, x4));
+}
+
+CPP_UNUSED CPP_INLINE
 FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t *__restrict to, FLOAT3 *param)
 {
-//    if (!check_sphere(camera, direction, to->position, to->R + to->r))
-//        return INFINITY;
+    if (!check_sphere(camera, direction, to->position, to->R + to->r))
+        return INFINITY;
 
     FLOAT ksi = to->R * to->R - to->r * to->r; // move this to torus structure;
     FLOAT M4R2 = -4. * to->R * to->R;
@@ -647,14 +803,20 @@ FLOAT intersect_torus(FLOAT3 camera, FLOAT3 direction, __constant const torus_t 
     D /= A;
     E /= A;
 
+    FLOAT res = quartic_complex_solve(B, C, D, E);
     if (param != NULL)
-        *param = (FLOAT3){0.5, 0.5, 0.5};
-    FLOAT res = depressed_quartic_solve(A, B, C, D, E);
+    {
+        FLOAT3 point = camera + direction * res;
+        FLOAT dt = dot(point, point);
+        FLOAT R2 = to->R * to->R;
+        FLOAT r2 = to->r * to->r;
+        *param = (FLOAT3){
+            4. * point.x * (-R2 - r2 + dt),
+            4. * point.y * (-R2 - r2 + dt),
+            4. * point.z * (R2 - r2 + dt)
+        };
+    }
     return res;
-//    FLOAT4 koefs = (FLOAT4){E, D, C, B};
-//    FLOAT2 res;
-//    fourth_degree_equation_solver(koefs, &res);
-//    return res.x;
 }
 
 CPP_UNUSED CPP_INLINE
@@ -924,7 +1086,7 @@ FLOAT3    trace_ray(
                 normal *= 1. / as_cylinder(closest_obj)->radius;
                 break ;
             }
-            case TOR: normal = param; break ;
+            case TOR: normal = normalize(param); break ;
         }
         FLOAT factor = compute_lightning(scene, point, normal, direction, get_obj_specular(closest_obj));
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;

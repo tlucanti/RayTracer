@@ -9,7 +9,7 @@
 namespace move_params
 {
     static FLOAT3 move_direction;
-    static FLOAT2 look_direction;
+    static COMPLEX look_direction;
     static cl_int2 mouse_pos;
     static int do_update(0);
     static bool mouse_press(false);

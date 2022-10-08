@@ -87,14 +87,22 @@ void test_ferrari()
 #include <json>
 int main()
 {
+    COMPLEX x1, x2;
+//    cubic_complex_solve(-10/3., 14/3., 27/3., &x1, &x2);
+//    std::cout << x1 << ' ' << x2 << std::endl;
+//    cubic_complex_solve(-21.25, 122.75, 0, &x1, &x2);
+//    std::cout << x1 << ' ' << x2 << std::endl;
+    std::cout << quartic_complex_solve(2, -41, -42, 360);
+//    return 0;
+
 //    test_ferrari();
 //    return 0;
 
-    nlohmann::json a = R"({"a": 123, "a": 432})"_json;
-    std::cout << a["a"] << std::endl;
+//    nlohmann::json a = R"({"a": 123, "a": 432})"_json;
+//    std::cout << a["a"] << std::endl;
 //    return 0;
 
-    std::cout << newton_cubic_solve(-2.3333, 0.2, 1.4, 0.6, -4.8) << std::endl;
+//    std::cout << newton_cubic_solve(-2.3333, 0.2, 1.4, 0.6, -4.8) << std::endl;
 //    std::cout << cubic_solve(2.1, -6.7, 10, -1.8) << std::endl;
 //    std::cout << ferrari_solve(0.5, -5, 10, -6.3, 4.9) << std::endl;
 //    return 0;
@@ -103,7 +111,7 @@ int main()
 //    return 0;
 
     try {
-//        rtx::parse_scene(rtx::config::scene_fname); // run in thread
+        rtx::parse_scene(rtx::config::scene_fname); // run in thread
 //    return 0;
         rtx::init_gpu(); // run in thread
         rtx::init_mlx(); // run in thread

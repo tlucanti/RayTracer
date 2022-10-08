@@ -12,6 +12,11 @@ FLOAT3 operator *(const FLOAT3 &a, const FLOAT3 &b);
 FLOAT3 &operator +=(FLOAT3 &a, const FLOAT3 &b);
 FLOAT3 &operator *=(FLOAT3 &a, FLOAT b);
 
+COMPLEX operator *(FLOAT a, const COMPLEX &b);
+COMPLEX operator +(const COMPLEX &a, const COMPLEX &b);
+COMPLEX operator -(const COMPLEX &a, const COMPLEX &b);
+COMPLEX operator -(const COMPLEX &a);
+
 RTX_NAMESPACE_BEGIN
 
 namespace linalg
@@ -19,6 +24,11 @@ namespace linalg
     FLOAT3 cross(const FLOAT3 &a, const FLOAT3 &b);
     FLOAT det(const FLOAT3 &v1, const FLOAT3 &v2, const FLOAT3 &v3);
     FLOAT dot(const FLOAT3 &v1, const FLOAT3 &v2);
+    FLOAT dot(const COMPLEX &v1, const COMPLEX &v2);
+    FLOAT length(const FLOAT3 &v);
+    FLOAT length(const COMPLEX &v);
+    FLOAT3 normalize(const FLOAT3 &v);
+    COMPLEX normalize(const COMPLEX &v);
     void normalize_ref(FLOAT3 &vec);
     void compute_angles(const FLOAT3 &direction, FLOAT &alpha, FLOAT &theta);
     void compute_angles_gamma(const FLOAT3 &direction, FLOAT3 &atg);
@@ -31,5 +41,6 @@ namespace linalg
 RTX_NAMESPACE_END
 
 std::ostream &operator <<(std::ostream &out, const FLOAT3 &p);
+std::ostream &operator <<(std::ostream &out, const COMPLEX &p);
 
 #endif /* STRUCT_HPP */

@@ -19,6 +19,32 @@ FLOAT rtx::linalg::dot(const FLOAT3 &v1, const FLOAT3 &v2)
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
+FLOAT rtx::linalg::dot(const COMPLEX &v1, const COMPLEX &v2)
+{
+    return v1.x * v2.x + v1.y * v2.y;
+}
+
+
+FLOAT rtx::linalg::length(const FLOAT3 &v)
+{
+    return sqrt(dot(v, v));
+}
+
+FLOAT rtx::linalg::length(const COMPLEX &v)
+{
+    return sqrt(dot(v, v));
+}
+
+FLOAT3 rtx::linalg::normalize(const FLOAT3 &v)
+{
+    return v * (1. / length(v));
+}
+
+COMPLEX rtx::linalg::normalize(const COMPLEX &v)
+{
+    return (1. / length(v)) * v;
+}
+
 void rtx::linalg::normalize_ref(FLOAT3 &vec)
 {
     FLOAT ln = 1. / sqrt(dot(vec, vec));
@@ -188,10 +214,47 @@ FLOAT3 &operator *=(FLOAT3 &a, FLOAT b)
     return a;
 }
 
+COMPLEX operator *(FLOAT a, const COMPLEX &b)
+{
+    return {a * b.x + a * b.y};
+}
+
+COMPLEX operator /(const COMPLEX &a, const FLOAT &b)
+{
+    return {a.x / b, a.y / b};
+}
+
+COMPLEX operator -(const COMPLEX &a)
+{
+    return {-a.x, -a.y};
+}
+
+COMPLEX operator +(const COMPLEX &a, const COMPLEX &b)
+{
+    return {a.x + b.x, a.y + b.y};
+}
+
+COMPLEX operator -(const COMPLEX &a, const COMPLEX &b)
+{
+    return {a.x - b.x, a.y - b.y};
+}
+
 static inline constexpr FLOAT flt0(FLOAT q) { return fabs(q) < EPS ? 0 : q; }
 
 std::ostream &operator <<(std::ostream &out, const FLOAT3 &p)
 {
     out << "(" << flt0(p.x) << ", " << flt0(p.y) << ", " << flt0(p.z) << ')';
+    return out;
+}
+
+std::ostream &operator <<(std::ostream &out, const COMPLEX &p)
+{
+    if (fabs(p.y) > EPS) {
+        if (p.y > 0)
+            out << "(" << flt0(p.x) << " + " << p.y << "j)";
+        else
+            out << "(" << flt0(p.x) << " - " << -p.y << "j)";
+    } else
+        out << flt0(p.x);
     return out;
 }
