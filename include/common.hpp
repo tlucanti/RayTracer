@@ -33,9 +33,9 @@ namespace RTX_NAMESPACE
         inline FLOAT horizontal_look_speed {0.005};
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
-//        inline constexpr const char *scene_fname = "../scenes/torus.json";
 //        inline constexpr const char *scene_fname = "../scenes/scene.json";
-        inline constexpr const char *scene_fname = "../scenes/spheres.json";
+//        inline constexpr const char *scene_fname = "../scenes/spheres.json";
+        inline constexpr const char *scene_fname = "../scenes/planes.json";
         inline constexpr const char *cl_dir = "../cl";
         inline unsigned int current_camera;
     } /* config */

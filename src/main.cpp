@@ -81,15 +81,17 @@ int main()
 //    std::cout << newton_solve(0, 0.657082, -1.056095, 14.076677, -7.052426, 51.848435) << std::endl;
 //    return 0;
 
-    try {
+//    try {
         rtx::parse_scene(rtx::config::scene_fname); // run in thread
 //    return 0;
         rtx::init_gpu(); // run in thread
         rtx::init_mlx(); // run in thread
-    } catch (std::exception &e) {
-        std::cout << e.what();
-        return 1;
-    }
+//    } catch (std::exception &e) {
+//        std::cout << e.what() << std::endl;
+//        std::cout << "-------------------------------------\n";
+//        std::cout << "aborting program\n";
+//        return 1;
+//    }
 
     init_scene();
     init_kernel(*rtx::data::kernel);

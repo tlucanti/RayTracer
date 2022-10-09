@@ -8,7 +8,7 @@
 #  define ASSIGN_FLOAT3(__x, __y, __z) (FLOAT3)(__x, __y, __z)
 #  define ASSIGN_COMPLEX(__real, __imag) (COMPLEX)(__real, __imag)
 #  define ASSIGN_SCENE(...) (scene_t){__VA_ARGS__}
-#  define cstatic_cast(__type, __var) (__type)(__var)
+#  define cstatic_cast(__type, __var) ((__type)(__var))
 # else
 #  include <linalg.hpp>
 #  define __constant

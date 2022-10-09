@@ -1,0 +1,71 @@
+
+{
+  "lights": [
+    {
+      "type": "point",
+      "intensity": 0.6,
+      "color": [255,255,255],
+      "position": [0,0,0]
+    },
+
+    {
+      "type": "ambient",
+      "intensity": 0.2,
+      "color": "white"
+    },
+
+    {
+      "type": "direct",
+      "intensity": 0.2,
+      "color": "white",
+      "direction": [-0.1,-1,-0.1]
+    }
+  ],
+
+  "planes": [
+    {
+      "point": [0, -10, 0],
+      "color": "yellow",
+      "normal": [0, 1, 0],
+      "specular": 500
+    },
+
+    {
+      "point": [0, 10, 0],
+      "color": "blue",
+      "normal": [0, -1, 0],
+      "specular": 200
+    },
+
+    {
+      "point": [-20, 0, 0],
+      "color": "green",
+      "normal": [5, 0, 0]
+    },
+
+    {
+      "point": [20, 0, 0],
+      "color": "red",
+      "normal": [-5, 0, 0]
+    },
+
+    {
+      "point": [0, 0, 20],
+      "color": "purple",
+      "normal": [0, 0, -0.1]
+    },
+
+    {
+      "point": [0, 0, -20],
+      "color": "white",
+      "normal": [0, 0, 100]
+    }
+  ],
+
+  "cameras": [
+    {
+      "position": [0, 0, 0],
+      "direction": [0, 0, 1]
+    }
+  ]
+}

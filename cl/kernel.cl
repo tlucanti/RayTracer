@@ -8,6 +8,7 @@
 # include "kernel.h"
 # include "objects.h"
 # include "algo.h"
+# include "inc.h"
 
 # define as_sphere(obj_ptr) cstatic_cast(sphere_ptr, obj_ptr)
 # define as_plane(obj_ptr) cstatic_cast(plane_ptr, obj_ptr)
@@ -15,9 +16,9 @@
 # define as_cone(obj_ptr) cstatic_cast(cone_ptr, obj_ptr)
 # define as_cylinder(obj_ptr) cstatic_cast(cylinder_ptr, obj_ptr)
 
-# define get_obj_color(obj_ptr) as_sphere(obj_ptr)->color
-# define get_obj_specular(obj_ptr) as_sphere(obj_ptr)->specular
-# define get_obj_reflective(obj_ptr) as_sphere(obj_ptr)->reflective
+# define get_obj_color(obj_ptr) (as_sphere(obj_ptr)->color)
+# define get_obj_specular(obj_ptr) (as_sphere(obj_ptr)->specular)
+# define get_obj_reflective(obj_ptr) (as_sphere(obj_ptr)->reflective)
 
 # define BLACK ASSIGN_FLOAT3(0., 0., 0.)
 

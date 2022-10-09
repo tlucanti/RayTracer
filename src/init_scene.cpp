@@ -120,7 +120,7 @@ static void parse_ok(bool cond, const std::string &str)
 
 static void parse_print(const std::string &str)
 {
-    std::cout << "[ -- ]: "_W + "parser"_P + ": "_W + str + rtx::Color::reset + "\n";
+    std::cout << "[ ** ] : "_W + "parser"_P + ": "_W + str + rtx::Color::reset + "\n";
 }
 
 template <class value_type>
@@ -179,7 +179,7 @@ static void parse_type_assert(const std::string &name, const nlohmann::json &val
 
 static void parse_unknown_notify(const std::string &name)
 {
-    parse_warn(true, "unknown field " + rtx::C[str(name)] + " (ignoring)");
+    parse_warn(false, "unknown field " + rtx::C[str(name)] + " (ignoring)");
 }
 
 template <class value_type>
@@ -279,7 +279,7 @@ static void parse_color(const std::string &name, const item_type &item, bool &fl
     parse_type_assert(name, item.value(), COLOR_TYPE);
 
     if (item.value().is_array())
-        color = to_col3(item.value());
+        color = to_vec3(item.value());
     else if (item.value().is_string())
     {
         switch(hash(std::string(item.value())))
@@ -291,6 +291,7 @@ static void parse_color(const std::string &name, const item_type &item, bool &fl
             case ("blue"_hash): color = rtx::color::blue; break ;
             case ("cyan"_hash): color = rtx::color::cyan; break ;
             case ("magenta"_hash): color = rtx::color::magenta; break ;
+            case ("purple"_hash): color = rtx::color::purple; break ;
             case ("yellow"_hash): color = rtx::color::yellow; break ;
             case ("grey"_hash): color = rtx::color::grey; break ;
             default: {
@@ -381,7 +382,9 @@ static void parse_cameras_single(const nlohmann::json &camera)
     if (got_position && got_direction)
     {
         camera_t cam(position, direction);
-        parse_print("added camera " + rtx::B["[" + to_string(rtx::objects::cam_vec.size()) + "]"] + ": " + to_string(cam));
+        parse_print("added camera " + rtx::B["["
+            + to_string(rtx::objects::cam_vec.size()) + "]"] + ": "
+            + rtx::Orange[to_string(cam)]);
         rtx::objects::cam_vec.push_back(cam);
         flags.cameras = true;
     }
@@ -418,7 +421,7 @@ static void parse_sphere_single(const nlohmann::json &sphere)
             case ("color"_hash): parse_color("sphere color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("sphere specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("sphere reflective", item, got_reflective, reflective); break ;
-            case ("center"_hash): parse_vec3_point("sphere position", item, got_position, position); break ;
+            case ("position"_hash): parse_vec3_point("sphere position", item, got_position, position); break ;
             case ("radius"_hash): parse_float_positive("sphere radius", item, got_radius, radius); break ;
             default: parse_unknown_notify(item.key()); break ;
         }
@@ -430,7 +433,11 @@ static void parse_sphere_single(const nlohmann::json &sphere)
     parse_undefined_assert("sphere radius", got_radius);
     if (got_color && got_position && got_radius)
     {
-        rtx::objects::sp_vec.emplace_back(position, radius, color, specular, reflective);
+        sphere_t sp(position, radius, color, specular, reflective);
+        parse_print("added sphere " + rtx::B["["
+            + to_string(rtx::objects::sp_vec.size()) + "]"] + ": "
+            + rtx::Orange[to_string(sp)]);
+        rtx::objects::sp_vec.emplace_back(sp);
         flags.spheres = true;
     }
 }
@@ -478,7 +485,11 @@ static void parse_plane_single(const nlohmann::json &plane)
     parse_undefined_assert("plane normal", got_normal);
     if (got_color && got_point && got_normal)
     {
-        rtx::objects::pl_vec.emplace_back(point, normal, color, specular, reflective);
+        plane_t pl(point, normal, color, specular, reflective);
+        parse_print("added plane " + rtx::B["["
+            + to_string(rtx::objects::pl_vec.size()) + "]"] + ": "
+            + rtx::Orange[to_string(pl)]);
+        rtx::objects::pl_vec.emplace_back(pl);
         flags.planes = true;
     }
 }
@@ -771,6 +782,9 @@ static void parse_light_single(const nlohmann::json &light)
             default:throw std::runtime_error(
                 rtx::R["[INTERNAL ERROR]: init_scene::parse_light_single: unexpected light type " + str(type)]);
         }
+        parse_print("added light " + rtx::B["["
+            + to_string(rtx::objects::li_vec.size() - 1) + "]"] + ": "
+            + rtx::Orange[to_string(rtx::objects::li_vec.back())]);
         flags.lights = true;
     }
 }
@@ -780,7 +794,7 @@ static void parse_lights(const nlohmann::json &lights)
     parse_type_assert("lights array", lights, ARRAY_TYPE);
     for (const auto &item : lights)
         parse_light_single(item);
-    parse_ok(true, "scene::lights parsed");
+    parse_ok(true, "scene::lights "_W + "parsed"_G);
 }
 
 void rtx::parse_scene(const char *fname)
@@ -788,7 +802,12 @@ void rtx::parse_scene(const char *fname)
     std::ifstream stream(fname);
     if (not stream.is_open())
         throw Exception(std::string("cannot open `") + fname + "` file");
-    nlohmann::json data = nlohmann::json::parse(stream);
+    nlohmann::json data;
+    try {
+        data = nlohmann::json::parse(stream);
+    } catch (nlohmann::json::exception &e) {
+        throw Exception("json parser fall with exception: " + rtx::Y[e.what()]);
+    }
     for (const auto &i : data.items())
     {
         switch(hash(i.key()))
@@ -810,7 +829,7 @@ void rtx::parse_scene(const char *fname)
     parse_warn(flags.objects, "your scene don`t have any objects, you will not see anything");
     parse_assert(flags.cameras, "your scene don`t have any cameras");
     if (not flags.cameras)
-        throw rtx::Exception("[FATAL]: cannot start due to scene errors"_R);
+        throw rtx::Exception("cannot start due to scene errors");
 
 //    rtx::objects::sp_vec = {
 //            sphere_t({0, 0, 0}, 0.2, rtx::color::white, 0, 0),

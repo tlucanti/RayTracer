@@ -9,6 +9,7 @@
 #  define DECLARE_METHOD(...)
 # else
 #  include <common.hpp>
+#  include "kernel.h"
 #  define DECLARE_CONSTRUCTOR(__name, ...) __name(__VA_ARGS__)
 #  define DECLARE_METHOD(__retval, __name, ...) __retval __name(__VA_ARGS__)
 # endif /* __CPP */
@@ -31,7 +32,7 @@ typedef struct sphere_s
     FLOAT3              color;          // 0  -- 32
     uint32_t            specular;       // 32 --
     PADDING4                            //    -- 40
-    FLOAT               reflective;     // 40 -- 48
+    FLOAT               reflective;      // 40 -- 48
     FLOAT               radius;         // 48 --
     PADDING8                            //    -- 64
     FLOAT3              position;       // 64 -- 96
@@ -45,7 +46,7 @@ typedef struct plane_s
     FLOAT3              color;          // 0  -- 32
     uint32_t            specular;       // 32 --
     PADDING4                            //    -- 40
-    FLOAT               reflective;     // 40 -- 48
+    FLOAT               reflective;      // 40 -- 48
     FLOAT3              point;          // 48 -- 80
     FLOAT3              normal;         // 80 -- 112
 
@@ -58,7 +59,7 @@ typedef struct triangle_s
     FLOAT3          color;              // 0  -- 32
     uint32_t        specular;           // 32 --
     PADDING4                            //    -- 40
-    FLOAT           reflective;         // 40 -- 48
+    FLOAT           reflective;          // 40 -- 48
     PADDING16                           //    -- 64
     FLOAT3          normal;             // 64 -- 96
     FLOAT3          a;                  // 96 -- 128
@@ -75,7 +76,7 @@ typedef struct cone_s
     FLOAT3          color;              // 0  -- 32
     uint32_t        specular;           // 32 --
     PADDING4                            //    -- 40
-    FLOAT           reflective;         // 40 -- 48
+    FLOAT           reflective;          // 40 -- 48
     FLOAT           width;              // 48 -- 56
     FLOAT           gamma;              // 56 -- 64
     FLOAT3          position;           // 64 -- 96
@@ -92,7 +93,7 @@ typedef struct cylinder_s
     FLOAT3          color;              // 0  -- 32
     uint32_t        specular;           // 32 --
     PADDING4                            //    -- 40
-    FLOAT           reflective;         // 40 -- 48
+    FLOAT           reflective;          // 40 -- 48
     FLOAT           radius;             // 48 --
     PADDING8                            //    -- 64
     FLOAT3          position;           // 64 -- 96
@@ -108,7 +109,7 @@ typedef struct torus_s
     FLOAT3          color;              // 0  -- 32
     uint32_t        specular;           // 32 --
     PADDING4                            //    -- 40
-    FLOAT           reflective;         // 40 -- 48
+    FLOAT           reflective;          // 40 -- 48
     FLOAT           r;                  // 48 -- 56
     FLOAT           R;                  // 56 -- 64
     FLOAT3          position;           // 64 -- 96

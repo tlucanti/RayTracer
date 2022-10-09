@@ -2,8 +2,15 @@
 {
   "lights": [
     {
-      "type": "ambient",
+      "type": "point",
       "intensity": 0.6,
+      "color": "white",
+      "position": [1,1,1]
+    },
+
+    {
+      "type": "ambient",
+      "intensity": 0.01,
       "color": "white"
     }
   ],
@@ -12,7 +19,17 @@
     {
       "position": [0, 0, 3],
       "radius": 1,
-      "color": "red"
+      "color": "red",
+      "specular": 200,
+      "reflective": 0.2
+    },
+
+    {
+      "position": [-3, 0, 3],
+      "radius": 1,
+      "color": "#0000FF",
+      "specular": 10,
+      "reflective": 0.2
     }
   ],
 

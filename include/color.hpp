@@ -24,6 +24,10 @@ struct Color
     static constexpr char cyan[] = "\033[1;96m";
     static constexpr char white[] = "\033[1;97m";
     static constexpr char reset[] = "\033[0m";
+
+    static constexpr char dark_red[] = "\033[38;2;167;0;0;1m";
+
+    static constexpr char orange[] = "\033[38;2;255;165;0;1m";
 };
 
 inline constexpr Color Black {Color::black};
@@ -36,6 +40,8 @@ inline constexpr Color Cyan {Color::cyan};
 inline constexpr Color White {Color::white};
 inline constexpr Color Reset {Color::reset};
 
+inline constexpr Color DarkRed {Color::dark_red};
+
 inline constexpr const Color &Magenta = Purple;
 inline constexpr const Color &K = Black;
 inline constexpr const Color &R = Red;
@@ -45,6 +51,8 @@ inline constexpr const Color &B = Blue;
 inline constexpr const Color &P = Purple;
 inline constexpr const Color &C = Cyan;
 inline constexpr const Color &W = White;
+
+inline constexpr const Color Orange {Color::orange};
 
 RTX_NAMESPACE_END
 
