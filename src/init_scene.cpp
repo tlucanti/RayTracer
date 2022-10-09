@@ -32,13 +32,13 @@ inline constexpr uintmax_t poly_hash(const char *str, size_t size, size_t idx)
     if (size == 0)
         return 0;
     else if (size == 1)
-        return str[0];
+        return static_cast<uintmax_t>(str[0]);
     else if (idx < size)
         return (
-            str[idx]
+            static_cast<uintmax_t>(str[idx])
             + poly_hash<mod, prime>(str, size, idx + 1) * prime % mod
         ) % mod;
-    return str[idx];
+    return static_cast<uintmax_t>(str[idx]);
 }
 
 typedef enum
@@ -78,7 +78,7 @@ static std::string to_string(const value_type &t)
 
 static FLOAT3 to_vec3(const nlohmann::json &v)
 {
-    return (FLOAT3){v[0], v[1], v[2]};
+    return FLOAT3({{v[0], v[1], v[2]}});
 }
 
 static FLOAT3 to_col3(const std::string &str)
@@ -87,11 +87,11 @@ static FLOAT3 to_col3(const std::string &str)
     ss << std::hex << str;
     unsigned int i;
     ss >> i;
-    return {
+    return {{
         static_cast<double>((i >> 16u) & 0xFF),
         static_cast<double>((i >> 8u) & 0xFF),
         static_cast<double>(i & 0xFF)
-    };
+    }};
 }
 
 static void parse_assert(bool cond, const std::string &str)
@@ -243,7 +243,7 @@ static void parse_float_positive(const std::string &name, const item_type &item,
 {
     parse_type_assert(name, item.value(), NUM_TYPE);
     parse_positive_assert(name, item.value());
-    value = value;
+    value = static_cast<FLOAT>(item.value());
     flag = true;
 }
 
@@ -346,8 +346,8 @@ static void parse_config(const nlohmann::json &res)
             default: parse_unknown_notify(item.key()); break ;
         }
     }
-    parse_undefined_warn_set("window resolution width", width, 800, rtx::config::width);
-    parse_undefined_warn_set("window resolution height", height, 600, rtx::config::height);
+    parse_undefined_warn_set("window resolution width", width, 800u, rtx::config::width);
+    parse_undefined_warn_set("window resolution height", height, 600u, rtx::config::height);
     parse_undefined_warn_set("fov x", fovx, 90., rtx::config::fovx);
     parse_undefined_warn_set("fov y", fovy, 90., rtx::config::fovy);
     parse_undefined_warn_set("move speed", move_speed, 0.1, rtx::config::forward_move_step);

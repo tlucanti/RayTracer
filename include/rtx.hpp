@@ -5,7 +5,7 @@
 # include <mlxlib>
 # include <cllib>
 # include <common.hpp>
-# include <cl/kernel.cl>
+# include <objects.h>
 
 RTX_NAMESPACE_BEGIN
 

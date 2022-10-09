@@ -3,7 +3,7 @@
 
 FLOAT3 rtx::linalg::cross(const FLOAT3 &a, const FLOAT3 &b)
 {
-    return {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
+    return {{a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x}};
 }
 
 FLOAT rtx::linalg::det(const FLOAT3 &v1, const FLOAT3 &v2, const FLOAT3 &v3)
@@ -89,9 +89,9 @@ void rtx::linalg::compute_matrix(FLOAT3 rotate_matrix[3], FLOAT alpha, FLOAT the
     sincos(alpha, &sin_alpha, &cos_alpha);
     sincos(theta, &sin_theta, &cos_theta);
 
-    rotate_matrix[0] = {cos_alpha, sin_alpha * sin_theta, sin_alpha * cos_theta};
-    rotate_matrix[1] = {0, cos_theta, -sin_theta};
-    rotate_matrix[2] = {-sin_alpha, sin_theta * cos_alpha, cos_alpha * cos_theta};
+    rotate_matrix[0] = {{cos_alpha, sin_alpha * sin_theta, sin_alpha * cos_theta}};
+    rotate_matrix[1] = {{0, cos_theta, -sin_theta}};
+    rotate_matrix[2] = {{-sin_alpha, sin_theta * cos_alpha, cos_alpha * cos_theta}};
 }
 
 void rtx::linalg::compute_matrix_gamma(FLOAT3 rotate_matrix[3], FLOAT3 atg)
@@ -118,19 +118,19 @@ void rtx::linalg::compute_matrix_gamma(FLOAT3 rotate_matrix[3], FLOAT3 atg)
 //         _cos[1] * _cos[2]
 //     };
 	rotate_matrix[0] = {
-		_cos[1] * _cos[2],
+		{_cos[1] * _cos[2],
 		_sin[0] * _sin[1] * _cos[2] - _cos[0] * _sin[2],
-		_cos[0] * _sin[1] * _cos[2] + _sin[0] * _sin[2]
+		_cos[0] * _sin[1] * _cos[2] + _sin[0] * _sin[2]}
 	};
 	rotate_matrix[1] = {
-		_cos[1] * _sin[2],
+		{_cos[1] * _sin[2],
 		_sin[0] * _sin[1] * _sin[2] + _cos[0] * _cos[2],
-		_cos[0] * _sin[1] * _sin[2] - _sin[0] * _cos[2]
+		_cos[0] * _sin[1] * _sin[2] - _sin[0] * _cos[2]}
 	};
 	rotate_matrix[2] = {
-		-_sin[1],
+		{-_sin[1],
 		_sin[0] * _cos[1],
-		_cos[0] * _cos[1]
+		_cos[0] * _cos[1]}
 	};
 }
 
@@ -142,28 +142,28 @@ void rtx::linalg::set_rotation_matrix(FLOAT3 *matrix, const FLOAT3 &v1, const FL
     if (abs(sin_theta) < EPS)
     {
         FLOAT factor = -2. * sin_theta + 1;
-        matrix[0] = (FLOAT3){1, 0, 0} * factor;
-        matrix[1] = (FLOAT3){0, 1, 0} * factor;
-        matrix[2] = (FLOAT3){0, 0, 1} * factor;
+        matrix[0] = FLOAT3({{1, 0, 0}}) * factor;
+        matrix[1] = FLOAT3({{0, 1, 0}}) * factor;
+        matrix[2] = FLOAT3({{0, 0, 1}}) * factor;
         return ;
     }
     normalize_ref(k);
-    FLOAT3 k2 = {k.x * k.x, k.y * k.y, k.z * k.z};
+    FLOAT3 k2 = {{k.x * k.x, k.y * k.y, k.z * k.z}};
 
 //    std::cout << "k " << k.x << ' ' << k.y << ' ' << k.z << std::endl;
 //    std::cout << "k2 " << k2.x << ' ' << k2.y << ' ' << k2.z << std::endl;
 
-    matrix[0] = {1, 0, 0};
-    matrix[1] = {0, 1, 0};
-    matrix[2] = {0, 0, 1};
+    matrix[0] = {{1, 0, 0}};
+    matrix[1] = {{0, 1, 0}};
+    matrix[2] = {{0, 0, 1}};
 
-    matrix[0] += (FLOAT3){0, -k.z, k.y} * sin_theta;
-    matrix[1] += (FLOAT3){k.z, 0, -k.x} * sin_theta;
-    matrix[2] += (FLOAT3){-k.y, k.x, 0} * sin_theta;
+    matrix[0] += FLOAT3({{0, -k.z, k.y}}) * sin_theta;
+    matrix[1] += FLOAT3({{k.z, 0, -k.x}}) * sin_theta;
+    matrix[2] += FLOAT3({{-k.y, k.x, 0}}) * sin_theta;
 
-    matrix[0] += (FLOAT3){-k2.y - k2.z, k.x * k.y, k.x * k.z} * (1 - cos_theta);
-    matrix[1] += (FLOAT3){k.x * k.y, -k2.x - k2.z, k.y * k.z} * (1 - cos_theta);
-    matrix[2] += (FLOAT3){k.x * k.z, k.y * k.z, -k2.x - k2.y} * (1 - cos_theta);
+    matrix[0] += FLOAT3({{-k2.y - k2.z, k.x * k.y, k.x * k.z}}) * (1 - cos_theta);
+    matrix[1] += FLOAT3({{k.x * k.y, -k2.x - k2.z, k.y * k.z}}) * (1 - cos_theta);
+    matrix[2] += FLOAT3({{k.x * k.z, k.y * k.z, -k2.x - k2.y}}) * (1 - cos_theta);
 }
 
 void rtx::linalg::add_rotated_vec(FLOAT3 &vec, const FLOAT3 matrix[3], FLOAT3 dir)
@@ -175,12 +175,12 @@ void rtx::linalg::add_rotated_vec(FLOAT3 &vec, const FLOAT3 matrix[3], FLOAT3 di
 
 FLOAT3 operator +(const FLOAT3 &a, const FLOAT3 &b)
 {
-    return {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
+    return {{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}};
 }
 
 FLOAT3 operator -(const FLOAT3 &a)
 {
-    return {-a.x, -a.y, -a.z};
+    return {{-a.x, -a.y, -a.z}};
 }
 
 FLOAT3 operator -(const FLOAT3 &a, const FLOAT3 &b)
@@ -190,12 +190,7 @@ FLOAT3 operator -(const FLOAT3 &a, const FLOAT3 &b)
 
 FLOAT3 operator *(const FLOAT3 &a, FLOAT t)
 {
-    return {a.x * t, a.y * t, a.z * t};
-}
-
-FLOAT3 operator *(const FLOAT3 &a, const FLOAT3 &b)
-{
-    return {a.x * a.x, a.y * a.y, a.z * a.z};
+    return {{a.x * t, a.y * t, a.z * t}};
 }
 
 FLOAT3 &operator +=(FLOAT3 &a, const FLOAT3 &b)
@@ -216,27 +211,27 @@ FLOAT3 &operator *=(FLOAT3 &a, FLOAT b)
 
 COMPLEX operator *(FLOAT a, const COMPLEX &b)
 {
-    return {a * b.x + a * b.y};
+    return {{a * b.x + a * b.y}};
 }
 
 COMPLEX operator /(const COMPLEX &a, const FLOAT &b)
 {
-    return {a.x / b, a.y / b};
+    return {{a.x / b, a.y / b}};
 }
 
 COMPLEX operator -(const COMPLEX &a)
 {
-    return {-a.x, -a.y};
+    return {{-a.x, -a.y}};
 }
 
 COMPLEX operator +(const COMPLEX &a, const COMPLEX &b)
 {
-    return {a.x + b.x, a.y + b.y};
+    return {{a.x + b.x, a.y + b.y}};
 }
 
 COMPLEX operator -(const COMPLEX &a, const COMPLEX &b)
 {
-    return {a.x - b.x, a.y - b.y};
+    return {{a.x - b.x, a.y - b.y}};
 }
 
 static inline constexpr FLOAT flt0(FLOAT q) { return fabs(q) < EPS ? 0 : q; }

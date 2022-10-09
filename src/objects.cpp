@@ -1,80 +1,78 @@
 
-#include <objects.hpp>
+#include <objects.h>
 #include <linalg.hpp>
 
 // -----------------------------------------------------------------------------
 sphere_s::sphere_s(
-        const FLOT3 &position,
+        const FLOAT3 &position,
         FLOAT radius,
-        const FLOT3 &color,
+        const FLOAT3 &color,
         uint32_t specular,
         FLOAT reflective
     ) :
-        position(position),
-        radius(radius),
         color(color),
         specular(specular),
         reflective(reflective),
-        _padding0(),
-        _padding1()
+        radius(radius),
+        position(position)
 {}
 
 // -----------------------------------------------------------------------------
 plane_s::plane_s(
-        const FLOT3 &point,
-        const FLOT3 &normal,
-        const FLOT3 &color,
+        const FLOAT3 &point,
+        const FLOAT3 &normal,
+        const FLOAT3 &color,
         uint32_t specular,
         FLOAT reflective
     ) :
-        point(point),
-        normal(normal),
         color(color),
         specular(specular),
-        reflective(reflective)
+        reflective(reflective),
+        point(point),
+        normal(normal)
 {
     rtx::linalg::normalize_ref(this->normal);
 }
 
 // -----------------------------------------------------------------------------
 triangle_s::triangle_s(
-        const FLOT3 &p1,
-        const FLOT3 &p2,
-        const FLOT3 &p3,
-        const FLOT3 &color,
+        const FLOAT3 &p1,
+        const FLOAT3 &p2,
+        const FLOAT3 &p3,
+        const FLOAT3 &color,
         uint32_t specular,
         FLOAT reflective
     ) :
-        a(p1),
-        b(p2),
-        c(p3),
         color(color),
         specular(specular),
-        reflective(reflective)
+        reflective(reflective),
+        a(p1),
+        b(p2),
+        c(p3)
 {
     normal = rtx::linalg::cross(p2 - p1, p3 - p1);
 }
 
 // -----------------------------------------------------------------------------
 cone_s::cone_s(
-        const FLOT3 &position,
-        const FLOT3 &direction,
+        const FLOAT3 &position,
+        const FLOAT3 &direction,
         FLOAT width,
         FLOAT gamma,
-        const FLOT3 &color,
+        const FLOAT3 &color,
         uint32_t specular,
         FLOAT reflective
     ) :
-        position(position),
-        direction(direction),
-        width(width),
-        gamma(gamma),
         color(color),
         specular(specular),
-        reflective(reflective)
+        reflective(reflective),
+        width(width),
+        gamma(gamma),
+        position(position),
+        direction(direction)
 {
     rtx::linalg::normalize_ref(this->direction);
-    rtx::linalg::set_rotation_matrix(this->matr, this->direction, {0, 0, 1});
+    rtx::linalg::set_rotation_matrix(this->matr, this->direction, {{0, 0, 1}});
 }
 
 // -----------------------------------------------------------------------------
@@ -86,12 +84,12 @@ cylinder_s::cylinder_s(
         uint32_t specular,
         FLOAT reflective
    ) :
-        position(position),
-        direction(direction),
-        radius(radius),
         color(color),
         specular(specular),
-        reflective(reflective)
+        reflective(reflective),
+        radius(radius),
+        position(position),
+        direction(direction)
 {
     rtx::linalg::normalize_ref(this->direction);
 }
@@ -106,13 +104,13 @@ torus_s::torus_s(
         uint32_t specular,
         FLOAT reflective
     ) :
-        position(position),
-        normal(normal),
-        r(r),
-        R(R),
         color(color),
         specular(specular),
-        reflective(reflective)
+        reflective(reflective),
+        r(r),
+        R(R),
+        position(position),
+        normal(normal)
 {
     rtx::linalg::normalize_ref(this->normal);
 }
@@ -122,7 +120,7 @@ light_s::light_s(
         light_type_t type,
         FLOAT intensity,
         const FLOAT3 &color,
-        const FLOAT3 &vec={}
+        const FLOAT3 &vec
     ) :
         type(type),
         intensity(intensity),
@@ -131,4 +129,25 @@ light_s::light_s(
 {
     if (type != AMBIENT and type != DIRECT and type != POINT)
         throw std::runtime_error("unknown light type");
+}
+
+// -----------------------------------------------------------------------------
+camera_s::camera_s(
+        const FLOAT3 &pos, const FLOAT3 &dir
+    ) :
+        position(pos),
+        direction(dir),
+        rotate_matrix(),
+        alpha(),
+        theta()
+{
+    rtx::linalg::normalize_ref(direction);
+    rtx::linalg::compute_angles(dir, alpha, theta);
+    rtx::linalg::compute_matrix(rotate_matrix, alpha, theta);
+}
+
+// -----------------------------------------------------------------------------
+void camera_s::recompute_matrix()
+{
+    rtx::linalg::compute_matrix(rotate_matrix, alpha, theta);
 }

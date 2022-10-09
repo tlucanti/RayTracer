@@ -13,7 +13,7 @@ MLXLIB_NAMESPACE_BEGIN
 class MLXimage
 {
 public:
-    MLXimage(const MLXcore &core, int width, int height)
+    MLXimage(const MLXcore &core, unsigned int width, unsigned int height)
         : mlx_ptr(core.mlx_ptr), image_ptr(nullptr), width(width), height(height)
     {
         image_ptr = mlx_new_image(mlx_ptr, width, height);
@@ -30,7 +30,7 @@ public:
 
     void fill(const std::vector<unsigned int> &pixel_data, size_t offset=0)
     {
-        if (pixel_data.size() - offset != width * height)
+        if (pixel_data.size() - offset != static_cast<size_t>(width * height))
             throw MLXexception("pixel data size mismatch");
         for (size_t i=0; i < pixel_data.size(); ++i)
             image_data[i] = pixel_data[i];
@@ -55,8 +55,8 @@ private:
     int             size_line;
     int             endian;
 
-    int     width;
-    int     height;
+    unsigned int    width;
+    unsigned int    height;
 
     friend class MLXwindow;
 };

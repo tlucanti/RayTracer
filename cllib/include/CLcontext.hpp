@@ -18,7 +18,7 @@ public:
         void (CL_CALLBACK * callback)(const char *, const void *, size_t, void *)=nullptr,
         void *user_data=nullptr
     ) :
-        context(nullptr), ref_count(new int(1))
+        ref_count(new int(1)), context(nullptr)
     {
         cl_int  error;
 
@@ -66,7 +66,7 @@ public:
     }
 
     CLcontext() NOEXCEPT
-        : context(nullptr), ref_count(nullptr)
+        : ref_count(nullptr), context(nullptr)
     {}
 
     CLcontext &operator =(const CLcontext &cpy)

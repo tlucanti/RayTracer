@@ -16,7 +16,7 @@ class CLplatform /*: public __utils::__noncopymovable<>*/
 public:
     WUR std::vector<CLdevice> get_devices(
         cl_device_type type=CLdevice::any_type,
-        cl_uint num_entries=-1
+        cl_uint num_entries=static_cast<cl_uint>(-1)
     ) const
     {
         cl_int      error;
@@ -29,7 +29,7 @@ public:
             error = clGetDeviceIDs(
                 platform_id,
                 type,
-                devices.size(),
+                static_cast<cl_uint>(devices.size()),
                 devices.data(),
                 &max_num
             );

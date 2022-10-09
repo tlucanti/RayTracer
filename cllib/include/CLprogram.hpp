@@ -22,7 +22,7 @@ public:
     ) : CLprogram(program.get_programd_arg_num(), program.get_program_source(), program.get_program_name(), context) {}
 
     CLprogram(
-        int argc,
+        unsigned int argc,
         std::ifstream stream,
         const std::string &program_name,
         const CLcontext &context
@@ -30,12 +30,12 @@ public:
     {}
 
     CLprogram(
-        int argc,
+        unsigned int argc,
         const std::string &program_code,
         const std::string &program_name,
         const CLcontext &context
     ) :
-        builder(), argc(argc), program(), name(program_name)
+        builder(), program(), argc(argc), name(program_name)
     {
         cl_int  error;
         const char  *code_ptr = program_code.c_str();
@@ -193,7 +193,7 @@ public:
         return program;
     }
 
-    WUR int __get_argc() const
+    WUR unsigned int __get_argc() const
     {
         return argc;
     }
@@ -383,9 +383,9 @@ public:
     __CLbuilder builder;
 
 private:
-    cl_program  program;
-    int         argc;
-    std::string name;
+    cl_program      program;
+    unsigned int    argc;
+    std::string     name;
 };
 
 CLLIB_NAMESPACE_END

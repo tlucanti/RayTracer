@@ -10,7 +10,8 @@ void rtx::init_gpu()
     rtx::data::queue = new cllib::CLqueue(*rtx::data::context, device);
 
     cllib::CLprogram program(4, std::ifstream(rtx::config::kernel_fname), "ray_tracer", *rtx::data::context);
-    program.compile(device, true, "-D__OPENCL");
+    std::string flags = "-D__OPENCL -I" + std::string(rtx::config::cl_dir);
+    program.compile(device, true, flags.c_str());
 
     rtx::data::kernel = new cllib::CLkernel(program, {static_cast<size_t>(rtx::config::width), static_cast<size_t>(rtx::config::height)});
 }

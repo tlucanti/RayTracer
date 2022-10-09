@@ -175,7 +175,7 @@ public:
         error = clEnqueueNDRangeKernel(
             queue.__get_queue(),
             kernel,
-            global_work_size_vector.size(),
+            static_cast<cl_uint>(global_work_size_vector.size()),
             global_work_offset_ptr,
             global_work_size_vector.data(),
             local_work_size_ptr,
@@ -228,9 +228,9 @@ public:
 //        }
 //    }
 
-    cl_kernel   kernel;
-    int         argc;
-    int         argi;
+    cl_kernel       kernel;
+    unsigned int    argc;
+    unsigned int    argi;
 
     std::vector<size_t>     global_work_size_vector;
     std::vector<size_t>     local_work_size_vector;

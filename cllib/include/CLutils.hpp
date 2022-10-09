@@ -42,7 +42,7 @@ namespace __utils
         std::streamsize length = stream.gcount();
         stream.seekg(0, std::ios_base::beg);
         std::string content;
-        content.resize(length - start);
+        content.resize(static_cast<std::string::size_type>(length - start));
         stream.read(content.data(), length - start);
         return content;
     }

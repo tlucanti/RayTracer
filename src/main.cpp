@@ -1,7 +1,7 @@
 
 #include <thread>
-
 #include <rtx.hpp>
+#include <cl/kernel.cl>
 
 void init_scene()
 {
@@ -53,35 +53,6 @@ NORET void rtx::collapse(int status)
     delete rtx::data::context;
     delete rtx::data::queue;
     exit(status);
-}
-
-double poly4(double x, double a, double b, double c, double d, double e)
-{
-    double fx = a;
-    fx = fx * x + b;
-    fx = fx * x + c;
-    fx = fx * x + d;
-    fx = fx * x + e;
-    return fx;
-}
-
-double rnd() {return (rand() % 200) - 100;}
-void test_ferrari()
-{
-    srand(0);
-    for (int i=0; i < 1000; ++i)
-    {
-        double a = 1.;
-        double b = rnd();
-        double c = rnd();
-        double d = rnd();
-        double e = rnd();
-
-        double x = ferrari_solve(a, b, c, d, e);
-        double v = poly4(x, a, b, c, d, e);
-        if (fabs(v) > 1e-3)
-            std::cout << i << ": " << a << ' ' << b << ' ' << c << ' ' << d << ' ' << e << " x: " << x << " v: " << v << std::endl;
-    }
 }
 
 #include <json>

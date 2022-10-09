@@ -7,7 +7,7 @@
 # include "CLsources.hpp"
 # include "CLexception.hpp"
 # include "CLbuiltinprog.hpp"
-//
+
 # include "CLplatform.hpp"
 # include "CLdevice.hpp"
 # include "CLcontext.hpp"
@@ -20,7 +20,7 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-WUR INLINE std::vector<CLplatform> get_platforms(cl_uint num_platforms=-1)
+WUR INLINE std::vector<CLplatform> get_platforms(cl_uint num_platforms=static_cast<cl_uint>(-1))
 {
     cl_int  error;
 

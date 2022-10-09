@@ -1,26 +1,38 @@
 
-#ifdef CL_KERNEL_H
+#ifndef CL_KERNEL_H
 # define CL_KERNEL_H
 
-# define UNUSED  __attribute__((unused))
-# ifndef NULL
-#  define NULL    0
-# endif /* NULL */
-# define CPP_UNUSED
-# define CPP_INLINE
-# define EPS 1e-4
-# define PACKED    __attribute__((__packed__))
-# define ALIGNED8  __attribute__((__aligned__(8)))
-# define ALIGNED16 __attribute__((__aligned__(16)))
+# ifndef __CPP
+#  define CPP_UNUSED
+#  define CPP_INLINE
+#  define ASSIGN_FLOAT3(__x, __y, __z) (FLOAT3)(__x, __y, __z)
+#  define ASSIGN_COMPLEX(__real, __imag) (COMPLEX)(__real, __imag)
+#  define ASSIGN_SCENE(...) (scene_t){__VA_ARGS__}
+#  define cstatic_cast(__type, __var) (__type)(__var)
+# else
+#  include <linalg.hpp>
+#  define __constant
+#  define __global
+#  define __kernel
+#  define CPP_UNUSED __attribute__((unused))
+#  define CPP_INLINE inline
+#  define NULLPTR nullptr
+#  define ASSIGN_FLOAT3(__x, __y, __z) {{__x, __y, __z}}
+#  define ASSIGN_COMPLEX(__real, __imag) {{__real, __imag}}
+#  define ASSIGN_SCENE(...) {__VA_ARGS__}
+#  define cstatic_cast(__type, __var) static_cast<__type>(__var)
 
-typedef double FLOAT;
-typedef double4 FLOAT4;
-typedef double3 FLOAT3;
-typedef double2 FLOAT2;
-typedef FLOAT2 COMPLEX;
-typedef unsigned int uint32_t;
-typedef int int32_t;
-typedef unsigned long int uint64_t;
-typedef long int int64_t;
+CPP_INLINE
+uint32_t get_global_id(uint32_t)
+{
+	return {};
+}
+
+using rtx::linalg::length;
+using rtx::linalg::normalize;
+using rtx::linalg::dot;
+using rtx::linalg::cross;
+
+# endif/* __CPP */
 
 #endif /* CL_KERNEL_H */
