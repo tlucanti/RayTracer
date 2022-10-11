@@ -413,20 +413,20 @@ bool shadow_intersection(
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
-FLOAT compute_lightning_single(
+FLOAT3 compute_lightning_single(
         FLOAT3 light_vector,
         FLOAT3 normal_vector,
         FLOAT3 direction,
-        FLOAT light_intensity,
+        FLOAT3 light_color,
         uint32_t specular
     )
 {
-    FLOAT intensity = 0;
+    FLOAT3 color = ASSIGN_FLOAT3(0., 0., 0.);
 
     // diffuse lightning
     FLOAT normal_angle = dot(normal_vector, light_vector);
     if (normal_angle > EPS)
-        intensity += light_intensity * normal_angle;
+        color += light_color * normal_angle;
 
     // specular light
     if (specular > 0)
@@ -434,23 +434,44 @@ FLOAT compute_lightning_single(
         FLOAT3 reflected = reflect_ray(light_vector, normal_vector);
         FLOAT reflected_angle = dot(reflected, direction);
         if (reflected_angle < EPS)
-            intensity += light_intensity * pow(reflected_angle, specular);
+            color += light_color * pow(reflected_angle, specular);
     }
 
-    return intensity;
+    return color;
+}
+
+CPP_UNUSED CPP_INLINE
+FLOAT3 compute_emission(scene_ptr scene, FLOAT3 point, FLOAT3 normal)
+{
+    FLOAT3 factor = ASSIGN_FLOAT3(0., 0., 0.);
+
+    for (uint32_t i=0; i < scene->spheres_num; ++i)
+    {
+        FLOAT3 direction = normalize(scene->spheres[i].position - point);
+        sphere_ptr sphere = scene->spheres + i;
+
+//        if (shadow_intersection(scene, point, direction, EPS, len))
+//            continue ;
+
+        FLOAT normal_angle = dot(normal, direction);
+        if (normal_angle > EPS)
+            factor += sphere->color * (1. / 255.) * sphere->emission * normal_angle;
+    }
+
+    return factor;
 }
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
-FLOAT compute_lightning(
-        const scene_t *scene,
+FLOAT3 compute_lightning(
+        scene_ptr scene,
         FLOAT3 point,
         FLOAT3 normal,
         FLOAT3 direction,
         uint32_t specular
     )
 {
-    FLOAT intensity = 0;
+    FLOAT3 color = ASSIGN_FLOAT3(0., 0., 0.);
     FLOAT end;
     FLOAT3 light_vector;
 
@@ -459,10 +480,10 @@ FLOAT compute_lightning(
         switch (scene->lights[i].type)
         {
             case AMBIENT:
-                intensity += scene->lights[i].intensity;
+                color += scene->lights[i].color;
                 continue ;
             case DIRECT:
-                light_vector = scene->lights[i].direction;
+                light_vector = scene->lights[i].color;
                 end = INFINITY;
                 break ;
             case POINT:
@@ -474,15 +495,19 @@ FLOAT compute_lightning(
 
         if (shadow_intersection(scene, point, light_vector, EPS, end))
             continue ;
-        intensity += compute_lightning_single(
+        color += compute_lightning_single(
             light_vector,
             normal,
             direction,
-            scene->lights[i].intensity,
+            scene->lights[i].color,
             specular
         );
     }
-    return fmin(1 - EPS, intensity);
+    color += compute_emission(scene, point, normal);
+    color.x = fmin(1. - EPS, color.x);
+    color.y = fmin(1. - EPS, color.y);
+    color.z = fmin(1. - EPS, color.z);
+    return color;
 }
 
 // -----------------------------------------------------------------------------
@@ -536,7 +561,7 @@ FLOAT3 trace_ray(
             }
             case TOR: normal = normalize(param); break ;
         }
-        FLOAT factor = compute_lightning(
+        FLOAT3 factor = compute_lightning(
             scene,
             point,
             normal,
@@ -544,6 +569,8 @@ FLOAT3 trace_ray(
             get_obj_specular(closest_obj)
         );
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
+        if (closest_type == SPHERE && as_sphere(closest_obj)->emission > 0.)
+            local_color = get_obj_color(closest_obj);
 
         if (recursion_depth == 0)
             color += local_color * reflective_prod; // * closest_sphere->reflective;

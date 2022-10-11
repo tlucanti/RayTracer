@@ -8,12 +8,14 @@ sphere_s::sphere_s(
         FLOAT radius,
         const FLOAT3 &color,
         uint32_t specular,
-        FLOAT reflective
+        FLOAT reflective,
+        FLOAT emission
     ) :
         color(color),
         specular(specular),
         reflective(reflective),
         radius(radius),
+        emission(emission),
         position(position)
 {}
 
@@ -125,10 +127,9 @@ light_s::light_s(
         const FLOAT3 &color,
         const FLOAT3 &vec
     ) :
-        type(type),
-        intensity(intensity),
-        color(color),
-        direction(vec)
+        color(color * intensity * (1. / 255.)),
+        direction(vec),
+        type(type)
 {
     if (type != AMBIENT and type != DIRECT and type != POINT)
         throw std::runtime_error("unknown light type");

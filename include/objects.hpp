@@ -67,7 +67,7 @@ std::ostream &operator <<(std::ostream &out, const light_t &li)
         case DIRECT: out << "direct_light[dir: " << li.direction << ", "; break ;
         case POINT: out << "point_light[pos: " << li.position << ", "; break ;
     }
-    out << "color: " << _clprt(li.color) << ", I[" << li.intensity << "] ]";
+    out << "color: " << _clprt(li.color) << "]";
 
     return out;
 }

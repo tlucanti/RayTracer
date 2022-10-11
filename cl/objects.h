@@ -33,11 +33,11 @@ typedef struct sphere_s
     uint32_t            specular;       // 32 --
     PADDING4                            //    -- 40
     FLOAT               reflective;      // 40 -- 48
-    FLOAT               radius;         // 48 --
-    PADDING8                            //    -- 64
+    FLOAT               radius;         // 48 -- 56
+    FLOAT               emission;       // 56 -- 64
     FLOAT3              position;       // 64 -- 96
 
-    DECLARE_CONSTRUCTOR(sphere_s, FL3_CREF, FLOAT, FL3_CREF, uint32_t, FLOAT);
+    DECLARE_CONSTRUCTOR(sphere_s, FL3_CREF, FLOAT, FL3_CREF, uint32_t, FLOAT, FLOAT);
 } PACKED ALIGNED64 sphere_t;
 
 // -----------------------------------------------------------------------------
@@ -123,15 +123,12 @@ typedef struct torus_s
 // -----------------------------------------------------------------------------
 typedef struct light_s
 {
-    light_type_t    type;               // 0  --
-    PADDING4                            //    -- 8
-    FLOAT           intensity;          // 8  --
-    PADDING16                           //    -- 32   
-    FLOAT3          color;              // 32 -- 64
-    union {                             // 64 -- 96
+    FLOAT3          color;              // 0  -- 32
+    union {                             // 32 -- 64
         FLOAT3      direction;
         FLOAT3      position;
     };
+    light_type_t    type;               // 64 -- 68
 
     DECLARE_CONSTRUCTOR(light_s, light_type_t, FLOAT, FL3_CREF, FL3_CREF);
 } PACKED ALIGNED64 light_t;

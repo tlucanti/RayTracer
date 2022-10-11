@@ -58,6 +58,8 @@ NORET void rtx::collapse(int status)
 #include <json>
 int main()
 {
+    putenv(const_cast<char *>("CUDA_CACHE_DISABLE=1"));
+
 //    COMPLEX x1, x2;
 //    cubic_complex_solve(-10/3., 14/3., 27/3., &x1, &x2);
 //    std::cout << x1 << ' ' << x2 << std::endl;

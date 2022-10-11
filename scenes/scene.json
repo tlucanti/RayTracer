@@ -1,14 +1,5 @@
 
 {
-	"config": {
-		"screen_width": 1000,
-		"screen_height": 1000,
-		"fovx": 90,
-		"fovy": 90,
-		"move_speed": 0.1,
-		"look_speed": 0.005
-	},
-
 	"cameras": [
 		{
 			"position":		[0, 0, -1],
@@ -18,9 +9,8 @@
 
 	"spheres": [
 		{
-			"color":		"red",
+			"color":		"white",
 			"specular":		500,
-			"reflective":	0.2,
 			"center":		[0, -1, 3],
 			"radius":		1
 		},
@@ -28,17 +18,24 @@
 		{
 			"color":		"blue",
 			"specular":		500,
-			"reflective":	0.3,
 			"center":		[2, 0, 4],
-			"radius":		1
+			"radius":		1,
+			"emission": 	0.8
 		},
 
 		{
-			"color":		"green",
+			"color":		"white",
 			"specular":		500,
-			"reflective":	0.4,
 			"center":		[-2, 0, 4],
-			"radius":		1
+			"radius":		1,
+			"_emission": 	0.002
+		},
+
+		{
+			"color": 		"white",
+			"specular": 	300,
+			"radius": 		500,
+			"position": 	[0, -501, 0]
 		}
 	],
 
@@ -48,12 +45,12 @@
 			"intensity": 0.2
 		},
 		{
-			"type": "point",
-			"intensity": 0.6,
+			"_type": "point",
+			"intensity": 0.4,
 			"position": [2, 1, 0]
 		},
 		{
-			"type": "direct",
+			"_type": "direct",
 			"intensity": 0.2,
 			"direction": [1, 4, 4]
 		}

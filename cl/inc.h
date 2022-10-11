@@ -79,16 +79,16 @@ bool shadow_intersection(
 );
 
 CPP_UNUSED
-FLOAT compute_lightning_single(
+FLOAT3 compute_lightning_single(
         FLOAT3 light_vector,
         FLOAT3 normal_vector,
         FLOAT3 direction,
-        FLOAT light_intensity,
+        FLOAT3 light_intensity,
         uint32_t specular
 );
 
 CPP_UNUSED
-FLOAT compute_lightning(
+FLOAT3 compute_lightning(
         const scene_t *scene,
         FLOAT3 point,
         FLOAT3 normal,

@@ -41,6 +41,7 @@ namespace RTX_NAMESPACE
 //        inline constexpr const char *scene_fname = "../scenes/torus.json";
 
 //        inline constexpr const char *scene_fname = "../scenes/lights.json";
+//        inline constexpr const char *scene_fname = "../scenes/colors.json";
         inline constexpr const char *cl_dir = "../cl";
         inline unsigned int current_camera;
     } /* config */
