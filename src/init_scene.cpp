@@ -294,6 +294,7 @@ static void parse_color(const std::string &name, const item_type &item, bool &fl
             case ("purple"_hash): color = rtx::color::purple; break ;
             case ("yellow"_hash): color = rtx::color::yellow; break ;
             case ("grey"_hash): color = rtx::color::grey; break ;
+            case ("orange"_hash): color = rtx::color::orange; break ;
             default: {
                 std::string st = item.value();
                 bool cond = not st.empty() and st.at(0) == '#';
@@ -421,6 +422,7 @@ static void parse_sphere_single(const nlohmann::json &sphere)
             case ("color"_hash): parse_color("sphere color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("sphere specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("sphere reflective", item, got_reflective, reflective); break ;
+            case ("center"_hash):
             case ("position"_hash): parse_vec3_point("sphere position", item, got_position, position); break ;
             case ("radius"_hash): parse_float_positive("sphere radius", item, got_radius, radius); break ;
             default: parse_unknown_notify(item.key()); break ;

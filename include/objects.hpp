@@ -19,7 +19,6 @@ light_t ambient_t(FLOAT intensity, const FLOAT3 &color)
 inline
 light_t direct_t(FLOAT intensity, const FLOAT3 &color, const FLOAT3 &direction)
 {
-    rtx::linalg::normalize(direction);
     return light_t(DIRECT, intensity, color, direction);
 }
 

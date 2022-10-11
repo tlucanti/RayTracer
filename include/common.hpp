@@ -33,12 +33,14 @@ namespace RTX_NAMESPACE
         inline FLOAT horizontal_look_speed {0.005};
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
-//        inline constexpr const char *scene_fname = "../scenes/scene.json";
+        inline constexpr const char *scene_fname = "../scenes/scene.json";
 //        inline constexpr const char *scene_fname = "../scenes/spheres.json";
 //        inline constexpr const char *scene_fname = "../scenes/planes.json";
-        inline constexpr const char *scene_fname = "../scenes/cylinders.json";
+//        inline constexpr const char *scene_fname = "../scenes/cylinders.json";
 
 //        inline constexpr const char *scene_fname = "../scenes/torus.json";
+
+//        inline constexpr const char *scene_fname = "../scenes/lights.json";
         inline constexpr const char *cl_dir = "../cl";
         inline unsigned int current_camera;
     } /* config */
@@ -55,6 +57,7 @@ namespace RTX_NAMESPACE
         inline constexpr FLOAT3 yellow = {{255, 255, 0}};
         inline constexpr FLOAT3 purple = magenta;
         inline constexpr FLOAT3 grey = {{100, 100, 100}};
+        inline constexpr FLOAT3 orange = {{255, 165, 0}};
     } /* color */
 
 } /* rtx */

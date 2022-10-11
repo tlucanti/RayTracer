@@ -204,6 +204,8 @@ FLOAT intersect_torus(
         return INFINITY;
     direction = rotate_vector(direction, to->matr);
     camera = rotate_vector(camera - to->position, to->matr);
+    FLOAT3 camera_origin = camera;
+    FLOAT3 direction_origin = direction;
 
     FLOAT ksi = to->R * to->R - to->r * to->r;                                  // FIXME: move this to torus structure
     FLOAT M4R2 = -4. * to->R * to->R;
@@ -232,7 +234,7 @@ FLOAT intersect_torus(
     FLOAT res = quartic_complex_solve(B, C, D, E);
     if (param == NULLPTR || res == INFINITY)
         return res;
-    FLOAT3 point = camera + direction * res;
+    FLOAT3 point = camera_origin + direction_origin * res;
     FLOAT dt = dot(point, point);
     FLOAT R2 = to->R * to->R;
     FLOAT r2 = to->r * to->r;
@@ -241,8 +243,8 @@ FLOAT intersect_torus(
         point.y * (-R2 - r2 + dt),
         point.z * (R2 - r2 + dt)
     );
-    if (point.x * point.x + point.y * point.y <= R2)
-        *param *= 0;//-*param;
+//    if (point.x * point.x + point.y * point.y <= R2)
+//        *param *= 0;//-*param;
     return res;
 }
 
@@ -470,9 +472,8 @@ FLOAT compute_lightning(
                 break ;
         }
 
-//        (void)(end);
-//        if (shadow_intersection(scene, point, light_vector, EPS, end))
-//            continue ;
+        if (shadow_intersection(scene, point, light_vector, EPS, end))
+            continue ;
         intensity += compute_lightning_single(
             light_vector,
             normal,

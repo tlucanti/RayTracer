@@ -42,102 +42,20 @@
 		}
 	],
 
-	"planes": [
-		{
-			"color": 		"#ffaabb",
-			"specular":		300,
-			"reflective": 	0.4,
-			"point":		[20, 0, 30],
-			"normal": 		[0.1, -0.2, -0.6]
-		},
-
-		{
-			"color": 		"yellow",
-			"specular": 	1000,
-			"point": 		[0, -1, 0],
-			"normal": 		[0, 1, 0]
-		}
-	],
-
-	"triangles": [
-		{
-			"color": 		"grey",
-			"a": 			[2, 2, 2],
-			"b": 			[3, 3, 3],
-			"c": 			[3, 2, 1]
-		}
-	],
-
-	"hyperboloids": [
-		{
-			"color": 		"magenta",
-			"specular": 	500,
-			"reflective": 	0.3,
-			"position": 	[0, 5, 7],
-			"direction": 	[1, 1, 1],
-			"width": 		0.5
-		},
-
-		{
-			"color": 		[255, 149, 0],
-			"specular": 	500,
-			"reflection": 	0.3,
-			"position": 	[0, 0, 0],
-			"direction": 	[0, 1, 0],
-			"width": 		0.2,
-			"gamma":		100
-		},
-
-		{
-			"color": 		[255, 149, 0],
-			"specular": 	500,
-			"reflection": 	0.3,
-			"position": 	[0, 0, 0],
-			"direction": 	[0, 1, 0],
-			"width": 		0.8,
-			"gamma": 		100
-		}
-	],
-
-	"cylinders": [
-		{
-			"color": 		"#a0ff00",
-			"specular": 	1000,
-			"position": 	[-4, 6, 1],
-			"direction": 	[0.1, 1, -0.1],
-			"radius": 		0.5
-		}
-	],
-
-	"torus": [
-		{
-			"color": 		"cyan",
-			"position": 	[0, 0, 0],
-			"normal": 		[0, 0, 1],
-			"inner_radius": 	0.5,
-			"outer_radius": 3
-		}
-	],
-
 	"lights": [
 		{
-			"type":			"ambient",
-			"intensity":	0.1,
-			"color":		"white"
+			"type": "ambient",
+			"intensity": 0.2
 		},
-
 		{
-			"type":			"point",
-			"intensity":	0.6,
-			"color":		"white",
-			"position":		[2, 1, 0]
+			"type": "point",
+			"intensity": 0.6,
+			"position": [2, 1, 0]
 		},
-
 		{
-			"type":			"direct",
-			"intensity":	0.1,
-			"color":		"white",
-			"direction":	[1, 4, 4]
+			"type": "direct",
+			"intensity": 0.2,
+			"direction": [1, 4, 4]
 		}
 	]
 }

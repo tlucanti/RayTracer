@@ -33,16 +33,9 @@
     {
       "position": [0, -100, 0],
       "radius": 100,
-      "color": "blue"
-    }
-  ],
-
-  "cylinders": [
-    {
-      "position": [3, 2, 3],
-      "direction": [-1, 1, 0],
-      "radius": 0.6,
-      "color": "purple"
+      "color": "#8080ff",
+      "specular": 300,
+      "reflective": 0.3
     }
   ],
 
@@ -52,31 +45,48 @@
       "normal": [0, 0, 1],
       "color": "cyan",
       "inner_radius": 0.3,
-      "outer_radius": 1
+      "outer_radius": 1,
+      "reflective": 0
     },
 
     {
       "position": [-3, 2, 3],
       "normal": [0, 1, 0],
       "color": "white",
-      "inner_radius": 0.05,
-      "outer_radius": 1
+      "inner_radius": 0.1,
+      "outer_radius": 1,
+      "specular": 100,
+      "reflective": 0.1
     },
 
     {
       "position": [3, 2, 3],
-      "normal": [-1, 1, 0],
+      "normal": [1, 1, 0],
       "inner_radius": 0.8,
       "outer_radius": 0.6,
-      "color": "orange"
+      "color": "orange",
+      "specular": 300,
+      "reflective": 0.2
     },
 
     {
       "position": [-3, 2, -2],
       "normal": [1, 1, 1],
       "color": "green",
+      "inner_radius": 0.8,
+      "outer_radius": 2,
+      "specular": 400,
+      "reflective": 0.3
+    },
+
+    {
+      "position": [2, 2, 0],
+      "normal": [1, 0, 0],
+      "color": "red",
       "inner_radius": 0.3,
-      "outer_radius": 1
+      "outer_radius": 1,
+      "specular": 500,
+      "reflective": 0.8
     }
   ],
 
@@ -87,10 +97,10 @@
       "color": "white"
     },
     {
-      "type": "__direct",
-      "intensity": 0.4,
+      "type": "direct",
+      "intensity": 0.3,
       "color": "white",
-      "direction": [-1,-1,-1]
+      "direction": [0.5,-1,-1]
     },
     {
       "type": "point",

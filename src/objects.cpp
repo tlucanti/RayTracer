@@ -132,6 +132,8 @@ light_s::light_s(
 {
     if (type != AMBIENT and type != DIRECT and type != POINT)
         throw std::runtime_error("unknown light type");
+    if (type == DIRECT)
+        rtx::linalg::normalize_ref(this->direction);
 }
 
 // -----------------------------------------------------------------------------
