@@ -24,14 +24,14 @@
 
   "planes": [
     {
-      "point": [0, -10, 0],
+      "point": [0, -5, 0],
       "color": "yellow",
       "normal": [0, 1, 0],
       "specular": 500
     },
 
     {
-      "point": [0, 10, 0],
+      "point": [0, 5, 0],
       "color": "blue",
       "normal": [0, -1, 0],
       "specular": 200

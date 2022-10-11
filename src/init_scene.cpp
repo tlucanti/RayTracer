@@ -120,7 +120,7 @@ static void parse_ok(bool cond, const std::string &str)
 
 static void parse_print(const std::string &str)
 {
-    std::cout << "[ ** ] : "_W + "parser"_P + ": "_W + str + rtx::Color::reset + "\n";
+    std::cout << "[ ** ]: "_W + "parser"_P + ": "_W + str + rtx::Color::reset + "\n";
 }
 
 template <class value_type>
@@ -473,6 +473,7 @@ static void parse_plane_single(const nlohmann::json &plane)
             case ("color"_hash): parse_color("plane color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("plane specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("plane reflective", item, got_reflective, reflective); break ;
+            case ("position"_hash):
             case ("point"_hash): parse_vec3_point("plane point", item, got_point, point); break;
             case ("normal"_hash): parse_vec3_unit("plane normal", item, got_normal, normal); break ;
             default: parse_unknown_notify(item.key()); break ;

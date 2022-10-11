@@ -113,6 +113,7 @@ torus_s::torus_s(
         normal(normal)
 {
     rtx::linalg::normalize_ref(this->normal);
+    rtx::linalg::set_rotation_matrix(this->matr, this->normal, {{0, 0, 1}});
 }
 
 // -----------------------------------------------------------------------------

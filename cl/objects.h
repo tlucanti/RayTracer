@@ -114,6 +114,7 @@ typedef struct torus_s
     FLOAT           R;                  // 56 -- 64
     FLOAT3          position;           // 64 -- 96
     FLOAT3          normal;             // 96 -- 128
+    FLOAT3          matr[3];               // 128-- 224
 
     DECLARE_CONSTRUCTOR(torus_s, FL3_CREF, FL3_CREF, FLOAT, FLOAT, FL3_CREF,
         uint32_t, FLOAT);

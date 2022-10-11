@@ -192,6 +192,8 @@ FLOAT intersect_torus(
 {
     if (!check_sphere(camera, direction, to->position, to->R + to->r))
         return INFINITY;
+    direction = rotate_vector(direction, to->matr);
+    camera = rotate_vector(camera - to->position, to->matr);
 
     FLOAT ksi = to->R * to->R - to->r * to->r;                                  // FIXME: move this to torus structure
     FLOAT M4R2 = -4. * to->R * to->R;
@@ -218,7 +220,7 @@ FLOAT intersect_torus(
     E /= A;
 
     FLOAT res = quartic_complex_solve(B, C, D, E);
-    if (param == NULLPTR)
+    if (param == NULLPTR || res == INFINITY)
         return res;
     FLOAT3 point = camera + direction * res;
     FLOAT dt = dot(point, point);
@@ -229,6 +231,8 @@ FLOAT intersect_torus(
         point.y * (-R2 - r2 + dt),
         point.z * (R2 - r2 + dt)
     );
+    if (point.x * point.x + point.y * point.y <= R2)
+        *param *= 0;//-*param;
     return res;
 }
 
@@ -321,7 +325,8 @@ void_ptr closest_intersection(
 
     for (uint32_t i=0; i < scene->torus_num; ++i)
     {
-        FLOAT t = intersect_torus(camera, direction, scene->torus + i, param);
+        FLOAT3 param2;
+        FLOAT t = intersect_torus(camera, direction, scene->torus + i, &param2);
 
         if (t < start || t > end) // maybe >= <= here
             continue ;
@@ -330,6 +335,7 @@ void_ptr closest_intersection(
             closest_t = t;
             closest_obj = scene->torus + i;
             closest_type = TOR;
+            *param = param2;
         }
     }
 
@@ -448,13 +454,14 @@ FLOAT compute_lightning(
                 end = INFINITY;
                 break ;
             case POINT:
-                light_vector = normalize(scene->lights[i].position - point);
-                end = 1 - EPS;
+                light_vector = scene->lights[i].position - point;
+                end = length(light_vector);
+                light_vector *= (1. / end);
                 break ;
         }
 
-        (void)end;
-       // if (shadow_intersection(scene, point, light_vector, EPS, end))
+//        (void)(end);
+//        if (shadow_intersection(scene, point, light_vector, EPS, end))
 //            continue ;
         intensity += compute_lightning_single(
             light_vector,
