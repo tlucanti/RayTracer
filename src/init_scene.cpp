@@ -621,6 +621,7 @@ static void parse_cylinder_single(const nlohmann::json &cylinder)
     FLOAT3 position;
     FLOAT3 direction;
     FLOAT radius;
+    FLOAT height;
 
     bool got_color = false;
     bool got_specular = false;
@@ -628,6 +629,7 @@ static void parse_cylinder_single(const nlohmann::json &cylinder)
     bool got_position = false;
     bool got_direction = false;
     bool got_radius = false;
+    bool got_height = false;
 
     for (const auto &item : cylinder.items())
     {
@@ -639,6 +641,7 @@ static void parse_cylinder_single(const nlohmann::json &cylinder)
             case ("position"_hash): parse_vec3_point("cylinder position", item, got_position, position); break ;
             case ("direction"_hash): parse_vec3_unit("cylinder direction", item, got_direction, direction); break ;
             case ("radius"_hash): parse_float_positive("cylinder radius", item, got_radius, radius); break ;
+            case ("height"_hash): parse_float_positive("cylinder height", item, got_height, height); break ;
             default: parse_unknown_notify(item.key()); break ;
         }
     }
@@ -646,12 +649,13 @@ static void parse_cylinder_single(const nlohmann::json &cylinder)
     parse_undefined_assert("cylinder color", got_color);
     parse_undefined_info_set("cylinder specular", got_specular, 0u, specular);
     parse_undefined_info_set("cylinder reflective", got_reflective, 0., reflective);
+    parse_undefined_info_set("cylinder height", got_height, std::numeric_limits<double>::infinity(), height);
     parse_undefined_assert("cylinder position", got_position);
     parse_undefined_assert("cylinder direction", got_direction);
     parse_undefined_assert("cylinder radius", got_radius);
     if (got_color && got_position && got_direction && got_radius)
     {
-        rtx::objects::cy_vec.emplace_back(position, direction, radius, color, specular, reflective);
+        rtx::objects::cy_vec.emplace_back(position, direction, radius, height, color, specular, reflective);
         flags.cylinders = true;
     }
 }

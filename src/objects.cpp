@@ -80,6 +80,7 @@ cylinder_s::cylinder_s(
         const FLOAT3 &position,
         const FLOAT3 &direction,
         FLOAT radius,
+        FLOAT height,
         const FLOAT3 &color,
         uint32_t specular,
         FLOAT reflective
@@ -88,6 +89,7 @@ cylinder_s::cylinder_s(
         specular(specular),
         reflective(reflective),
         radius(radius),
+        height(height),
         position(position),
         direction(direction)
 {

@@ -164,7 +164,7 @@ FLOAT intersect_cylinder(
     FLOAT3 B = cross(direction, cy->direction);
 
     FLOAT a = dot(B, B);
-    FLOAT b = 2 * dot(A, B);
+    FLOAT b = 2. * dot(A, B);
     FLOAT c = dot(A, A) - cy->radius * cy->radius;
 
     FLOAT discriminant = b * b - 4. * a * c;
@@ -172,13 +172,23 @@ FLOAT intersect_cylinder(
         return INFINITY;
 
     discriminant = sqrt(discriminant);
-    FLOAT x1 = -b + discriminant / (2. * a);
-    FLOAT x2 = -b - discriminant / (2. * a);
+    FLOAT x1 = (-b + discriminant) / (2. * a);
+    FLOAT x2 = (-b - discriminant) / (2. * a);
 
-    FLOAT mn = fmin(x1, x2);
-    if (mn < EPS)
-        return fmax(x1, x2);
-    return mn;
+    if (x1 > x2 && x2 > EPS)
+        SWAP(x1, x2);
+    if (isinf(cy->height))
+        return x1;
+
+    FLOAT3 point = camera + direction * x1;
+    FLOAT height = dot(point - cy->position, cy->direction);
+    if (fabs(height) < cy->height)
+        return x1;
+    point = camera + direction * x2;
+    height = dot(point - cy->position, cy->direction);
+    if (fabs(height) < cy->height)
+        return x2;
+    return INFINITY;
 }
 
 // -----------------------------------------------------------------------------

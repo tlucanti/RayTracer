@@ -94,13 +94,13 @@ typedef struct cylinder_s
     uint32_t        specular;           // 32 --
     PADDING4                            //    -- 40
     FLOAT           reflective;          // 40 -- 48
-    FLOAT           radius;             // 48 --
-    PADDING8                            //    -- 64
+    FLOAT           radius;             // 48 -- 56
+    FLOAT           height;             // 56 -- 64
     FLOAT3          position;           // 64 -- 96
     FLOAT3          direction;          // 96 -- 128
 
-    DECLARE_CONSTRUCTOR(cylinder_s, FL3_CREF, FL3_CREF, FLOAT, FL3_CREF, 
-        uint32_t, FLOAT);
+    DECLARE_CONSTRUCTOR(cylinder_s, FL3_CREF, FL3_CREF, FLOAT, FLOAT,
+        FL3_CREF, uint32_t, FLOAT);
 } PACKED ALIGNED64 cylinder_t;
 
 // -----------------------------------------------------------------------------
