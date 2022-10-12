@@ -234,7 +234,9 @@ COMPLEX operator -(const COMPLEX &a, const COMPLEX &b)
     return {{a.x - b.x, a.y - b.y}};
 }
 
-static inline constexpr FLOAT flt0(FLOAT q) { return fabs(q) < EPS ? 0 : q; }
+static inline constexpr FLOAT _fabs(FLOAT q) { return q > 0 ? q : -q; }
+
+static inline constexpr FLOAT flt0(FLOAT q) { return _fabs(q) < EPS ? 0 : q; }
 
 std::ostream &operator <<(std::ostream &out, const FLOAT3 &p)
 {

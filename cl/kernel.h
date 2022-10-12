@@ -33,6 +33,9 @@ using rtx::linalg::normalize;
 using rtx::linalg::dot;
 using rtx::linalg::cross;
 
+using std::isnan;
+using std::isinf;
+
 # endif/* __CPP */
 
 #endif /* CL_KERNEL_H */

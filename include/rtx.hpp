@@ -9,7 +9,7 @@
 
 RTX_NAMESPACE_BEGIN
 
-void parse_scene(const char *fname);
+void parse_scene();
 void init_gpu();
 void init_mlx();
 NORET void collapse(int status);

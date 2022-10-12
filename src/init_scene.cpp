@@ -67,13 +67,17 @@ inline constexpr uintmax_t operator ""_hash(const char *str, size_t len)
 template <typename value_type>
 static std::string str(const value_type &t)
 {
-    return (std::stringstream() << '`' << t << '`').str();
+    std::stringstream ss;
+    ss << '`' << t << '`';
+    return ss.str();
 }
 
 template <typename value_type>
 static std::string to_string(const value_type &t)
 {
-    return (std::stringstream() << t).str();
+    std::stringstream ss;
+    ss << t;
+    return ss.str();
 }
 
 static FLOAT3 to_vec3(const nlohmann::json &v)
@@ -808,11 +812,11 @@ static void parse_lights(const nlohmann::json &lights)
     parse_ok(true, "scene::lights "_W + "parsed"_G);
 }
 
-void rtx::parse_scene(const char *fname)
+void rtx::parse_scene()
 {
-    std::ifstream stream(fname);
+    std::ifstream stream(rtx::config::scene_fname);
     if (not stream.is_open())
-        throw Exception(std::string("cannot open `") + fname + "` file");
+        throw Exception(std::string("cannot open `") + rtx::config::scene_fname + "` file");
     nlohmann::json data;
     try {
         data = nlohmann::json::parse(stream);

@@ -2,10 +2,15 @@
 # include <objects.h>
 # include <ostream>
 
-static inline constexpr FLOAT _flt0(FLOAT q) { return fabs(q) < EPS ? 0 : q; }
+static inline constexpr FLOAT _fabs(FLOAT q) { return q > 0 ? q : -q; }
+
+static inline constexpr FLOAT _flt0(FLOAT q) { return _fabs(q) < EPS ? 0 : q; }
+
 static inline std::string _clprt(const FLOAT3 &c)
 {
-    return (std::stringstream() << c.x << ':' << c.y << ':' << c.z).str();
+    std::stringstream ss;
+    ss << c.x << ':' << c.y << ':' << c.z;
+    return ss.str();
 }
 
 // -----------------------------------------------------------------------------

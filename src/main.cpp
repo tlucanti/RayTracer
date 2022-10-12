@@ -2,6 +2,7 @@
 #include <thread>
 #include <rtx.hpp>
 #include <cl/kernel.cl>
+#include <thread>
 
 void init_scene()
 {
@@ -22,6 +23,7 @@ void init_kernel(cllib::CLkernel &kernel)
 {
     kernel.reset_args();
     kernel.set_next_arg(rtx::scene::canvas);
+
     kernel.set_next_arg(rtx::scene::spheres);
     kernel.set_next_arg(rtx::scene::planes);
     kernel.set_next_arg(rtx::scene::triangles);
@@ -84,10 +86,14 @@ int main()
 //    return 0;
 
 //    try {
-        rtx::parse_scene(rtx::config::scene_fname); // run in thread
+        std::thread parser(rtx::parse_scene);
+        std::thread gpu_initializer(rtx::init_gpu);
+        std::thread mlx_initializer(rtx::init_mlx);
+
+        parser.join();
+        gpu_initializer.join();
+        mlx_initializer.join();
 //    return 0;
-        rtx::init_gpu(); // run in thread
-        rtx::init_mlx(); // run in thread
 //    } catch (std::exception &e) {
 //        std::cout << e.what() << std::endl;
 //        std::cout << "-------------------------------------\n";
