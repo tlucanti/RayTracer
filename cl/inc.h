@@ -101,12 +101,14 @@ FLOAT3 trace_ray(
         const scene_t *scene,
         FLOAT3 point,
         FLOAT3 direction,
+        FLOAT *distance,
         uint32_t recursion_depth
 );
 
 CPP_UNUSED CPP_INLINE
 __kernel void ray_tracer(
         __global uint32_t *canvas,
+        __global FLOAT *distances,
 
         sphere_ptr spheres,
         plane_ptr planes,
@@ -118,18 +120,18 @@ __kernel void ray_tracer(
         light_ptr lights,
         camera_ptr cameras,
 
-        const uint32_t spheres_num,
-        const uint32_t planes_num,
-        const uint32_t triangles_num,
-        const uint32_t cones_num,
-        const uint32_t cylinders_num,
-        const uint32_t torus_num,
+        uint32_t spheres_num,
+        uint32_t planes_num,
+        uint32_t triangles_num,
+        uint32_t cones_num,
+        uint32_t cylinders_num,
+        uint32_t torus_num,
 
-        const uint32_t lights_num,
-        const uint32_t cameras_num,
+        uint32_t lights_num,
+        uint32_t cameras_num,
 
-        const uint32_t width,
-        const uint32_t height
+        int32_t width,
+        int32_t height
 );
 
 #endif /* CL_INC_H */

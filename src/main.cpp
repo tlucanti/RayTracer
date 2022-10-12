@@ -16,13 +16,17 @@ void init_scene()
     rtx::scene::cameras = cllib::CLarray<camera_t, cllib::read_only_array>(rtx::objects::cam_vec, *rtx::data::context, *rtx::data::queue);
     rtx::scene::lights = cllib::CLarray<light_t, cllib::read_only_array>(rtx::objects::li_vec, *rtx::data::context, *rtx::data::queue);
 
-    rtx::scene::canvas = cllib::CLarray<unsigned int, cllib::write_only_array>(rtx::config::width * rtx::config::height, *rtx::data::context);
+    rtx::scene::canvas = cllib::CLarray<unsigned int, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
+    rtx::scene::distances = cllib::CLarray<FLOAT, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
+    rtx::scene::canvas.memset(0., *rtx::data::queue);
+    rtx::scene::distances.memset(0., *rtx::data::queue);
 }
 
 void init_kernel(cllib::CLkernel &kernel)
 {
     kernel.reset_args();
     kernel.set_next_arg(rtx::scene::canvas);
+    kernel.set_next_arg(rtx::scene::distances);
 
     kernel.set_next_arg(rtx::scene::spheres);
     kernel.set_next_arg(rtx::scene::planes);

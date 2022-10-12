@@ -24,7 +24,8 @@ namespace scene
 
     cllib::CLarray<light_t, cllib::read_only_array> lights;
 
-    cllib::CLarray<unsigned int, cllib::write_only_array> canvas;
+    cllib::CLarray<unsigned int, cllib::read_write_array> canvas;
+    cllib::CLarray<FLOAT, cllib::read_write_array> distances;
 } /* scene */
 
 namespace objects

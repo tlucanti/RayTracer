@@ -146,6 +146,55 @@ public:
     }
 
 // -----------------------------------------------------------------------------
+    void memset(
+        const value_type &val,
+        const CLqueue &queue,
+        size_t offset=0,
+        cl_uint num_events_in_wait_list=0,
+        const cl_event *event_wait_list=nullptr,
+        cl_event *event=nullptr
+    ) THROW
+        /**
+        \brief fill GPU buffer with set value
+        \detailed function fills GPU memory block, with values of `val`,
+            overriding old data.
+
+        \param val value to be filled with
+        \param queue OpenCL queue where filling operation will be enqueued
+        \param offset the offset in bytes in the buffer object to read from
+        \param event_wait_list that need to be completed before executing this
+            command
+        \param num_events_in_wait_list number of events in `event_wait_list`
+        \param event returns event id of current event, that can be used in the
+            future to identify it
+
+        \time O(this->size())
+        \memory O(1)
+
+        \GPUtime O(this->size())
+        \GPUmemory O(1)
+    */
+    {
+        cl_int  error = CL_SUCCESS;
+
+        if (offset > buff_size)
+            throw std::runtime_error("vector size more than buffer size");
+        error = clEnqueueFillBuffer(
+                queue.__get_queue(),
+                buffer,
+                &val,
+                sizeof(value_type),
+                offset,
+                buff_size * sizeof(value_type),
+                num_events_in_wait_list,
+                event_wait_list,
+                event
+        );
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+    }
+
+// -----------------------------------------------------------------------------
     void fill(
         const std::vector<value_type> &vec,
         const CLqueue &queue,

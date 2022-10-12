@@ -516,6 +516,7 @@ FLOAT3 trace_ray(
         const scene_t *scene,
         FLOAT3 point,
         FLOAT3 direction,
+        FLOAT *distance,
         uint32_t recursion_depth
     )
 {
@@ -539,8 +540,10 @@ FLOAT3 trace_ray(
             &closest_type,
             &param
         );
+        *distance = INFINITY;
         if (closest_obj == NULLPTR)
             break ;
+        *distance = closest_t;
 
         point += direction * closest_t;
         FLOAT3 normal;
@@ -585,10 +588,22 @@ FLOAT3 trace_ray(
     return color;
 }
 
+typedef union
+{
+    unsigned int value;
+    struct {
+        unsigned char _unused;
+        unsigned char red;
+        unsigned char green;
+        unsigned char blue;
+    };
+} color_t;
+
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
 __kernel void ray_tracer(
         __global uint32_t *canvas,
+        __global FLOAT *distances,
 
         sphere_ptr spheres,
         plane_ptr planes,
@@ -610,15 +625,15 @@ __kernel void ray_tracer(
         const uint32_t lights_num,
         const uint32_t cameras_num,
 
-        const uint32_t width,
-        const uint32_t height
+        const int32_t width,
+        const int32_t height
     )
 {
 
     const FLOAT rheight = 1. / height;
     const FLOAT rwidth = 1. / width;
-    const uint32_t z = get_global_id(0);
-    const uint32_t y = get_global_id(1);
+    const int32_t z = get_global_id(0);
+    const int32_t y = get_global_id(1);
 
     const scene_t scene = ASSIGN_SCENE(
         spheres,
@@ -649,18 +664,45 @@ __kernel void ray_tracer(
     );
     vec = normalize(vec);
     vec = rotate_vector(vec, cameras[0].rotate_matrix);
+    FLOAT distance;
     const FLOAT3 color = trace_ray(
         &scene,
         cameras[0].position,
         vec,
+        &distance,
         4
     );
+
+    int32_t pix_pos;
+
+    pix_pos = (height - y - 1) * (width) + z;
     const uint32_t int_color =
           cstatic_cast(uint32_t, color.x) << 16u
         | cstatic_cast(uint32_t, color.y) << 8u
         | cstatic_cast(uint32_t, color.z);
-    canvas[(height - y - 1) * width + z] = int_color;
+    canvas[pix_pos] = int_color;
+
+    distances[pix_pos] = distance;
+
+    FLOAT3 convolution_val = ASSIGN_FLOAT3(0., 0., 0.);
+
+    int i=0;
+//    for (int i=-5; i <= 5; ++i) {
+        for (int j=-5; j <= 5; ++j) {
+            int pos = (height - y - 1 + i) * (width) + (z + j);
+            if (height - y - 1 + i >= 0 && z + j >= 0)
+                convolution_val.z += canvas[pos] & 0xFF;
+        }
+//    }
+//
+    convolution_val *= 1. / 25.;
+    const uint32_t blur_val =
+            cstatic_cast(uint32_t, convolution_val.x) << 16u
+            | cstatic_cast(uint32_t, convolution_val.y) << 8u
+            | cstatic_cast(uint32_t, convolution_val.z);
+    canvas[pix_pos] = blur_val;
 }
+
 
 # ifdef __CPP
 #  undef dot

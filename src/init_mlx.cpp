@@ -6,7 +6,7 @@ void rtx::init_mlx()
 {
     mlxlib::MLXcore core;
     rtx::data::win = new mlxlib::MLXwindow(core, rtx::config::width, rtx::config::height);
-    rtx::data::img = new mlxlib::MLXimage(core, rtx::config::width, rtx::config::height);
+    rtx::data::img = new mlxlib::MLXimage(core, (rtx::config::width), (rtx::config::height));
 
     //    win.add_keyhook(keypress_hook);
     rtx::data::win->add_hook(rtx::hooks::keypress_hook, mlxlib::events::key_press, nullptr, mlxlib::masks::key_press);
