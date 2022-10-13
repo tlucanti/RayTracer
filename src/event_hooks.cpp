@@ -103,7 +103,8 @@ void rtx::hooks::framehook(void *)
     );
 
     rtx::scene::cameras.fill(rtx::objects::cam_vec, *rtx::data::queue);
-    rtx::data::kernel->run(*rtx::data::queue, false);
+    rtx::data::kernel->run(*rtx::data::queue, true);
+//    rtx::data::blur_kernel->run(*rtx::data::queue, true);
     rtx::scene::canvas.dump(rtx::data::img->raw_pixel_data(), *rtx::data::queue);
     rtx::data::win->put_image(*rtx::data::img);
     if (fps_period == 30)

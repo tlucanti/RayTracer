@@ -10,6 +10,8 @@ namespace data
     cllib::CLkernel     *kernel = nullptr;
     cllib::CLcontext    *context = nullptr;
     cllib::CLqueue      *queue = nullptr;
+
+//    cllib::CLkernel     *blur_kernel = nullptr;
 } /* data */
 
 namespace scene
@@ -24,8 +26,9 @@ namespace scene
 
     cllib::CLarray<light_t, cllib::read_only_array> lights;
 
-    cllib::CLarray<unsigned int, cllib::read_write_array> canvas;
-    cllib::CLarray<FLOAT, cllib::read_write_array> distances;
+    cllib::CLarray<uint32_t, cllib::write_only_array> canvas;
+//    cllib::CLarray<uint32_t, cllib::read_write_array> canvas2;
+//    cllib::CLarray<FLOAT, cllib::read_write_array> distances;
 } /* scene */
 
 namespace objects

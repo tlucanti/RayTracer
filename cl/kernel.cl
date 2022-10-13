@@ -411,35 +411,7 @@ bool shadow_intersection(
     return false;
 }
 
-// -----------------------------------------------------------------------------
-CPP_UNUSED CPP_INLINE
-FLOAT3 compute_lightning_single(
-        FLOAT3 light_vector,
-        FLOAT3 normal_vector,
-        FLOAT3 direction,
-        FLOAT3 light_color,
-        uint32_t specular
-    )
-{
-    FLOAT3 color = ASSIGN_FLOAT3(0., 0., 0.);
-
-    // diffuse lightning
-    FLOAT normal_angle = dot(normal_vector, light_vector);
-    if (normal_angle > EPS)
-        color += light_color * normal_angle;
-
-    // specular light
-    if (specular > 0)
-    {
-        FLOAT3 reflected = reflect_ray(light_vector, normal_vector);
-        FLOAT reflected_angle = dot(reflected, direction);
-        if (reflected_angle < EPS)
-            color += light_color * pow(reflected_angle, specular);
-    }
-
-    return color;
-}
-
+#ifdef RTX_EMISSION
 CPP_UNUSED CPP_INLINE
 FLOAT3 compute_emission(scene_ptr scene, FLOAT3 point, FLOAT3 normal)
 {
@@ -460,6 +432,7 @@ FLOAT3 compute_emission(scene_ptr scene, FLOAT3 point, FLOAT3 normal)
 
     return factor;
 }
+#endif /* RTX_EMISSION */
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
@@ -468,7 +441,8 @@ FLOAT3 compute_lightning(
         FLOAT3 point,
         FLOAT3 normal,
         FLOAT3 direction,
-        uint32_t specular
+        uint32_t specular,
+        FLOAT3 *specular_computed
     )
 {
     FLOAT3 color = ASSIGN_FLOAT3(0., 0., 0.);
@@ -483,7 +457,7 @@ FLOAT3 compute_lightning(
                 color += scene->lights[i].color;
                 continue ;
             case DIRECT:
-                light_vector = scene->lights[i].color;
+                light_vector = scene->lights[i].direction;
                 end = INFINITY;
                 break ;
             case POINT:
@@ -495,25 +469,60 @@ FLOAT3 compute_lightning(
 
         if (shadow_intersection(scene, point, light_vector, EPS, end))
             continue ;
-        color += compute_lightning_single(
-            light_vector,
-            normal,
-            direction,
-            scene->lights[i].color,
-            specular
-        );
+
+        color = ASSIGN_FLOAT3(0., 0., 0.);
+
+        // diffuse lightning
+        FLOAT normal_angle = dot(normal, light_vector);
+        if (normal_angle > EPS)
+            color += scene->lights[i].color * normal_angle;
+
+        // specular light
+        *specular_computed = ASSIGN_FLOAT3(0., 0., 0.);
+        if (specular > 0)
+        {
+            FLOAT3 reflected = reflect_ray(light_vector, normal);
+            FLOAT reflected_angle = dot(reflected, direction);
+            if (reflected_angle < EPS)
+                *specular_computed += scene->lights[i].color * pow(reflected_angle, specular);
+        }
     }
+#ifdef RTX_EMISSION
     color += compute_emission(scene, point, normal);
-    color.x = fmin(1. - EPS, color.x);
-    color.y = fmin(1. - EPS, color.y);
-    color.z = fmin(1. - EPS, color.z);
+#endif /* RTX_EMISSION */
     return color;
+}
+// -----------------------------------------------------------------------------
+CPP_UNUSED CPP_INLINE
+FLOAT3 compute_direct_lightning(
+        scene_ptr scene,
+        FLOAT3 camera,
+        FLOAT3 direction
+    )
+{
+    FLOAT3 blinding = BLACK;
+
+    for (uint32_t i=0; i < scene->lights_num; ++i) {
+        if (scene->lights[i].type != POINT)
+            continue ;
+
+        FLOAT3 co = scene->lights[i].position - camera;
+        if (shadow_intersection(scene, camera, co, EPS, length(co)))
+            continue ;
+
+        FLOAT distance = length(cross(co, direction));
+        FLOAT factor = 2. / distance;
+        FLOAT t = dot(co, direction);
+        if (t > EPS)
+            blinding += scene->lights[i].color * factor;
+    }
+    return blinding;
 }
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
 FLOAT3 trace_ray(
-        const scene_t *scene,
+        scene_ptr scene,
         FLOAT3 point,
         FLOAT3 direction,
         FLOAT *distance,
@@ -527,6 +536,7 @@ FLOAT3 trace_ray(
     obj_type_t  closest_type;
     FLOAT3      param;
 
+    color += compute_direct_lightning(scene, point, direction);
     while (recursion_depth > 0)
     {
         --recursion_depth;
@@ -564,16 +574,24 @@ FLOAT3 trace_ray(
             }
             case TOR: normal = normalize(param); break ;
         }
+        FLOAT3 specular_val;
         FLOAT3 factor = compute_lightning(
             scene,
             point,
             normal,
             direction,
-            get_obj_specular(closest_obj)
+            get_obj_specular(closest_obj),
+            &specular_val
         );
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
+        local_color += specular_val * 255.;
+        local_color.x = fmin(255. - EPS, local_color.x);
+        local_color.y = fmin(255. - EPS, local_color.y);
+        local_color.z = fmin(255. - EPS, local_color.z);
+#ifdef RTX_EMISSION
         if (closest_type == SPHERE && as_sphere(closest_obj)->emission > 0.)
             local_color = get_obj_color(closest_obj);
+#endif /* RTX_EMISSION */
 
         if (recursion_depth == 0)
             color += local_color * reflective_prod; // * closest_sphere->reflective;
@@ -585,6 +603,9 @@ FLOAT3 trace_ray(
         direction = reflect_ray(-direction, normal);
     }
 
+    color.x = fmin(255. - EPS, color.x);
+    color.y = fmin(255. - EPS, color.y);
+    color.z = fmin(255. - EPS, color.z);
     return color;
 }
 
@@ -603,7 +624,6 @@ typedef union
 CPP_UNUSED CPP_INLINE
 __kernel void ray_tracer(
         __global uint32_t *canvas,
-        __global FLOAT *distances,
 
         sphere_ptr spheres,
         plane_ptr planes,
@@ -681,26 +701,51 @@ __kernel void ray_tracer(
         | cstatic_cast(uint32_t, color.y) << 8u
         | cstatic_cast(uint32_t, color.z);
     canvas[pix_pos] = int_color;
+//    distances[pix_pos] = distance;
+}
 
-    distances[pix_pos] = distance;
+CPP_UNUSED CPP_INLINE
+__kernel void blur_convolution(
+    __global uint32_t *input,
+    __global uint32_t *output,
+    __global FLOAT *distances,
+
+    const int32_t width,
+    const int32_t height
+)
+{
+    const int32_t z = get_global_id(0);
+    const int32_t y = get_global_id(1);
+    const int pix_pos = (height - y - 1) * (width) + z;
 
     FLOAT3 convolution_val = ASSIGN_FLOAT3(0., 0., 0.);
+    int conv_size = cstatic_cast(int, fmin(distances[pix_pos], 20.));
+    int conv_step = conv_size / 10;
+    int cnt = 0;
 
-    int i=0;
-//    for (int i=-5; i <= 5; ++i) {
-        for (int j=-5; j <= 5; ++j) {
-            int pos = (height - y - 1 + i) * (width) + (z + j);
-            if (height - y - 1 + i >= 0 && z + j >= 0)
-                convolution_val.z += canvas[pos] & 0xFF;
+    for (int i=-conv_size; i <= conv_size; i+=conv_step) {
+        for (int j=-conv_size; j <= conv_size; j+=conv_step) {
+            int column = z + j;
+            int row = height - y - 1 + i;
+
+            row = max(0, row);
+            row = min(height - 1, row);
+            column = max(0, column);
+            column = min(width - 1, column);
+
+            const int pos = row * width + column;
+            convolution_val.z += input[pos] & 0xFF;
+            convolution_val.y += (input[pos] >> 8u) & 0xFF;
+            convolution_val.x += (input[pos] >> 16u) & 0xFF;
+            ++cnt;
         }
-//    }
-//
-    convolution_val *= 1. / 25.;
+    }
+    convolution_val *= 1. / cnt;
     const uint32_t blur_val =
             cstatic_cast(uint32_t, convolution_val.x) << 16u
             | cstatic_cast(uint32_t, convolution_val.y) << 8u
             | cstatic_cast(uint32_t, convolution_val.z);
-    canvas[pix_pos] = blur_val;
+    output[pix_pos] = blur_val;
 }
 
 

@@ -16,17 +16,19 @@ void init_scene()
     rtx::scene::cameras = cllib::CLarray<camera_t, cllib::read_only_array>(rtx::objects::cam_vec, *rtx::data::context, *rtx::data::queue);
     rtx::scene::lights = cllib::CLarray<light_t, cllib::read_only_array>(rtx::objects::li_vec, *rtx::data::context, *rtx::data::queue);
 
-    rtx::scene::canvas = cllib::CLarray<unsigned int, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
-    rtx::scene::distances = cllib::CLarray<FLOAT, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
-    rtx::scene::canvas.memset(0., *rtx::data::queue);
-    rtx::scene::distances.memset(0., *rtx::data::queue);
+    rtx::scene::canvas = cllib::CLarray<uint32_t, cllib::write_only_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
+//    rtx::scene::canvas2 = cllib::CLarray<uint32_t, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
+//    rtx::scene::distances = cllib::CLarray<FLOAT, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
+//    rtx::scene::canvas.memset(0, *rtx::data::queue);
+//    rtx::scene::canvas2.memset(0, *rtx::data::queue);
+//    rtx::scene::distances.memset(0., *rtx::data::queue);
 }
 
 void init_kernel(cllib::CLkernel &kernel)
 {
     kernel.reset_args();
     kernel.set_next_arg(rtx::scene::canvas);
-    kernel.set_next_arg(rtx::scene::distances);
+//    kernel.set_next_arg(rtx::scene::distances);
 
     kernel.set_next_arg(rtx::scene::spheres);
     kernel.set_next_arg(rtx::scene::planes);
@@ -51,6 +53,16 @@ void init_kernel(cllib::CLkernel &kernel)
     kernel.set_next_arg(rtx::config::height);
 }
 
+void init_blur_kernel(cllib::CLkernel &blur_kernel)
+{
+    blur_kernel.reset_args();
+    blur_kernel.set_next_arg(rtx::scene::canvas);
+//    blur_kernel.set_next_arg(rtx::scene::canvas2);
+//    blur_kernel.set_next_arg(rtx::scene::distances);
+    blur_kernel.set_next_arg(rtx::config::width);
+    blur_kernel.set_next_arg(rtx::config::height);
+}
+
 NORET void rtx::collapse(int status)
 {
     delete rtx::data::win;
@@ -58,10 +70,10 @@ NORET void rtx::collapse(int status)
     delete rtx::data::kernel;
     delete rtx::data::context;
     delete rtx::data::queue;
+//    delete rtx::data::blur_kernel;
     exit(status);
 }
 
-#include <json>
 int main()
 {
     putenv(const_cast<char *>("CUDA_CACHE_DISABLE=1"));
@@ -91,12 +103,11 @@ int main()
 
 //    try {
         std::thread parser(rtx::parse_scene);
-        std::thread gpu_initializer(rtx::init_gpu);
         std::thread mlx_initializer(rtx::init_mlx);
 
         parser.join();
-        gpu_initializer.join();
         mlx_initializer.join();
+        rtx::init_gpu();
 //    return 0;
 //    } catch (std::exception &e) {
 //        std::cout << e.what() << std::endl;
@@ -107,14 +118,14 @@ int main()
 
     init_scene();
     init_kernel(*rtx::data::kernel);
+//    init_blur_kernel(*rtx::data::blur_kernel);
 
     rtx::data::kernel->run(*rtx::data::queue);
+//    rtx::data::blur_kernel->run(*rtx::data::queue);
 
     auto pixel_data = rtx::scene::canvas.dump(*rtx::data::queue);
 
     rtx::data::img->fill(pixel_data);
     rtx::data::win->put_image(*rtx::data::img);
     rtx::data::win->event_loop();
-
-    rtx::collapse(0);
 }

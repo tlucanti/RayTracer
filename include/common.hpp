@@ -31,10 +31,11 @@ namespace RTX_NAMESPACE
         inline FLOAT vertical_move_speed {0.05};
         inline FLOAT vertical_look_speed {0.005};
         inline FLOAT horizontal_look_speed {0.005};
+        inline bool emission {false};
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
-        inline constexpr const char *scene_fname = "../scenes/scene.json";
-//        inline constexpr const char *scene_fname = "../scenes/spheres.json";
+//        inline constexpr const char *scene_fname = "../scenes/scene.json";
+        inline constexpr const char *scene_fname = "../scenes/spheres.json";
 //        inline constexpr const char *scene_fname = "../scenes/planes.json";
 //        inline constexpr const char *scene_fname = "../scenes/cylinders.json";
 

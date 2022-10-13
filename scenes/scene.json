@@ -7,6 +7,16 @@
 		}
 	],
 
+	"cylinders": [
+		{
+			"color": "white",
+			"position": [0, 0, 0],
+			"radius": 0.2,
+			"height": 0.05,
+			"direction": [0, 1, 0]
+		}
+	],
+
 	"spheres": [
 		{
 			"color":		"white",

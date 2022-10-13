@@ -1,5 +1,9 @@
 
 {
+  "config": {
+    "emission": false
+  },
+
   "lights": [
     {
       "type": "point",
@@ -10,7 +14,14 @@
 
     {
       "type": "ambient",
-      "intensity": 0.01,
+      "intensity": 0.1,
+      "color": "white"
+    },
+
+    {
+      "type": "direct",
+      "intensity": 0.3,
+      "direction": [-1,-2,-4],
       "color": "white"
     }
   ],
@@ -28,8 +39,22 @@
       "position": [-3, 0, 3],
       "radius": 1,
       "color": "#0000FF",
-      "specular": 10,
+      "specular": 100,
       "reflective": 0.2
+    },
+
+    {
+      "position": [-2, 2, 4],
+      "radius": 1,
+      "specular": 500,
+      "reflective": 0.3,
+      "color": "green"
+    },
+
+    {
+      "position": [0, -501, 0],
+      "radius": 500,
+      "color": [255, 100, 165]
     }
   ],
 

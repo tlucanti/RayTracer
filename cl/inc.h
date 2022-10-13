@@ -79,21 +79,13 @@ bool shadow_intersection(
 );
 
 CPP_UNUSED
-FLOAT3 compute_lightning_single(
-        FLOAT3 light_vector,
-        FLOAT3 normal_vector,
-        FLOAT3 direction,
-        FLOAT3 light_intensity,
-        uint32_t specular
-);
-
-CPP_UNUSED
 FLOAT3 compute_lightning(
         const scene_t *scene,
         FLOAT3 point,
         FLOAT3 normal,
         FLOAT3 direction,
-        uint32_t specular
+        uint32_t specular,
+        FLOAT3 *specular_computed
 );
 
 CPP_UNUSED
@@ -108,7 +100,6 @@ FLOAT3 trace_ray(
 CPP_UNUSED CPP_INLINE
 __kernel void ray_tracer(
         __global uint32_t *canvas,
-        __global FLOAT *distances,
 
         sphere_ptr spheres,
         plane_ptr planes,

@@ -21,6 +21,8 @@ namespace data
     extern cllib::CLkernel     *kernel;
     extern cllib::CLcontext    *context;
     extern cllib::CLqueue      *queue;
+
+//    extern cllib::CLkernel      *blur_kernel;
 } /* data */
 
 namespace scene
@@ -35,8 +37,9 @@ namespace scene
 
     extern cllib::CLarray<light_t, cllib::read_only_array> lights;
 
-    extern cllib::CLarray<unsigned int, cllib::read_write_array> canvas;
-    extern cllib::CLarray<FLOAT, cllib::read_write_array> distances;
+    extern cllib::CLarray<unsigned int, cllib::write_only_array> canvas;
+//    extern cllib::CLarray<unsigned int, cllib::read_write_array> canvas2;
+//    extern cllib::CLarray<FLOAT, cllib::read_write_array> distances;
 } /* scene */
 
 namespace objects

@@ -35,6 +35,8 @@ using rtx::linalg::cross;
 
 using std::isnan;
 using std::isinf;
+using std::max;
+using std::min;
 
 # endif/* __CPP */
 

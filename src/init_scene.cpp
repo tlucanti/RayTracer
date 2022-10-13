@@ -45,6 +45,7 @@ typedef enum
 {
     INT_TYPE,
     NUM_TYPE,
+    BOOL_TYPE,
     STRING_TYPE,
     VEC3_TYPE,
     COLOR_TYPE,
@@ -176,6 +177,8 @@ static void parse_type_assert(const std::string &name, const nlohmann::json &val
         case HEX_TYPE:
             parse_assert(std::string(value).size() == 7 and std::string(value).at(0) == '#', "hex color (like " + "#RRGGBB"_G + ")");
             break ;
+        case BOOL_TYPE:
+            parse_assert(value.is_boolean(), "expected boolean" +  msg); break ;
         default: throw std::runtime_error(
             rtx::R["[INTERNAL ERROR]: init_scene::parse_type_assert: unexpected item_type " + str(type)]);
     }
@@ -239,6 +242,14 @@ static void parse_int_positive(const std::string &name, const item_type &item, b
     parse_type_assert(name, item.value(), INT_TYPE);
     parse_positive_assert(name, item.value());
     value = static_cast<value_type>(item.value());
+    flag = true;
+}
+
+template <class item_type>
+static void parse_bool(const std::string &name, const item_type &item, bool &flag, bool &value)
+{
+    parse_type_assert(name, item.value(), BOOL_TYPE);
+    value = static_cast<bool>(item.value());
     flag = true;
 }
 
@@ -337,6 +348,7 @@ static void parse_config(const nlohmann::json &res)
     bool fovy = false;
     bool move_speed = false;
     bool look_speed = false;
+    bool emission = false;
 
     parse_type_assert("config", res, OBJECT_TYPE);
     for (const auto &item : res.items())
@@ -349,18 +361,19 @@ static void parse_config(const nlohmann::json &res)
             case ("fovy"_hash): parse_float_ranged("fov x", item, fovy, rtx::config::fovy, 0, 180); break ;
             case ("move_speed"_hash): parse_float_positive("move speed", item, move_speed, rtx::config::forward_move_step); break ;
             case ("look_speed"_hash): parse_float_positive("mouse sensitivity", item, look_speed, rtx::config::horizontal_look_speed); break ;
+            case ("emission"_hash): parse_bool("object emission", item, emission, rtx::config::emission); break ;
             default: parse_unknown_notify(item.key()); break ;
         }
     }
-    parse_undefined_warn_set("window resolution width", width, 800u, rtx::config::width);
-    parse_undefined_warn_set("window resolution height", height, 600u, rtx::config::height);
+    parse_undefined_warn_set("window resolution width", width, 1000u, rtx::config::width);
+    parse_undefined_warn_set("window resolution height", height, 1000u, rtx::config::height);
     parse_undefined_warn_set("fov x", fovx, 90., rtx::config::fovx);
     parse_undefined_warn_set("fov y", fovy, 90., rtx::config::fovy);
     parse_undefined_warn_set("move speed", move_speed, 0.1, rtx::config::forward_move_step);
-    rtx::config::forward_move_step = rtx::config::forward_move_step / 2.;
-    rtx::config::forward_move_step = rtx::config::forward_move_step / 2.;
+    rtx::config::side_move_speed = rtx::config::forward_move_step / 2.;
     parse_undefined_warn_set("mouse sensitivity", look_speed, 0.005, rtx::config::vertical_look_speed);
     rtx::config::horizontal_look_speed = rtx::config::vertical_look_speed;
+    parse_undefined_warn_set("object emission", emission, false, rtx::config::emission);
     flags.config = true;
     parse_ok(true, "scene::config "_W + "parsed"_G);
 }
