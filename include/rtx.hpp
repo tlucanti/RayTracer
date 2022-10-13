@@ -6,7 +6,6 @@
 # include <cllib>
 # include <common.hpp>
 # include <objects.h>
-# include <atomic>
 
 RTX_NAMESPACE_BEGIN
 
@@ -25,7 +24,6 @@ namespace data
     extern cllib::CLcontext    *context;
     extern cllib::CLqueue      *queue;
 
-    extern std::atomic_bool    reloading;
 //    extern cllib::CLkernel      *blur_kernel;
 } /* data */
 

@@ -23,7 +23,7 @@
 #  define cstatic_cast(__type, __var) static_cast<__type>(__var)
 
 CPP_INLINE
-int32_t get_global_id(uint32_t)
+uint32_t get_global_id(uint32_t)
 {
 	return {};
 }

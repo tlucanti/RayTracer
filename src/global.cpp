@@ -1,6 +1,5 @@
 
 #include <rtx.hpp>
-#include <atomic>
 
 RTX_NAMESPACE_BEGIN
 
@@ -12,7 +11,6 @@ namespace data
     cllib::CLcontext    *context = nullptr;
     cllib::CLqueue      *queue = nullptr;
 
-    std::atomic_bool   reloading;
 //    cllib::CLkernel     *blur_kernel = nullptr;
 } /* data */
 

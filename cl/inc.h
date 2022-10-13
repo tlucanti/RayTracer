@@ -121,8 +121,8 @@ __kernel void ray_tracer(
         uint32_t lights_num,
         uint32_t cameras_num,
 
-        int32_t width,
-        int32_t height
+        uint32_t width,
+        uint32_t height
 );
 
 #endif /* CL_INC_H */
