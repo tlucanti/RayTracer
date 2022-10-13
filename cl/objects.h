@@ -32,12 +32,14 @@ typedef struct sphere_s
     FLOAT3              color;          // 0  -- 32
     uint32_t            specular;       // 32 --
     PADDING4                            //    -- 40
-    FLOAT               reflective;      // 40 -- 48
-    FLOAT               radius;         // 48 -- 56
-    FLOAT               emission;       // 56 -- 64
-    FLOAT3              position;       // 64 -- 96
+    FLOAT               reflective;     // 40 -- 48
+    FLOAT               refractive;     // 48 -- 56
+    FLOAT               transparency;   // 56 -- 64
+    FLOAT               emission;       //
+    FLOAT               radius;         //
+    FLOAT3              position;       //
 
-    DECLARE_CONSTRUCTOR(sphere_s, FL3_CREF, FLOAT, FL3_CREF, uint32_t, FLOAT, FLOAT);
+    DECLARE_CONSTRUCTOR(sphere_s, FL3_CREF, FLOAT, FL3_CREF, uint32_t, FLOAT, FLOAT, FLOAT, FLOAT);
 } PACKED ALIGNED64 sphere_t;
 
 // -----------------------------------------------------------------------------

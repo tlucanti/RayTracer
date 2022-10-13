@@ -426,6 +426,8 @@ static void parse_sphere_single(const nlohmann::json &sphere)
     FLOAT3 color;
     uint32_t specular;
     FLOAT reflective;
+    FLOAT refractive;
+    FLOAT transparency;
     FLOAT3 position;
     FLOAT radius;
     FLOAT emission;
@@ -433,6 +435,8 @@ static void parse_sphere_single(const nlohmann::json &sphere)
     bool got_color = false;
     bool got_specular = false;
     bool got_reflective = false;
+    bool got_refractive = false;
+    bool got_transparency = false;
     bool got_position = false;
     bool got_radius = false;
     bool got_emission = false;
@@ -444,6 +448,8 @@ static void parse_sphere_single(const nlohmann::json &sphere)
             case ("color"_hash): parse_color("sphere color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("sphere specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("sphere reflective", item, got_reflective, reflective); break ;
+            case ("refractive"_hash): parse_float_unit("sphere refractive", item, got_refractive, refractive); break ;
+            case ("transparency"_hash): parse_float_unit("sphere transparency", item, got_transparency, transparency); break ;
             case ("center"_hash):
             case ("position"_hash): parse_vec3_point("sphere position", item, got_position, position); break ;
             case ("radius"_hash): parse_float_positive("sphere radius", item, got_radius, radius); break ;
@@ -454,12 +460,14 @@ static void parse_sphere_single(const nlohmann::json &sphere)
     parse_undefined_assert("sphere color", got_color);
     parse_undefined_info_set("sphere specular", got_specular, 0u, specular);
     parse_undefined_info_set("sphere reflective", got_reflective, 0., reflective);
+    parse_undefined_info_set("sphere refractive", got_refractive, 0., refractive);
+    parse_undefined_info_set("sphere transparency", got_transparency, 0., transparency);
     parse_undefined_info_set("sphere emission", got_emission, 0., emission);
     parse_undefined_assert("sphere position", got_position);
     parse_undefined_assert("sphere radius", got_radius);
     if (got_color && got_position && got_radius)
     {
-        sphere_t sp(position, radius, color, specular, reflective, emission);
+        sphere_t sp(position, radius, color, specular, reflective, refractive, transparency, emission);
         parse_print("added sphere " + rtx::B["["
             + to_string(rtx::objects::sp_vec.size()) + "]"] + ": "
             + rtx::Orange[to_string(sp)]);

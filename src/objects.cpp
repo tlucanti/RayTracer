@@ -9,13 +9,17 @@ sphere_s::sphere_s(
         const FLOAT3 &color,
         uint32_t specular,
         FLOAT reflective,
+        FLOAT refractive,
+        FLOAT transparency,
         FLOAT emission
     ) :
         color(color),
         specular(specular),
         reflective(reflective),
-        radius(radius),
+        refractive(refractive),
+        transparency(transparency),
         emission(emission),
+        radius(radius),
         position(position)
 {}
 

@@ -19,6 +19,8 @@
 # define get_obj_color(obj_ptr) (as_sphere(obj_ptr)->color)
 # define get_obj_specular(obj_ptr) (as_sphere(obj_ptr)->specular)
 # define get_obj_reflective(obj_ptr) (as_sphere(obj_ptr)->reflective)
+# define get_obj_refractive(obj_ptr) (as_sphere(obj_ptr)->refractive)
+# define get_obj_transparency(obj_ptr) (as_sphere(obj_ptr)->transparency)
 
 # define BLACK ASSIGN_FLOAT3(0., 0., 0.)
 
@@ -521,53 +523,74 @@ FLOAT3 compute_direct_lightning(
 }
 
 // -----------------------------------------------------------------------------
+#define RECURSION_DEPTH 4
+
 CPP_UNUSED CPP_INLINE
 FLOAT3 trace_ray(
         scene_ptr scene,
-        FLOAT3 camera,
-        FLOAT3 direction,
+        FLOAT3 _camera,
+        FLOAT3 _direction,
         FLOAT *distance,
-        uint32_t recursion_depth
+        uint32_t _recursion_depth
     )
 {
+    (void)_recursion_depth;
     void_ptr    closest_obj;
-    FLOAT3      color = BLACK;
-    FLOAT       reflective_prod = 1;
+    FLOAT3      _color = BLACK;
     FLOAT       closest_t;
     obj_type_t  closest_type;
     FLOAT3      param;
 
+    FLOAT3 ray_queue_dir[RECURSION_DEPTH];
+    FLOAT3 ray_queue_pos[RECURSION_DEPTH];
+    FLOAT3 ray_queue_col[RECURSION_DEPTH];
+    uint32_t ray_equeued[RECURSION_DEPTH];
+    FLOAT reflective_prod[RECURSION_DEPTH / 2];
+
+    ray_queue_dir[1] = _direction;
+    ray_queue_pos[1] = _camera;
+    ray_equeued[0] = 1;
+    reflective_prod[0] = 1.;
+
 //    color += compute_direct_lightning(scene, camera, direction, 0);
-    while (recursion_depth > 0)
+
+    for (uint32_t current_ray = 1; current_ray < RECURSION_DEPTH; ++current_ray)
     {
-        --recursion_depth;
+        ray_queue_col[current_ray] = BLACK;
+        if (ray_equeued[current_ray / 2] == 0) {
+            ray_equeued[current_ray] = 0;
+            continue ;
+        }
+        ray_equeued[current_ray] = 1;
         closest_obj = closest_intersection(
             scene,
-            camera,
-            direction,
+            ray_queue_pos[current_ray],
+            ray_queue_dir[current_ray],
             EPS,
             INFINITY,
             &closest_t,
             &closest_type,
             &param
         );
-        color += compute_direct_lightning(scene, camera, direction, closest_t);
+        ray_queue_col[current_ray] += compute_direct_lightning(scene, ray_queue_pos[current_ray], ray_queue_dir[current_ray], closest_t);
         *distance = closest_t;
-        if (closest_obj == NULLPTR)
-            break ;
+        if (closest_obj == NULLPTR) {
+            ray_equeued[current_ray] = 0;
+            continue ;
+        }
 
-        camera += direction * closest_t;
+        ray_queue_pos[current_ray] += ray_queue_dir[current_ray] * closest_t;
         FLOAT3 normal;
         switch (closest_type)
         {
             case SPHERE:
-                normal = normalize(camera - as_sphere(closest_obj)->position);
+                normal = normalize(ray_queue_pos[current_ray] - as_sphere(closest_obj)->position);
                 break ;
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
             case CONE: normal = normalize(param); break ;
             case CYLINDER: {
-                const FLOAT3 op = camera - as_cylinder(closest_obj)->position;
+                const FLOAT3 op = ray_queue_pos[current_ray] - as_cylinder(closest_obj)->position;
                 const FLOAT dt = dot(as_cylinder(closest_obj)->direction, op);
                 normal = op - as_cylinder(closest_obj)->direction * dt;
                 normal *= 1. / as_cylinder(closest_obj)->radius;
@@ -579,9 +602,9 @@ FLOAT3 trace_ray(
         FLOAT3 specular_val = BLACK;
         FLOAT3 factor = compute_lightning(
             scene,
-            camera,
+            ray_queue_pos[current_ray],
             normal,
-            direction,
+            ray_queue_dir[current_ray],
             get_obj_specular(closest_obj),
             &specular_val
         );
@@ -595,20 +618,33 @@ FLOAT3 trace_ray(
             local_color = get_obj_color(closest_obj);
 #endif /* RTX_EMISSION */
 
-        if (recursion_depth == 0)
-            color += local_color * reflective_prod; // * closest_sphere->reflective;
-        else
-            color += local_color
-                * (1.0 - get_obj_reflective(closest_obj)) * reflective_prod;
-        reflective_prod *= get_obj_reflective(closest_obj);
+        if (current_ray >= RECURSION_DEPTH / 2) {
+            ray_queue_col[current_ray] += local_color * (1. - reflective_prod[current_ray / 2]);
+        } else {
+            if (current_ray % 2 == 0) {
+                reflective_prod[current_ray] = reflective_prod[current_ray / 2] * (1. - get_obj_reflective(closest_obj));
+                ray_queue_dir[current_ray * 2] = reflect_ray(-ray_queue_dir[current_ray], normal);
+            } else {
+//                reflective_prod[current_ray] = reflective_prod[current_ray / 2] * get_obj_transparency(closest_obj);
+//                ray_queue_dir[current_ray * 2 + 1] = refract_ray(ray_queue_dir[current_ray], normal, get_obj_refractive(closest_obj));
 
-        direction = reflect_ray(-direction, normal);
+//                reflective_prod[current_ray] = reflective_prod[current_ray / 2];
+//                ray_queue_dir[current_ray * 2 + 1] = ray_queue_dir[current_ray];
+            }
+            ray_queue_col[current_ray] += local_color * reflective_prod[current_ray];
+            ray_queue_pos[current_ray * 2] = ray_queue_pos[current_ray];
+            ray_queue_pos[current_ray * 2 + 1] = ray_queue_pos[current_ray];
+        }
     }
 
-    color.x = fmin(255. - EPS, color.x);
-    color.y = fmin(255. - EPS, color.y);
-    color.z = fmin(255. - EPS, color.z);
-    return color;
+    for (uint32_t i=2; i < RECURSION_DEPTH; i*=2) {
+        _color += ray_queue_col[i];
+    }
+
+    _color.x = fmin(255. - EPS, _color.x);
+    _color.y = fmin(255. - EPS, _color.y);
+    _color.z = fmin(255. - EPS, _color.z);
+    return _color;
 }
 
 // -----------------------------------------------------------------------------

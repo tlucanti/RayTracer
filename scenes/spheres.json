@@ -4,7 +4,7 @@
   "lights": [
     {
       "type": "point",
-      "intensity": 1,
+      "intensity": 0.6,
       "color": "white",
       "position": [1,1,1]
     },
@@ -16,7 +16,7 @@
     },
 
     {
-      "_type": "direct",
+      "type": "direct",
       "intensity": 0.3,
       "direction": [-1,-2,-4],
       "color": "white"
@@ -29,7 +29,9 @@
       "radius": 1,
       "color": "orange",
       "specular": 200,
-      "reflective": 0.2
+      "reflective": 0.1,
+      "refractive": 0.5,
+      "transparency": 0.8
     },
 
     {
