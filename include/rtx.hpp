@@ -6,6 +6,7 @@
 # include <cllib>
 # include <common.hpp>
 # include <objects.h>
+# include <atomic>
 
 RTX_NAMESPACE_BEGIN
 
@@ -13,6 +14,8 @@ void parse_scene();
 void init_gpu();
 void init_mlx();
 NORET void collapse(int status);
+void init_scene();
+void init_kernel();
 
 namespace data
 {
@@ -22,6 +25,7 @@ namespace data
     extern cllib::CLcontext    *context;
     extern cllib::CLqueue      *queue;
 
+    extern std::atomic_bool    reloading;
 //    extern cllib::CLkernel      *blur_kernel;
 } /* data */
 

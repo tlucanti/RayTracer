@@ -24,7 +24,7 @@ union Flags
     unsigned long long all;
 };
 
-inline static Flags flags {.all=0ull};
+inline static Flags flags;
 
 template <uintmax_t mod=10000000001191, uintmax_t prime=257>
 inline constexpr uintmax_t poly_hash(const char *str, size_t size, size_t idx)
@@ -355,7 +355,9 @@ static void parse_config(const nlohmann::json &res)
     {
         switch (hash(item.key()))
         {
+            case("width"_hash):
             case ("screen_width"_hash): parse_int_positive("window resolution width", item, width, rtx::config::width); break ;
+            case("height"_hash):
             case ("screen_height"_hash): parse_int_positive("window resolution height", item, height, rtx::config::height); break ;
             case ("fovx"_hash): parse_float_ranged("fov x", item, fovx, rtx::config::fovx, 0, 180); break ;
             case ("fovy"_hash): parse_float_ranged("fov x", item, fovy, rtx::config::fovy, 0, 180); break ;
@@ -827,6 +829,9 @@ static void parse_lights(const nlohmann::json &lights)
 
 void rtx::parse_scene()
 {
+//    rtx::data::reloading.store(true, std::memory_order_seq_cst);
+
+    flags.all = 0ull;
     std::ifstream stream(rtx::config::scene_fname);
     if (not stream.is_open())
         throw Exception(std::string("cannot open `") + rtx::config::scene_fname + "` file");
@@ -940,4 +945,6 @@ void rtx::parse_scene()
 
     assert(not rtx::objects::li_vec.empty());
     assert(not rtx::objects::cam_vec.empty());
+
+//    rtx::data::reloading.store(false, std::memory_order_seq_cst);
 }

@@ -1,5 +1,9 @@
 
 {
+	"config": {
+		"emission": true
+	},
+
 	"cameras": [
 		{
 			"position":		[0, 0, -1],

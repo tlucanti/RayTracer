@@ -2,6 +2,7 @@
 #include <rtx.hpp>
 #include <linalg.hpp>
 #include <event_hooks.hpp>
+#include <exception.hpp>
 
 #include <sstream>
 #include <mlxlib>
@@ -16,8 +17,59 @@ namespace move_params
     static struct timespec fps_meter;
 }
 
+static void screenshot(const char *fname)
+{
+    uint64_t	f_size;
+    uint64_t	header[7];
+
+    std::ofstream fout(fname);
+    if (not fout.is_open()) {
+        rtx::Error("screen-capture", std::string("cannot open file `") + fname + "` for screenshot");
+        return ;
+    }
+    bzero(header, 56);
+    f_size = 14 + 40 + (rtx::config::width * rtx::config::height) * 4;
+    rtx::config::height *= static_cast<unsigned int>(-1);
+    header[0x00] = 0x4d42u | f_size << 16u;
+    header[0x01] = 0x28000000380000u;
+    header[0x02] = static_cast<uint64_t>(rtx::config::width << 16u) | static_cast<uint64_t>(rtx::config::height) << 48u;
+    header[0x03] = static_cast<unsigned int>(rtx::config::height) >> 16u | 0x2000010000u;
+    fout.write(reinterpret_cast<char *>(header), 56);
+    rtx::config::height *= static_cast<unsigned int>(-1);
+    fout.write(reinterpret_cast<char *>(rtx::data::img->raw_pixel_data()), (rtx::config::width * rtx::config::height) * 4);
+    fout.close();
+    rtx::Ok("screen-capture", "saved screenshot at ./scr.bmp");
+}
+
+static void reload_scene()
+{
+    rtx::objects::cam_vec.clear();
+    rtx::objects::sp_vec.clear();
+    rtx::objects::pl_vec.clear();
+    rtx::objects::tr_vec.clear();
+    rtx::objects::cn_vec.clear();
+    rtx::objects::cy_vec.clear();
+    rtx::objects::to_vec.clear();
+    rtx::objects::li_vec.clear();
+
+    rtx::parse_scene();
+
+    rtx::scene::spheres = cllib::CLarray<sphere_t, cllib::read_only_array>(rtx::objects::sp_vec, *rtx::data::context, *rtx::data::queue);
+    rtx::scene::planes = cllib::CLarray<plane_t, cllib::read_only_array>(rtx::objects::pl_vec, *rtx::data::context, *rtx::data::queue);
+    rtx::scene::triangles = cllib::CLarray<triangle_t, cllib::read_only_array>(rtx::objects::tr_vec, *rtx::data::context, *rtx::data::queue);
+    rtx::scene::cones = cllib::CLarray<cone_t, cllib::read_only_array>(rtx::objects::cn_vec, *rtx::data::context, *rtx::data::queue);
+    rtx::scene::cylinders = cllib::CLarray<cylinder_t, cllib::read_only_array>(rtx::objects::cy_vec, *rtx::data::context, *rtx::data::queue);
+    rtx::scene::torus = cllib::CLarray<torus_t, cllib::read_only_array>(rtx::objects::to_vec, *rtx::data::context, *rtx::data::queue);
+
+    rtx::scene::cameras = cllib::CLarray<camera_t, cllib::read_only_array>(rtx::objects::cam_vec, *rtx::data::context, *rtx::data::queue);
+    rtx::scene::lights = cllib::CLarray<light_t, cllib::read_only_array>(rtx::objects::li_vec, *rtx::data::context, *rtx::data::queue);
+
+    rtx::init_kernel();
+}
+
 void rtx::hooks::keypress_hook(int keycode, void *)
 {
+    (void)reload_scene;
     switch (keycode)
     {
         case mlxlib::keys::KEY_W: move_params::move_direction.z = rtx::config::forward_move_step; break ;
@@ -31,6 +83,8 @@ void rtx::hooks::keypress_hook(int keycode, void *)
         case mlxlib::keys::KEY_DOWN: move_params::look_direction.y = rtx::config::vertical_look_speed; break ;
         case mlxlib::keys::KEY_LEFT: move_params::look_direction.x = -rtx::config::horizontal_look_speed; break ;
         case mlxlib::keys::KEY_RIGHT: move_params::look_direction.x = rtx::config::horizontal_look_speed; break ;
+        case mlxlib::keys::KEY_P: screenshot("../screenshot.bmp"); break ;
+//        case mlxlib::keys::KEY_R: reload_scene(); break ;
         case mlxlib::keys::KEY_ESCAPE: exit(0);
         default: return ;
     }
@@ -85,6 +139,8 @@ void rtx::hooks::mouserelease_hook(int button, void *)
 
 void rtx::hooks::framehook(void *)
 {
+//    if (rtx::data::reloading.load(std::memory_order_seq_cst))
+//        return ;
     static int fps_period = 0;
     static std::stringstream ss;
 

@@ -445,7 +445,7 @@ FLOAT3 compute_lightning(
         FLOAT3 *specular_computed
     )
 {
-    FLOAT3 color = ASSIGN_FLOAT3(0., 0., 0.);
+    FLOAT3 color = BLACK;
     FLOAT end;
     FLOAT3 light_vector;
 
@@ -457,20 +457,18 @@ FLOAT3 compute_lightning(
                 color += scene->lights[i].color;
                 continue ;
             case DIRECT:
-                light_vector = scene->lights[i].direction;
+                light_vector = -scene->lights[i].direction;
                 end = INFINITY;
                 break ;
             case POINT:
                 light_vector = scene->lights[i].position - point;
                 end = length(light_vector);
-                light_vector *= (1. / end);
+                light_vector *= 1. / end;
                 break ;
         }
 
         if (shadow_intersection(scene, point, light_vector, EPS, end))
             continue ;
-
-        color = ASSIGN_FLOAT3(0., 0., 0.);
 
         // diffuse lightning
         FLOAT normal_angle = dot(normal, light_vector);
@@ -478,7 +476,6 @@ FLOAT3 compute_lightning(
             color += scene->lights[i].color * normal_angle;
 
         // specular light
-        *specular_computed = ASSIGN_FLOAT3(0., 0., 0.);
         if (specular > 0)
         {
             FLOAT3 reflected = reflect_ray(light_vector, normal);
@@ -497,23 +494,27 @@ CPP_UNUSED CPP_INLINE
 FLOAT3 compute_direct_lightning(
         scene_ptr scene,
         FLOAT3 camera,
-        FLOAT3 direction
+        FLOAT3 direction,
+        FLOAT t
     )
 {
     FLOAT3 blinding = BLACK;
+    FLOAT3 point = camera + direction * t;
 
     for (uint32_t i=0; i < scene->lights_num; ++i) {
         if (scene->lights[i].type != POINT)
             continue ;
-
-        FLOAT3 co = scene->lights[i].position - camera;
-        if (shadow_intersection(scene, camera, co, EPS, length(co)))
+        if (shadow_intersection(scene, point, scene->lights[i].position - point, EPS, 1.))
             continue ;
 
+        FLOAT3 co = scene->lights[i].position - camera;
         FLOAT distance = length(cross(co, direction));
-        FLOAT factor = 2. / distance;
-        FLOAT t = dot(co, direction);
-        if (t > EPS)
+        FLOAT intensity = scene->lights[i].color.x + scene->lights[i].color.y + scene->lights[i].color.z;
+        FLOAT factor = 10. * intensity / distance;
+//        if (shadow_intersection(scene, camera, direction, EPS, t))
+//            continue ;
+
+//        if (t > EPS)
             blinding += scene->lights[i].color * factor;
     }
     return blinding;
@@ -523,7 +524,7 @@ FLOAT3 compute_direct_lightning(
 CPP_UNUSED CPP_INLINE
 FLOAT3 trace_ray(
         scene_ptr scene,
-        FLOAT3 point,
+        FLOAT3 camera,
         FLOAT3 direction,
         FLOAT *distance,
         uint32_t recursion_depth
@@ -536,13 +537,13 @@ FLOAT3 trace_ray(
     obj_type_t  closest_type;
     FLOAT3      param;
 
-    color += compute_direct_lightning(scene, point, direction);
+//    color += compute_direct_lightning(scene, camera, direction, 0);
     while (recursion_depth > 0)
     {
         --recursion_depth;
         closest_obj = closest_intersection(
             scene,
-            point,
+            camera,
             direction,
             EPS,
             INFINITY,
@@ -550,23 +551,24 @@ FLOAT3 trace_ray(
             &closest_type,
             &param
         );
-        *distance = INFINITY;
+        color += compute_direct_lightning(scene, camera, direction, closest_t);
+        *distance = closest_t;
         if (closest_obj == NULLPTR)
             break ;
-        *distance = closest_t;
 
-        point += direction * closest_t;
+
+        camera += direction * closest_t;
         FLOAT3 normal;
         switch (closest_type)
         {
             case SPHERE:
-                normal = normalize(point - as_sphere(closest_obj)->position);
+                normal = normalize(camera - as_sphere(closest_obj)->position);
                 break ;
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
             case CONE: normal = normalize(param); break ;
             case CYLINDER: {
-                const FLOAT3 op = point - as_cylinder(closest_obj)->position;
+                const FLOAT3 op = camera - as_cylinder(closest_obj)->position;
                 const FLOAT dt = dot(as_cylinder(closest_obj)->direction, op);
                 normal = op - as_cylinder(closest_obj)->direction * dt;
                 normal *= 1. / as_cylinder(closest_obj)->radius;
@@ -574,17 +576,18 @@ FLOAT3 trace_ray(
             }
             case TOR: normal = normalize(param); break ;
         }
-        FLOAT3 specular_val;
+
+        FLOAT3 specular_val = BLACK;
         FLOAT3 factor = compute_lightning(
             scene,
-            point,
+            camera,
             normal,
             direction,
             get_obj_specular(closest_obj),
             &specular_val
         );
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
-        local_color += specular_val * 255.;
+        local_color += specular_val;
         local_color.x = fmin(255. - EPS, local_color.x);
         local_color.y = fmin(255. - EPS, local_color.y);
         local_color.z = fmin(255. - EPS, local_color.z);

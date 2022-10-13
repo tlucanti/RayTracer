@@ -4,7 +4,7 @@
 #include <cl/kernel.cl>
 #include <thread>
 
-void init_scene()
+void rtx::init_scene()
 {
     rtx::scene::spheres = cllib::CLarray<sphere_t, cllib::read_only_array>(rtx::objects::sp_vec, *rtx::data::context, *rtx::data::queue);
     rtx::scene::planes = cllib::CLarray<plane_t, cllib::read_only_array>(rtx::objects::pl_vec, *rtx::data::context, *rtx::data::queue);
@@ -24,8 +24,9 @@ void init_scene()
 //    rtx::scene::distances.memset(0., *rtx::data::queue);
 }
 
-void init_kernel(cllib::CLkernel &kernel)
+void rtx::init_kernel()
 {
+    cllib::CLkernel &kernel = *rtx::data::kernel;
     kernel.reset_args();
     kernel.set_next_arg(rtx::scene::canvas);
 //    kernel.set_next_arg(rtx::scene::distances);
@@ -102,12 +103,13 @@ int main()
 //    return 0;
 
 //    try {
-        std::thread parser(rtx::parse_scene);
-        std::thread mlx_initializer(rtx::init_mlx);
-
-        parser.join();
-        mlx_initializer.join();
+        rtx::parse_scene();
+        rtx::init_mlx();
         rtx::init_gpu();
+//        std::thread gpu_initializer(rtx::init_gpu);
+//        std::thread mlx_initializer(rtx::init_mlx);
+//        gpu_initializer.join();
+//        mlx_initializer.join();
 //    return 0;
 //    } catch (std::exception &e) {
 //        std::cout << e.what() << std::endl;
@@ -116,8 +118,8 @@ int main()
 //        return 1;
 //    }
 
-    init_scene();
-    init_kernel(*rtx::data::kernel);
+    rtx::init_scene();
+    rtx::init_kernel();
 //    init_blur_kernel(*rtx::data::blur_kernel);
 
     rtx::data::kernel->run(*rtx::data::queue);
