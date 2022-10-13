@@ -1,10 +1,5 @@
 
 {
-  "config": {
-    "emission": false,
-    "height": 1200,
-    "width": 1200
-  },
 
   "lights": [
     {
@@ -21,7 +16,7 @@
     },
 
     {
-      "type": "direct",
+      "_type": "direct",
       "intensity": 0.3,
       "direction": [-1,-2,-4],
       "color": "white"

@@ -504,18 +504,18 @@ FLOAT3 compute_direct_lightning(
     for (uint32_t i=0; i < scene->lights_num; ++i) {
         if (scene->lights[i].type != POINT)
             continue ;
+        FLOAT3 co = scene->lights[i].position - camera;
+        if (dot(co, direction) < 0)
+            continue ;
+
         if (shadow_intersection(scene, point, scene->lights[i].position - point, EPS, 1.))
             continue ;
 
-        FLOAT3 co = scene->lights[i].position - camera;
         FLOAT distance = length(cross(co, direction));
         FLOAT intensity = scene->lights[i].color.x + scene->lights[i].color.y + scene->lights[i].color.z;
-        FLOAT factor = 10. * intensity / distance;
-//        if (shadow_intersection(scene, camera, direction, EPS, t))
-//            continue ;
+        FLOAT factor = 1. * intensity / (distance * distance);
 
-//        if (t > EPS)
-            blinding += scene->lights[i].color * factor;
+        blinding += scene->lights[i].color * factor;
     }
     return blinding;
 }
@@ -556,7 +556,6 @@ FLOAT3 trace_ray(
         if (closest_obj == NULLPTR)
             break ;
 
-
         camera += direction * closest_t;
         FLOAT3 normal;
         switch (closest_type)
@@ -587,7 +586,7 @@ FLOAT3 trace_ray(
             &specular_val
         );
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
-        local_color += specular_val;
+        local_color += specular_val * 255.;
         local_color.x = fmin(255. - EPS, local_color.x);
         local_color.y = fmin(255. - EPS, local_color.y);
         local_color.z = fmin(255. - EPS, local_color.z);

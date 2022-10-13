@@ -15,9 +15,11 @@ void rtx::init_gpu()
         flags += " -DRTX_EMISSION ";
     program.compile(device, true, flags.c_str());
 
-    cllib::CLprogram blur_program(4, std::ifstream(rtx::config::kernel_fname), "blur_convolution", *rtx::data::context);
-    blur_program.compile(device, true, flags.c_str());
+//    cllib::CLprogram blur_program(4, std::ifstream(rtx::config::kernel_fname), "blur_convolution", *rtx::data::context);
+//    blur_program.compile(device, true, flags.c_str());
 
-    rtx::data::kernel = new cllib::CLkernel(program, {static_cast<size_t>(rtx::config::width), static_cast<size_t>(rtx::config::height)});
+    auto w = static_cast<size_t>(rtx::config::width);
+    auto h = static_cast<size_t>(rtx::config::height);
+    rtx::data::kernel = new cllib::CLkernel(program, {w, h});
 //    rtx::data::blur_kernel = new cllib::CLkernel(blur_program, {static_cast<size_t>(rtx::config::width), static_cast<size_t>(rtx::config::height)});
 }

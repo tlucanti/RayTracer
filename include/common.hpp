@@ -22,15 +22,15 @@ namespace RTX_NAMESPACE
 {
     namespace config
     {
-        inline unsigned int width {1000};
-        inline unsigned int height {1000};
-        inline FLOAT fovx {90};
-        inline FLOAT fovy {90};
-        inline FLOAT forward_move_step {0.1};
-        inline FLOAT side_move_speed {0.05};
-        inline FLOAT vertical_move_speed {0.05};
-        inline FLOAT vertical_look_speed {0.005};
-        inline FLOAT horizontal_look_speed {0.005};
+        inline unsigned int width {0};
+        inline unsigned int height {0};
+        inline FLOAT fovx {0};
+        inline FLOAT fovy {0};
+        inline FLOAT forward_move_step {0};
+        inline FLOAT side_move_speed {0};
+        inline FLOAT vertical_move_speed {0};
+        inline FLOAT vertical_look_speed {0};
+        inline FLOAT horizontal_look_speed {0};
         inline bool emission {false};
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
@@ -43,6 +43,7 @@ namespace RTX_NAMESPACE
 
 //        inline constexpr const char *scene_fname = "../scenes/lights.json";
 //        inline constexpr const char *scene_fname = "../scenes/colors.json";
+//        inline constexpr const char *scene_fname = "../scenes/caustics.json";
         inline constexpr const char *cl_dir = "../cl";
         inline unsigned int current_camera;
     } /* config */

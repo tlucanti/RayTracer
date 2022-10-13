@@ -177,6 +177,8 @@ public:
     MLXwindow(const MLXcore &core, unsigned int width, unsigned int height, const std::string &title="")
         : mlx_ptr(core.mlx_ptr)
     {
+        if (width == 0 or height == 0)
+            throw MLXexception("screen resolution should not be equal to zero");
         window_ptr = mlx_new_window(mlx_ptr, width, height, const_cast<char *>(title.c_str()));
         if (window_ptr == nullptr)
             throw MLXexception("mlx window initialization error");

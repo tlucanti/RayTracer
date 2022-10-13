@@ -355,9 +355,9 @@ static void parse_config(const nlohmann::json &res)
     {
         switch (hash(item.key()))
         {
-            case("width"_hash):
+            case ("width"_hash):
             case ("screen_width"_hash): parse_int_positive("window resolution width", item, width, rtx::config::width); break ;
-            case("height"_hash):
+            case ("height"_hash):
             case ("screen_height"_hash): parse_int_positive("window resolution height", item, height, rtx::config::height); break ;
             case ("fovx"_hash): parse_float_ranged("fov x", item, fovx, rtx::config::fovx, 0, 180); break ;
             case ("fovy"_hash): parse_float_ranged("fov x", item, fovy, rtx::config::fovy, 0, 180); break ;
@@ -373,6 +373,7 @@ static void parse_config(const nlohmann::json &res)
     parse_undefined_warn_set("fov y", fovy, 90., rtx::config::fovy);
     parse_undefined_warn_set("move speed", move_speed, 0.1, rtx::config::forward_move_step);
     rtx::config::side_move_speed = rtx::config::forward_move_step / 2.;
+    rtx::config::vertical_move_speed = rtx::config::forward_move_step;
     parse_undefined_warn_set("mouse sensitivity", look_speed, 0.005, rtx::config::vertical_look_speed);
     rtx::config::horizontal_look_speed = rtx::config::vertical_look_speed;
     parse_undefined_warn_set("object emission", emission, false, rtx::config::emission);
@@ -858,6 +859,15 @@ void rtx::parse_scene()
         }
     }
     parse_notify(flags.config, "config parameters are not set, setting to default values");
+    if (not flags.config) {
+        rtx::config::width = 1000u;
+        rtx::config::height = 1000u;
+        rtx::config::forward_move_step = 0.1;
+        rtx::config::side_move_speed = 0.05;
+        rtx::config::vertical_move_speed = 0.1;
+        rtx::config::vertical_look_speed = 0.005;
+        rtx::config::horizontal_look_speed = 0.005;
+    }
     parse_warn(flags.lights, "your scene don`t have any light sources, you will not see anything");
     parse_warn(flags.objects, "your scene don`t have any objects, you will not see anything");
     parse_assert(flags.cameras, "your scene don`t have any cameras");
