@@ -27,11 +27,11 @@
     {
       "position": [0, 0, 3],
       "radius": 1,
-      "color": "orange",
+      "color": "cyan",
       "specular": 200,
-      "reflective": 0.1,
+      "reflective": 0.3,
       "refractive": 0.5,
-      "transparency": 0.8
+      "transparency": 0.4
     },
 
     {
@@ -39,7 +39,8 @@
       "radius": 1,
       "color": "#0000FF",
       "specular": 100,
-      "reflective": 0.2
+      "reflective": 0.2,
+      "transparency": 0.2
     },
 
     {
@@ -47,7 +48,8 @@
       "radius": 1,
       "specular": 500,
       "reflective": 0.3,
-      "color": "green"
+      "color": "green",
+      "transparency": 0.3
     },
 
     {
@@ -55,7 +57,15 @@
       "radius": 500,
       "color": [255, 100, 165],
       "specular": 600,
-      "reflective": 0.1
+      "reflective": 0.1,
+      "transparency": 0.4
+    },
+    {
+      "position": [0.5, 0.5, 1],
+      "radius": 0.5,
+      "color": "white",
+      "reflective": 0.1,
+      "transparency": 0.7
     }
   ],
 

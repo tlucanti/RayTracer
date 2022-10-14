@@ -71,6 +71,7 @@ namespace RTX_NAMESPACE
 # endif /* __APPLE__ */
 
 # define EPS 1e-4
+# define ONE (1. - EPS)
 # define PI M_PI
 
 # ifndef ATTRIBUTE

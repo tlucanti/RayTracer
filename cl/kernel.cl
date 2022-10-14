@@ -507,10 +507,13 @@ FLOAT3 compute_direct_lightning(
         if (scene->lights[i].type != POINT)
             continue ;
         FLOAT3 co = scene->lights[i].position - camera;
-        if (dot(co, direction) < 0)
+        if (dot(co, direction) < EPS)
             continue ;
 
-        if (shadow_intersection(scene, point, scene->lights[i].position - point, EPS, 1.))
+        FLOAT3 cp = scene->lights[i].position - point;
+        (void)cp;
+//        shadow_intersection(scene, point, normalize(cp), EPS,  length(cp));
+        if (shadow_intersection(scene, point, normalize(cp), EPS,  length(cp)))
             continue ;
 
         FLOAT distance = length(cross(co, direction));
@@ -523,18 +526,15 @@ FLOAT3 compute_direct_lightning(
 }
 
 // -----------------------------------------------------------------------------
-#define RECURSION_DEPTH 4
+#define RECURSION_DEPTH 8
 
 CPP_UNUSED CPP_INLINE
 FLOAT3 trace_ray(
         scene_ptr scene,
-        FLOAT3 _camera,
-        FLOAT3 _direction,
-        FLOAT *distance,
-        uint32_t _recursion_depth
+        FLOAT3 camera,
+        FLOAT3 direction
     )
 {
-    (void)_recursion_depth;
     void_ptr    closest_obj;
     FLOAT3      _color = BLACK;
     FLOAT       closest_t;
@@ -544,24 +544,22 @@ FLOAT3 trace_ray(
     FLOAT3 ray_queue_dir[RECURSION_DEPTH];
     FLOAT3 ray_queue_pos[RECURSION_DEPTH];
     FLOAT3 ray_queue_col[RECURSION_DEPTH];
-    uint32_t ray_equeued[RECURSION_DEPTH];
-    FLOAT reflective_prod[RECURSION_DEPTH / 2];
+    uint32_t ray_enqueued[RECURSION_DEPTH];
+    FLOAT reflective_prod[RECURSION_DEPTH];
 
-    ray_queue_dir[1] = _direction;
-    ray_queue_pos[1] = _camera;
-    ray_equeued[0] = 1;
-    reflective_prod[0] = 1.;
-
-//    color += compute_direct_lightning(scene, camera, direction, 0);
+    reflective_prod[1] = 1.;
+    ray_queue_dir[1] = direction;
+    ray_queue_pos[1] = camera;
+    ray_enqueued[0] = 1;
 
     for (uint32_t current_ray = 1; current_ray < RECURSION_DEPTH; ++current_ray)
     {
         ray_queue_col[current_ray] = BLACK;
-        if (ray_equeued[current_ray / 2] == 0) {
-            ray_equeued[current_ray] = 0;
+        if (ray_enqueued[current_ray / 2] == 0) {
+            ray_enqueued[current_ray] = 0;
             continue ;
         }
-        ray_equeued[current_ray] = 1;
+        ray_enqueued[current_ray] = 1;
         closest_obj = closest_intersection(
             scene,
             ray_queue_pos[current_ray],
@@ -572,10 +570,10 @@ FLOAT3 trace_ray(
             &closest_type,
             &param
         );
-        ray_queue_col[current_ray] += compute_direct_lightning(scene, ray_queue_pos[current_ray], ray_queue_dir[current_ray], closest_t);
-        *distance = closest_t;
+//        ray_queue_col[current_ray] += compute_direct_lightning(scene, ray_queue_pos[current_ray], ray_queue_dir[current_ray], closest_t);
+//        *distance = closest_t;
         if (closest_obj == NULLPTR) {
-            ray_equeued[current_ray] = 0;
+            ray_enqueued[current_ray] = 0;
             continue ;
         }
 
@@ -584,7 +582,7 @@ FLOAT3 trace_ray(
         switch (closest_type)
         {
             case SPHERE:
-                normal = normalize(ray_queue_pos[current_ray] - as_sphere(closest_obj)->position);
+                normal = normalize(ray_queue_pos[current_ray] - as_sphere(closest_obj)->position);                   // FIXME: just divide to sphere radius
                 break ;
             case PLANE: normal = as_plane(closest_obj)->normal; break ;
             case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
@@ -619,25 +617,36 @@ FLOAT3 trace_ray(
 #endif /* RTX_EMISSION */
 
         if (current_ray >= RECURSION_DEPTH / 2) {
-            ray_queue_col[current_ray] += local_color * (1. - reflective_prod[current_ray / 2]);
+            ray_queue_col[current_ray] += local_color * reflective_prod[current_ray];
         } else {
-            if (current_ray % 2 == 0) {
-                reflective_prod[current_ray] = reflective_prod[current_ray / 2] * (1. - get_obj_reflective(closest_obj));
-                ray_queue_dir[current_ray * 2] = reflect_ray(-ray_queue_dir[current_ray], normal);
-            } else {
+//            if (current_ray == 1) {}
+//            else if (current_ray % 2 == 0) {
+//                reflective_prod[current_ray * 2] = reflective_prod[current_ray / 2] * (1. - get_obj_reflective(closest_obj));
+//            } else {
 //                reflective_prod[current_ray] = reflective_prod[current_ray / 2] * get_obj_transparency(closest_obj);
 //                ray_queue_dir[current_ray * 2 + 1] = refract_ray(ray_queue_dir[current_ray], normal, get_obj_refractive(closest_obj));
 
 //                reflective_prod[current_ray] = reflective_prod[current_ray / 2];
-//                ray_queue_dir[current_ray * 2 + 1] = ray_queue_dir[current_ray];
-            }
-            ray_queue_col[current_ray] += local_color * reflective_prod[current_ray];
+//            }
+            FLOAT refl = get_obj_reflective(closest_obj);
+            FLOAT trans = get_obj_transparency(closest_obj);
+            FLOAT refr = get_obj_refractive(closest_obj);
+
+            reflective_prod[current_ray * 2] = reflective_prod[current_ray] * refl * (ONE - trans);
+            reflective_prod[current_ray * 2 + 1] = reflective_prod[current_ray] * (ONE - refl) * trans;
+            ray_queue_col[current_ray] += local_color * reflective_prod[current_ray] * (ONE - refl) * (ONE - trans);
+
+            ray_queue_dir[current_ray * 2] = reflect_ray(-ray_queue_dir[current_ray], normal);
+            ray_queue_dir[current_ray * 2 + 1] = refract_ray(-ray_queue_dir[current_ray], normal, refr);
+//            ray_queue_dir[current_ray * 2 + 1] = ray_queue_dir[current_ray];
+
             ray_queue_pos[current_ray * 2] = ray_queue_pos[current_ray];
             ray_queue_pos[current_ray * 2 + 1] = ray_queue_pos[current_ray];
         }
     }
 
-    for (uint32_t i=2; i < RECURSION_DEPTH; i*=2) {
+    _color += ray_queue_col[1];
+    for (uint32_t i=2; i < RECURSION_DEPTH; ++i) {
         _color += ray_queue_col[i];
     }
 
@@ -711,13 +720,11 @@ __kernel void ray_tracer(
     );
     vec = normalize(vec);
     vec = rotate_vector(vec, cameras[0].rotate_matrix);
-    FLOAT distance;
+//    FLOAT distance;
     const FLOAT3 color = trace_ray(
         &scene,
         cameras[0].position,
-        vec,
-        &distance,
-        4
+        vec
     );
 
     uint32_t pix_pos;

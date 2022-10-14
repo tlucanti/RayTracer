@@ -92,9 +92,7 @@ CPP_UNUSED
 FLOAT3 trace_ray(
         const scene_t *scene,
         FLOAT3 point,
-        FLOAT3 direction,
-        FLOAT *distance,
-        uint32_t recursion_depth
+        FLOAT3 direction
 );
 
 CPP_UNUSED CPP_INLINE

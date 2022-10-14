@@ -41,20 +41,20 @@ FLOAT3 reflect_ray(FLOAT3 ray, FLOAT3 normal)
 CPP_UNUSED inline
 FLOAT3 refract_ray(FLOAT3 ray, FLOAT3 normal, FLOAT n12)
 {
-    (void)normal;
-    (void)n12;
-    return -ray;
-//    FLOAT cos_a = dot(normal, ray);
-//    FLOAT sin_b = n12 * sqrt(1. - cos_a * cos_a);
-//    FLOAT cos_b = sqrt(1. - sin_b * sin_b);
-//
-//    FLOAT3 V_n = normal * cos_a;
-//    FLOAT3 V_p = ray - V_n;
-//
-//    FLOAT3 R_n = -normal * cos_b;
-//    FLOAT3 R_p = -V_p * sin_b;
-//
-//    return R_n + R_p;
+//    (void)normal;
+//    (void)n12;
+//    return -ray;
+    FLOAT cos_a = dot(normal, ray);
+    FLOAT sin_b = n12 * sqrt(1. - cos_a * cos_a);
+    FLOAT cos_b = sqrt(1. - sin_b * sin_b);
+
+    FLOAT3 V_n = normal * cos_a;
+    FLOAT3 V_p = ray - V_n;
+
+    FLOAT3 R_n = -normal * cos_b;
+    FLOAT3 R_p = -V_p * sin_b;
+
+    return R_n + R_p;
 }
 
 // -----------------------------------------------------------------------------
