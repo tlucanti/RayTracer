@@ -49,10 +49,12 @@ typedef struct plane_s
     uint32_t            specular;       // 32 --
     PADDING4                            //    -- 40
     FLOAT               reflective;      // 40 -- 48
-    FLOAT3              point;          // 48 -- 80
-    FLOAT3              normal;         // 80 -- 112
+    FLOAT               refractive;     // 48 -- 56
+    FLOAT               transparency;   // 56 -- 64
+    FLOAT3              point;          //
+    FLOAT3              normal;         //
 
-    DECLARE_CONSTRUCTOR(plane_s, FL3_CREF, FL3_CREF, FL3_CREF, uint32_t, FLOAT);
+    DECLARE_CONSTRUCTOR(plane_s, FL3_CREF, FL3_CREF, FL3_CREF, uint32_t, FLOAT, FLOAT, FLOAT);
 } PACKED ALIGNED64 plane_t;
 
 // -----------------------------------------------------------------------------
@@ -62,11 +64,14 @@ typedef struct triangle_s
     uint32_t        specular;           // 32 --
     PADDING4                            //    -- 40
     FLOAT           reflective;          // 40 -- 48
-    PADDING16                           //    -- 64
-    FLOAT3          normal;             // 64 -- 96
-    FLOAT3          a;                  // 96 -- 128
-    FLOAT3          b;                  // 128-- 160
-    FLOAT3          c;                  // 160-- 192
+    FLOAT           refractive;         // 48 -- 56
+    FLOAT           transparency;       // 56 -- 64
+    FLOAT           emission;           //
+    PADDING16                           //
+    FLOAT3          normal;             //
+    FLOAT3          a;                  //
+    FLOAT3          b;                  //
+    FLOAT3          c;                  //
 
     DECLARE_CONSTRUCTOR(triangle_s, FL3_CREF, FL3_CREF, FL3_CREF, FL3_CREF,
         uint32_t, FLOAT);
@@ -79,11 +84,13 @@ typedef struct cone_s
     uint32_t        specular;           // 32 --
     PADDING4                            //    -- 40
     FLOAT           reflective;          // 40 -- 48
-    FLOAT           width;              // 48 -- 56
-    FLOAT           gamma;              // 56 -- 64
-    FLOAT3          position;           // 64 -- 96
-    FLOAT3          direction;          // 96 -- 128
-    FLOAT3          matr[3];            // 224
+    FLOAT           refractive;
+    FLOAT           transparency;
+    FLOAT           width;              //
+    FLOAT           gamma;              //
+    FLOAT3          position;           //
+    FLOAT3          direction;          //
+    FLOAT3          matr[3];            //
 
     DECLARE_CONSTRUCTOR(cone_s, FL3_CREF, FL3_CREF, FLOAT, FLOAT, FL3_CREF,
         uint32_t, FLOAT);
@@ -96,6 +103,8 @@ typedef struct cylinder_s
     uint32_t        specular;           // 32 --
     PADDING4                            //    -- 40
     FLOAT           reflective;          // 40 -- 48
+    FLOAT           refractive;
+    FLOAT           transparency;
     FLOAT           radius;             // 48 -- 56
     FLOAT           height;             // 56 -- 64
     FLOAT3          position;           // 64 -- 96
@@ -112,11 +121,13 @@ typedef struct torus_s
     uint32_t        specular;           // 32 --
     PADDING4                            //    -- 40
     FLOAT           reflective;          // 40 -- 48
-    FLOAT           r;                  // 48 -- 56
-    FLOAT           R;                  // 56 -- 64
-    FLOAT3          position;           // 64 -- 96
-    FLOAT3          normal;             // 96 -- 128
-    FLOAT3          matr[3];               // 128-- 224
+    FLOAT           refractive;         //
+    FLOAT           transparency;       //
+    FLOAT           r;                  //
+    FLOAT           R;                  //
+    FLOAT3          position;           //
+    FLOAT3          normal;             //
+    FLOAT3          matr[3];            //
 
     DECLARE_CONSTRUCTOR(torus_s, FL3_CREF, FL3_CREF, FLOAT, FLOAT, FL3_CREF,
         uint32_t, FLOAT);
