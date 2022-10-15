@@ -9,6 +9,15 @@
 #  define ASSIGN_COMPLEX(__real, __imag) (COMPLEX)(__real, __imag)
 #  define ASSIGN_SCENE(...) (scene_t){__VA_ARGS__}
 #  define cstatic_cast(__type, __var) ((__type)(__var))
+
+#  define SPHRERE_PARAMS
+#  define PLANE_PARAMS
+#  define TRIANGLE_PARAMS
+#  define CONE_PARAMS
+#  define CYLINDER_PARAMS
+#  define TORUS_PARAMS
+#  define LIGHT_PARAMS
+#  define CAMERA_PARAMS
 # else
 #  include <linalg.hpp>
 #  define __constant
@@ -22,11 +31,81 @@
 #  define ASSIGN_SCENE(...) {__VA_ARGS__}
 #  define cstatic_cast(__type, __var) static_cast<__type>(__var)
 
+#  define SPHERE_PARAMS     \
+    FL3_CREF position,      \
+    FLOAT radius,           \
+    FL3_CREF color,         \
+    uint32_t specular,      \
+    FLOAT reflective,       \
+    FLOAT refractive,       \
+    FLOAT transparency,     \
+    FLOAT emission
+
+#  define PLANE_PARAMS      \
+    FL3_CREF point,         \
+    FL3_CREF normal,        \
+    FL3_CREF color,         \
+    uint32_t specular,      \
+    FLOAT reflective,       \
+    FLOAT refractive,       \
+    FLOAT transparency
+
+#  define TRIANGLE_PARAMS   \
+    FL3_CREF p1,            \
+    FL3_CREF p2,            \
+    FL3_CREF p3,            \
+    FL3_CREF color,         \
+    uint32_t specular,      \
+    FLOAT reflective,       \
+    FLOAT refractive,       \
+    FLOAT transparency,     \
+    FLOAT emission
+
+#  define CONE_PARAMS       \
+    FL3_CREF position,      \
+    FL3_CREF direction,     \
+    FLOAT width,            \
+    FLOAT gamma,            \
+    FL3_CREF color,         \
+    uint32_t specular,      \
+    FLOAT reflective,       \
+    FLOAT refractive,       \
+    FLOAT transparency
+
+#  define CYLINDER_PARAMS   \
+    FL3_CREF position,      \
+    FL3_CREF direction,     \
+    FLOAT radius,           \
+    FLOAT height,           \
+    FL3_CREF color,         \
+    uint32_t specular,      \
+    FLOAT reflective,       \
+    FLOAT refractive,       \
+    FLOAT transparency
+
+#  define TORUS_PARAMS      \
+    FL3_CREF position,      \
+    FL3_CREF normal,        \
+    FLOAT r,                \
+    FLOAT R,                \
+    FL3_CREF color,         \
+    uint32_t specular,      \
+    FLOAT reflective,       \
+    FLOAT refractive,       \
+    FLOAT transparency
+
+#  define LIGHT_PARAMS      \
+    light_type_t type,      \
+    FLOAT intensity,        \
+    FL3_CREF color,         \
+    FL3_CREF vec
+
+#  define CAMERA_PARAMS     \
+    FL3_CREF pos,           \
+    FL3_CREF dir
+
 CPP_INLINE
-uint32_t get_global_id(uint32_t)
-{
-	return {};
-}
+uint32_t get_global_id(uint32_t) { return {}; }
 
 using rtx::linalg::length;
 using rtx::linalg::normalize;

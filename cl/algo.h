@@ -45,14 +45,15 @@ FLOAT3 refract_ray(FLOAT3 ray, FLOAT3 normal, FLOAT n12)
 //    (void)n12;
 //    return -ray;
     FLOAT cos_a = dot(normal, ray);
-    FLOAT sin_b = n12 * sqrt(1. - cos_a * cos_a);
+    FLOAT sin_a = sqrt(1. - cos_a * cos_a);
+    FLOAT sin_b = n12 * sin_a;
     FLOAT cos_b = sqrt(1. - sin_b * sin_b);
 
-    FLOAT3 V_n = normal * cos_a;
-    FLOAT3 V_p = ray - V_n;
+    FLOAT3 D_n = normal * cos_a;
+    FLOAT3 D_p = ray - D_n;
 
     FLOAT3 R_n = -normal * cos_b;
-    FLOAT3 R_p = -V_p * sin_b;
+    FLOAT3 R_p = -D_p * sin_b * (1. / sin_a);
 
     return R_n + R_p;
 }

@@ -637,8 +637,8 @@ FLOAT3 trace_ray(
             ray_queue_col[current_ray] += local_color * reflective_prod[current_ray] * (ONE - refl) * (ONE - trans);
 
             ray_queue_dir[current_ray * 2] = reflect_ray(-ray_queue_dir[current_ray], normal);
-//            ray_queue_dir[current_ray * 2 + 1] = refract_ray(-ray_queue_dir[current_ray], normal, refr);
-            ray_queue_dir[current_ray * 2 + 1] = ray_queue_dir[current_ray];
+            ray_queue_dir[current_ray * 2 + 1] = refract_ray(-ray_queue_dir[current_ray], normal, refr);
+//            ray_queue_dir[current_ray * 2 + 1] = ray_queue_dir[current_ray];
 
             ray_queue_pos[current_ray * 2] = ray_queue_pos[current_ray];
             ray_queue_pos[current_ray * 2 + 1] = ray_queue_pos[current_ray];

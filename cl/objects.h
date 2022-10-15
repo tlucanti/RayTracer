@@ -39,7 +39,7 @@ typedef struct sphere_s
     FLOAT               radius;         //
     FLOAT3              position;       //
 
-    DECLARE_CONSTRUCTOR(sphere_s, FL3_CREF, FLOAT, FL3_CREF, uint32_t, FLOAT, FLOAT, FLOAT, FLOAT);
+    DECLARE_CONSTRUCTOR(sphere_s, SPHERE_PARAMS);
 } PACKED ALIGNED64 sphere_t;
 
 // -----------------------------------------------------------------------------
@@ -54,7 +54,7 @@ typedef struct plane_s
     FLOAT3              point;          //
     FLOAT3              normal;         //
 
-    DECLARE_CONSTRUCTOR(plane_s, FL3_CREF, FL3_CREF, FL3_CREF, uint32_t, FLOAT, FLOAT, FLOAT);
+    DECLARE_CONSTRUCTOR(plane_s, PLANE_PARAMS);
 } PACKED ALIGNED64 plane_t;
 
 // -----------------------------------------------------------------------------
@@ -73,8 +73,7 @@ typedef struct triangle_s
     FLOAT3          b;                  //
     FLOAT3          c;                  //
 
-    DECLARE_CONSTRUCTOR(triangle_s, FL3_CREF, FL3_CREF, FL3_CREF, FL3_CREF,
-        uint32_t, FLOAT);
+    DECLARE_CONSTRUCTOR(triangle_s, TRIANGLE_PARAMS);
 } PACKED ALIGNED64 triangle_t;
 
 // -----------------------------------------------------------------------------
@@ -92,8 +91,7 @@ typedef struct cone_s
     FLOAT3          direction;          //
     FLOAT3          matr[3];            //
 
-    DECLARE_CONSTRUCTOR(cone_s, FL3_CREF, FL3_CREF, FLOAT, FLOAT, FL3_CREF,
-        uint32_t, FLOAT);
+    DECLARE_CONSTRUCTOR(cone_s, CONE_PARAMS);
 } PACKED ALIGNED64 cone_t;
 
 // -----------------------------------------------------------------------------
@@ -110,8 +108,7 @@ typedef struct cylinder_s
     FLOAT3          position;           // 64 -- 96
     FLOAT3          direction;          // 96 -- 128
 
-    DECLARE_CONSTRUCTOR(cylinder_s, FL3_CREF, FL3_CREF, FLOAT, FLOAT,
-        FL3_CREF, uint32_t, FLOAT);
+    DECLARE_CONSTRUCTOR(cylinder_s, CYLINDER_PARAMS);
 } PACKED ALIGNED64 cylinder_t;
 
 // -----------------------------------------------------------------------------
@@ -129,8 +126,7 @@ typedef struct torus_s
     FLOAT3          normal;             //
     FLOAT3          matr[3];            //
 
-    DECLARE_CONSTRUCTOR(torus_s, FL3_CREF, FL3_CREF, FLOAT, FLOAT, FL3_CREF,
-        uint32_t, FLOAT);
+    DECLARE_CONSTRUCTOR(torus_s, TORUS_PARAMS);
 } PACKED ALIGNED64 torus_t;
 
 // -----------------------------------------------------------------------------
@@ -143,7 +139,7 @@ typedef struct light_s
     };
     light_type_t    type;               // 64 -- 68
 
-    DECLARE_CONSTRUCTOR(light_s, light_type_t, FLOAT, FL3_CREF, FL3_CREF);
+    DECLARE_CONSTRUCTOR(light_s, LIGHT_PARAMS);
 } PACKED ALIGNED64 light_t;
 
 // -----------------------------------------------------------------------------
@@ -155,8 +151,8 @@ typedef struct camera_s
     FLOAT    alpha;                     // 160-- 168
     FLOAT    theta;                     // 168-- 176
 
-    DECLARE_CONSTRUCTOR(camera_s, FL3_CREF, FL3_CREF);
-    DECLARE_METHOD(void, recompute_matrix);
+    DECLARE_CONSTRUCTOR(camera_s, CAMERA_PARAMS);
+    DECLARE_METHOD(void, recompute_matrix, void);
 } PACKED ALIGNED64 camera_t;
 
 // -----------------------------------------------------------------------------

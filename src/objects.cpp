@@ -29,11 +29,15 @@ plane_s::plane_s(
         const FLOAT3 &normal,
         const FLOAT3 &color,
         uint32_t specular,
-        FLOAT reflective
+        FLOAT reflective,
+        FLOAT refractive,
+        FLOAT transparency
     ) :
         color(color),
         specular(specular),
         reflective(reflective),
+        refractive(refractive),
+        transparency(transparency),
         point(point),
         normal(normal)
 {
@@ -47,11 +51,17 @@ triangle_s::triangle_s(
         const FLOAT3 &p3,
         const FLOAT3 &color,
         uint32_t specular,
-        FLOAT reflective
+        FLOAT reflective,
+        FLOAT refractive,
+        FLOAT transparency,
+        FLOAT emission
     ) :
         color(color),
         specular(specular),
         reflective(reflective),
+        refractive(refractive),
+        transparency(transparency),
+        emission(emission),
         a(p1),
         b(p2),
         c(p3)
@@ -67,11 +77,15 @@ cone_s::cone_s(
         FLOAT gamma,
         const FLOAT3 &color,
         uint32_t specular,
-        FLOAT reflective
+        FLOAT reflective,
+        FLOAT refractive,
+        FLOAT transparency
     ) :
         color(color),
         specular(specular),
         reflective(reflective),
+        refractive(refractive),
+        transparency(transparency),
         width(width),
         gamma(gamma),
         position(position),
@@ -89,11 +103,15 @@ cylinder_s::cylinder_s(
         FLOAT height,
         const FLOAT3 &color,
         uint32_t specular,
-        FLOAT reflective
+        FLOAT reflective,
+        FLOAT refractive,
+        FLOAT transparency
    ) :
         color(color),
         specular(specular),
         reflective(reflective),
+        refractive(refractive),
+        transparency(transparency),
         radius(radius),
         height(height),
         position(position),
@@ -110,11 +128,15 @@ torus_s::torus_s(
         FLOAT R,
         const FLOAT3 &color,
         uint32_t specular,
-        FLOAT reflective
+        FLOAT reflective,
+        FLOAT refractive,
+        FLOAT transparency
     ) :
         color(color),
         specular(specular),
         reflective(reflective),
+        refractive(refractive),
+        transparency(transparency),
         r(r),
         R(R),
         position(position),
@@ -143,7 +165,8 @@ light_s::light_s(
 
 // -----------------------------------------------------------------------------
 camera_s::camera_s(
-        const FLOAT3 &pos, const FLOAT3 &dir
+        const FLOAT3 &pos,
+        const FLOAT3 &dir
     ) :
         position(pos),
         direction(dir),
