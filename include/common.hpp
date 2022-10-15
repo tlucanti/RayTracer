@@ -32,10 +32,13 @@ namespace RTX_NAMESPACE
         inline FLOAT vertical_look_speed {0};
         inline FLOAT horizontal_look_speed {0};
         inline bool emission {false};
+        inline bool blinding {true};
+        inline bool transparency {true};
+        inline bool refractive {true};
 
         inline constexpr const char *kernel_fname = "../cl/kernel.cl";
 //        inline constexpr const char *scene_fname = "../scenes/scene.json";
-        inline constexpr const char *scene_fname = "../scenes/spheres.json";
+        inline const char *scene_fname;
 //        inline constexpr const char *scene_fname = "../scenes/planes.json";
 //        inline constexpr const char *scene_fname = "../scenes/cylinders.json";
 

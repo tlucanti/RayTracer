@@ -349,6 +349,9 @@ static void parse_config(const nlohmann::json &res)
     bool move_speed = false;
     bool look_speed = false;
     bool emission = false;
+    bool blinding = false;
+    bool transparency = false;
+    bool refractive = false;
 
     parse_type_assert("config", res, OBJECT_TYPE);
     for (const auto &item : res.items())
@@ -364,6 +367,9 @@ static void parse_config(const nlohmann::json &res)
             case ("move_speed"_hash): parse_float_positive("move speed", item, move_speed, rtx::config::forward_move_step); break ;
             case ("look_speed"_hash): parse_float_positive("mouse sensitivity", item, look_speed, rtx::config::horizontal_look_speed); break ;
             case ("emission"_hash): parse_bool("object emission", item, emission, rtx::config::emission); break ;
+            case ("blinding"_hash): parse_bool("light blinding", item, blinding, rtx::config::blinding); break ;
+            case ("transparency"_hash): parse_bool("object transparency", item, transparency, rtx::config::transparency); break ;
+            case ("refractive"_hash): parse_bool("object refractive", item, refractive, rtx::config::refractive); break ;
             default: parse_unknown_notify(item.key()); break ;
         }
     }
@@ -377,6 +383,9 @@ static void parse_config(const nlohmann::json &res)
     parse_undefined_warn_set("mouse sensitivity", look_speed, 0.005, rtx::config::vertical_look_speed);
     rtx::config::horizontal_look_speed = rtx::config::vertical_look_speed;
     parse_undefined_warn_set("object emission", emission, false, rtx::config::emission);
+    parse_undefined_warn_set("light blinding", blinding, true, rtx::config::blinding);
+    parse_undefined_warn_set("object transparency", transparency, true, rtx::config::transparency);
+    parse_undefined_warn_set("object refractive", refractive, true, rtx::config::refractive);
     flags.config = true;
     parse_ok(true, "scene::config "_W + "parsed"_G);
 }
@@ -448,7 +457,7 @@ static void parse_sphere_single(const nlohmann::json &sphere)
             case ("color"_hash): parse_color("sphere color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("sphere specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("sphere reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_unit("sphere refractive", item, got_refractive, refractive); break ;
+            case ("refractive"_hash): parse_float_positive("sphere refractive", item, got_refractive, refractive); break ;
             case ("transparency"_hash): parse_float_unit("sphere transparency", item, got_transparency, transparency); break ;
             case ("center"_hash):
             case ("position"_hash): parse_vec3_point("sphere position", item, got_position, position); break ;
@@ -511,7 +520,7 @@ static void parse_plane_single(const nlohmann::json &plane)
             case ("color"_hash): parse_color("plane color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("plane specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("plane reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_unit("plane refractive", item, got_refractive, refractive); break ;
+            case ("refractive"_hash): parse_float_positive("plane refractive", item, got_refractive, refractive); break ;
             case ("transparency"_hash): parse_float_unit("plane transparency", item, got_transparency, transparency); break ;
             case ("position"_hash):
             case ("point"_hash): parse_vec3_point("plane point", item, got_point, point); break;
@@ -576,7 +585,7 @@ static void parse_triangle_single(const nlohmann::json &triangle)
             case ("color"_hash): parse_color("triangle color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("triangle specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("triangle reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_unit("triangle refractive", item, got_refractive, refractive); break ;
+            case ("refractive"_hash): parse_float_positive("triangle refractive", item, got_refractive, refractive); break ;
             case ("transparency"_hash): parse_float_unit("triangle transparency", item, got_transparency, transparency); break ;
             case ("emission"_hash): parse_float_unit("triangle emission", item, got_emission, emission); break ;
             case ("a"_hash): parse_vec3_point("triangle point a", item, got_a, a); break ;
@@ -644,7 +653,7 @@ static void parse_hyperboloid_single(const nlohmann::json &hyper)
             case ("color"_hash): parse_color("hyperboloid color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("hyperboloid specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("hyperboloid reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_unit("hyperboloid refractive", item, got_refractive, refractive); break ;
+            case ("refractive"_hash): parse_float_positive("hyperboloid refractive", item, got_refractive, refractive); break ;
             case ("transparency"_hash): parse_float_unit("hyperboloid transparency", item, got_transparency, transparency); break ;
             case ("position"_hash): parse_vec3_point("hyperboloid position", item, got_position, position); break ;
             case ("direction"_hash): parse_vec3_unit("hyperboloid direction", item, got_direction, direction); break ;
@@ -712,7 +721,7 @@ static void parse_cylinder_single(const nlohmann::json &cylinder)
             case ("color"_hash): parse_color("cylinder color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("cylinder specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("cylinder reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_unit("cylinder refractive", item, got_refractive, refractive); break ;
+            case ("refractive"_hash): parse_float_positive("cylinder refractive", item, got_refractive, refractive); break ;
             case ("transparency"_hash): parse_float_unit("cylinder transparency", item, got_transparency, transparency); break ;
             case ("position"_hash): parse_vec3_point("cylinder position", item, got_position, position); break ;
             case ("direction"_hash): parse_vec3_unit("cylinder direction", item, got_direction, direction); break ;
@@ -781,7 +790,7 @@ static void parse_torus_single(const nlohmann::json &torus)
             case ("color"_hash): parse_color("torus color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("torus specular", item, got_specular, specular); break ;
             case ("reflective"_hash): parse_float_unit("torus reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_unit("torus refractive", item, got_refractive, refractive); break ;
+            case ("refractive"_hash): parse_float_positive("torus refractive", item, got_refractive, refractive); break ;
             case ("transparency"_hash): parse_float_unit("torus transparency", item, got_transparency, transparency); break ;
             case ("position"_hash): parse_vec3_point("torus position", item, got_position, position); break ;
             case ("normal"_hash): parse_vec3_unit("torus normal", item, got_normal, normal); break ;

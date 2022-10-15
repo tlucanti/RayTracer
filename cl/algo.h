@@ -39,12 +39,12 @@ FLOAT3 reflect_ray(FLOAT3 ray, FLOAT3 normal)
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED inline
-FLOAT3 refract_ray(FLOAT3 ray, FLOAT3 normal, FLOAT n12)
+FLOAT3 refract_ray_slow(FLOAT3 ray, FLOAT3 normal, FLOAT n12)
 {
 //    (void)normal;
 //    (void)n12;
 //    return -ray;
-    FLOAT cos_a = dot(normal, ray);
+    FLOAT cos_a = fabs(dot(normal, ray));
     FLOAT sin_a = sqrt(1. - cos_a * cos_a);
     FLOAT sin_b = n12 * sin_a;
     FLOAT cos_b = sqrt(1. - sin_b * sin_b);
@@ -56,6 +56,34 @@ FLOAT3 refract_ray(FLOAT3 ray, FLOAT3 normal, FLOAT n12)
     FLOAT3 R_p = -D_p * sin_b * (1. / sin_a);
 
     return R_n + R_p;
+}
+
+// -----------------------------------------------------------------------------
+CPP_UNUSED inline
+FLOAT3 refract_ray_2(FLOAT3 ray, FLOAT3 normal, FLOAT n12)
+{
+    const FLOAT cosI = -dot(normal, ray);
+    const FLOAT sinT2 = n12 * n12 * (1. - cosI * cosI);
+//    if (sinT2 > 1.)
+//        return nan; // TIR
+    const FLOAT cosT = sqrt(1. - sinT2);
+    return normal * n12 + normal * (n12 * cosI - cosT);
+}
+
+// -----------------------------------------------------------------------------
+CPP_UNUSED inline
+FLOAT3 refract_ray(FLOAT3 ray, FLOAT3 normal, FLOAT n12)
+{
+    // Compute $\cos \theta_\roman{t}$ using Snell's law
+    FLOAT cosThetaI = dot(normal, ray);
+    FLOAT sin2ThetaI = fmax(0., 1. - cosThetaI * cosThetaI);
+    FLOAT sin2ThetaT = n12 * n12 * sin2ThetaI;
+
+    // Handle total internal reflection for transmission
+//    if (sin2ThetaT >= 1)
+//        return false;
+    FLOAT cosThetaT = sqrt(1. - sin2ThetaT);
+    return -ray * n12 + normal * (n12 * cosThetaI - cosThetaT);
 }
 
 // -----------------------------------------------------------------------------

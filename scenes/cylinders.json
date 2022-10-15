@@ -1,5 +1,9 @@
 
 {
+  "config": {
+    "transparency": false
+  },
+
   "cameras": [
     {
       "position": [0, 0, 0],
@@ -14,6 +18,9 @@
       "color": "purple",
       "radius": 1,
       "height": 5
+    },
+    {
+
     }
   ],
 

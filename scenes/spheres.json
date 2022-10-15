@@ -65,7 +65,8 @@
       "radius": 0.5,
       "color": "white",
       "reflective": 0.1,
-      "transparency": 0.7
+      "refractive": 0.7,
+      "transparency": 0.9
     }
   ],
 

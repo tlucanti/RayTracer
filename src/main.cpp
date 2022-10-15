@@ -3,6 +3,7 @@
 #include <rtx.hpp>
 #include <cl/kernel.cl>
 #include <thread>
+#include <exception.hpp>
 
 void rtx::init_scene()
 {
@@ -75,8 +76,15 @@ NORET void rtx::collapse(int status)
     exit(status);
 }
 
-int main()
+int main(int argc, char **argv)
 {
+    if (argc < 2) {
+        rtx::Error("rtx", "expected scene name as argument");
+        return 1;
+    } else if (argc > 2) {
+        rtx::Warning("rtx", "extra options ignored");
+    }
+    rtx::config::scene_fname = argv[1];
     putenv(const_cast<char *>("CUDA_CACHE_DISABLE=1"));
 
 //    COMPLEX x1, x2;

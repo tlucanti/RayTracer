@@ -1,5 +1,10 @@
 
 {
+  "config": {
+    "blinding": true,
+    "transparency": false
+  },
+
   "cameras": [
     {
       "position": [0, 0, 0],

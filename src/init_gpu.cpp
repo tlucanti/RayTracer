@@ -13,6 +13,12 @@ void rtx::init_gpu()
     std::string flags = "-D__OPENCL -I" + std::string(rtx::config::cl_dir);
     if (rtx::config::emission)
         flags += " -DRTX_EMISSION ";
+    if (rtx::config::blinding)
+        flags += " -DRTX_DIRECT ";
+    if (rtx::config::transparency)
+        flags += " -DRTX_TRANSPARENCY ";
+    if (rtx::config::refractive)
+        flags += " -DRTX_REFRACTIVE ";
     program.compile(device, true, flags.c_str());
 
 //    cllib::CLprogram blur_program(4, std::ifstream(rtx::config::kernel_fname), "blur_convolution", *rtx::data::context);

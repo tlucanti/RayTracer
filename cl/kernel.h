@@ -30,6 +30,8 @@
 #  define ASSIGN_COMPLEX(__real, __imag) {{__real, __imag}}
 #  define ASSIGN_SCENE(...) {__VA_ARGS__}
 #  define cstatic_cast(__type, __var) static_cast<__type>(__var)
+#  define RTX_EMISSION
+#  define RTX_DIRECT
 
 #  define SPHERE_PARAMS     \
     FL3_CREF position,      \

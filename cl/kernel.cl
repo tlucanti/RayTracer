@@ -526,8 +526,8 @@ FLOAT3 compute_direct_lightning(
 }
 
 // -----------------------------------------------------------------------------
-#define RECURSION_DEPTH 8
-
+#ifdef RTX_TRANSPARENCY
+# define RECURSION_DEPTH 16
 CPP_UNUSED CPP_INLINE
 FLOAT3 trace_ray(
         scene_ptr scene,
@@ -570,8 +570,10 @@ FLOAT3 trace_ray(
             &closest_type,
             &param
         );
-//        ray_queue_col[current_ray] += compute_direct_lightning(scene, ray_queue_pos[current_ray], ray_queue_dir[current_ray], closest_t);
-//        *distance = closest_t;
+#ifdef RTX_DIRECT
+        ray_queue_col[current_ray] += compute_direct_lightning(scene, ray_queue_pos[current_ray], ray_queue_dir[current_ray], closest_t);
+#endif /* RTX_DIRECT */
+        //        *distance = closest_t;
         if (closest_obj == NULLPTR) {
             ray_enqueued[current_ray] = 0;
             continue ;
@@ -619,15 +621,6 @@ FLOAT3 trace_ray(
         if (current_ray >= RECURSION_DEPTH / 2) {
             ray_queue_col[current_ray] += local_color * reflective_prod[current_ray];
         } else {
-//            if (current_ray == 1) {}
-//            else if (current_ray % 2 == 0) {
-//                reflective_prod[current_ray * 2] = reflective_prod[current_ray / 2] * (1. - get_obj_reflective(closest_obj));
-//            } else {
-//                reflective_prod[current_ray] = reflective_prod[current_ray / 2] * get_obj_transparency(closest_obj);
-//                ray_queue_dir[current_ray * 2 + 1] = refract_ray(ray_queue_dir[current_ray], normal, get_obj_refractive(closest_obj));
-
-//                reflective_prod[current_ray] = reflective_prod[current_ray / 2];
-//            }
             FLOAT refl = get_obj_reflective(closest_obj);
             FLOAT trans = get_obj_transparency(closest_obj);
             FLOAT refr = get_obj_refractive(closest_obj);
@@ -637,9 +630,11 @@ FLOAT3 trace_ray(
             ray_queue_col[current_ray] += local_color * reflective_prod[current_ray] * (ONE - refl) * (ONE - trans);
 
             ray_queue_dir[current_ray * 2] = reflect_ray(-ray_queue_dir[current_ray], normal);
-            ray_queue_dir[current_ray * 2 + 1] = refract_ray(-ray_queue_dir[current_ray], normal, refr);
-//            ray_queue_dir[current_ray * 2 + 1] = ray_queue_dir[current_ray];
-
+# ifdef RTX_REFRACTIVE
+            ray_queue_dir[current_ray * 2 + 1] = -refract_ray(-ray_queue_dir[current_ray], normal, refr);
+# else /* no RTX_REFRACTIVE */
+            ray_queue_dir[current_ray * 2 + 1] = ray_queue_dir[current_ray];
+# endif
             ray_queue_pos[current_ray * 2] = ray_queue_pos[current_ray];
             ray_queue_pos[current_ray * 2 + 1] = ray_queue_pos[current_ray];
         }
@@ -655,6 +650,100 @@ FLOAT3 trace_ray(
     _color.z = fmin(255. - EPS, _color.z);
     return _color;
 }
+#else /* no RTX_TRANSPARENCY */
+# define RECURSION_DEPTH 4
+CPP_UNUSED CPP_INLINE
+FLOAT3 trace_ray(
+        scene_ptr scene,
+        FLOAT3 camera,
+        FLOAT3 direction
+)
+{
+    void_ptr    closest_obj;
+    FLOAT3      color = BLACK;
+    FLOAT       reflective_prod = 1;
+    FLOAT       closest_t;
+    obj_type_t  closest_type;
+    FLOAT3      param;
+
+//    color += compute_direct_lightning(scene, camera, direction, 0);
+    uint32_t recursion_depth = RECURSION_DEPTH;
+    while (recursion_depth > 0)
+    {
+        --recursion_depth;
+        closest_obj = closest_intersection(
+                scene,
+                camera,
+                direction,
+                EPS,
+                INFINITY,
+                &closest_t,
+                &closest_type,
+                &param
+        );
+# ifdef RTX_DIRECT
+        color += compute_direct_lightning(scene, camera, direction, closest_t);
+# endif /* RTX_DIRECT */
+//        *distance = closest_t;
+        if (closest_obj == NULLPTR)
+            break ;
+
+
+        camera += direction * closest_t;
+        FLOAT3 normal;
+        switch (closest_type)
+        {
+            case SPHERE:
+                normal = normalize(camera - as_sphere(closest_obj)->position);
+                break ;
+            case PLANE: normal = as_plane(closest_obj)->normal; break ;
+            case TRIANGLE: normal = as_triangle(closest_obj)->normal; break ;
+            case CONE: normal = normalize(param); break ;
+            case CYLINDER: {
+                const FLOAT3 op = camera - as_cylinder(closest_obj)->position;
+                const FLOAT dt = dot(as_cylinder(closest_obj)->direction, op);
+                normal = op - as_cylinder(closest_obj)->direction * dt;
+                normal *= 1. / as_cylinder(closest_obj)->radius;
+                break ;
+            }
+            case TOR: normal = normalize(param); break ;
+        }
+
+        FLOAT3 specular_val = BLACK;
+        FLOAT3 factor = compute_lightning(
+                scene,
+                camera,
+                normal,
+                direction,
+                get_obj_specular(closest_obj),
+                &specular_val
+        );
+        FLOAT3 local_color = get_obj_color(closest_obj) * factor;
+        local_color += specular_val;
+        local_color.x = fmin(255. - EPS, local_color.x);
+        local_color.y = fmin(255. - EPS, local_color.y);
+        local_color.z = fmin(255. - EPS, local_color.z);
+# ifdef RTX_EMISSION
+        if (closest_type == SPHERE && as_sphere(closest_obj)->emission > 0.)
+            local_color = get_obj_color(closest_obj);
+# endif /* RTX_EMISSION */
+
+        if (recursion_depth == 0)
+            color += local_color * reflective_prod; // * closest_sphere->reflective;
+        else
+            color += local_color
+                     * (1.0 - get_obj_reflective(closest_obj)) * reflective_prod;
+        reflective_prod *= get_obj_reflective(closest_obj);
+
+        direction = reflect_ray(-direction, normal);
+    }
+
+    color.x = fmin(255. - EPS, color.x);
+    color.y = fmin(255. - EPS, color.y);
+    color.z = fmin(255. - EPS, color.z);
+    return color;
+}
+#endif /* RTX_TRANSPARENCY */
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
@@ -787,4 +876,5 @@ __kernel void blur_convolution(
 #  undef cross
 # endif /* __CPP */
 
+# define __VERSION 7
 #endif /* CL_KERNEL */
