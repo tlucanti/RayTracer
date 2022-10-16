@@ -32,6 +32,8 @@
 #  define cstatic_cast(__type, __var) static_cast<__type>(__var)
 #  define RTX_EMISSION
 #  define RTX_DIRECT
+#  define RTX_TRANSPARENCY
+#  define RTX_REFRACTIVE
 
 #  define SPHERE_PARAMS     \
     FL3_CREF position,      \

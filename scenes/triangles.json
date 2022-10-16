@@ -1,0 +1,63 @@
+
+{
+  "config": {
+    "transparency": false
+  },
+  "cameras": [
+    {
+      "position": [0, 0, 0],
+      "direction": [0, 0, 1]
+    }
+  ],
+  "triangles": [
+    {
+      "a": [1, 0, 1],
+      "b": [-1, 0, 1],
+      "c": [0, 0.3, 3],
+      "color": [250, 155, 30],
+      "reflective": 0.5
+    },
+    {
+      "a": [0.4, 4, 1],
+      "b": [-0.5, 3, 0.8],
+      "c": [-0.1, 2, 3],
+      "color": [250, 30, 155],
+      "reflective": 0.5    }
+  ],
+  "spheres": [
+    {
+      "position": [1, 0, 1],
+      "radius": 0.05,
+      "color": "red"
+    },
+    {
+      "position": [-1, 0, 1],
+      "radius": 0.05,
+      "color": "red"
+    },
+    {
+      "position": [0, 0.3, 3],
+      "radius": 0.05,
+      "color": "red"
+    }
+  ],
+  "lights": [
+    {
+      "type": "ambient",
+      "intensity": 0.1,
+      "color": "white"
+    },
+    {
+      "type": "direct",
+      "intensity": 0.5,
+      "color": "white",
+      "direction": [-1, -30, 1]
+    },
+    {
+      "type": "point",
+      "intensity": 0.4,
+      "color": "white",
+      "position": [-0.5, 4, 1]
+    }
+  ]
+}

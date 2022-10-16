@@ -66,7 +66,9 @@ triangle_s::triangle_s(
         b(p2),
         c(p3)
 {
-    normal = rtx::linalg::cross(p2 - p1, p3 - p1);
+    a.y += 0.01;
+    normal = rtx::linalg::cross(b - a, c - a);
+    rtx::linalg::normalize_ref(normal);
 }
 
 // -----------------------------------------------------------------------------

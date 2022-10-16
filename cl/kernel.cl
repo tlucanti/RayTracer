@@ -544,22 +544,20 @@ FLOAT3 trace_ray(
     FLOAT3 ray_queue_dir[RECURSION_DEPTH];
     FLOAT3 ray_queue_pos[RECURSION_DEPTH];
     FLOAT3 ray_queue_col[RECURSION_DEPTH];
-    uint32_t ray_enqueued[RECURSION_DEPTH];
+    uint32_t ray_enqueued[RECURSION_DEPTH] = {};
     FLOAT reflective_prod[RECURSION_DEPTH];
 
     reflective_prod[1] = 1.;
     ray_queue_dir[1] = direction;
     ray_queue_pos[1] = camera;
-    ray_enqueued[0] = 1;
+    ray_enqueued[1] = 1;
 
     for (uint32_t current_ray = 1; current_ray < RECURSION_DEPTH; ++current_ray)
     {
         ray_queue_col[current_ray] = BLACK;
-        if (ray_enqueued[current_ray / 2] == 0) {
-            ray_enqueued[current_ray] = 0;
-            continue ;
+        if (ray_enqueued[current_ray] == 0) {
+            continue;
         }
-        ray_enqueued[current_ray] = 1;
         closest_obj = closest_intersection(
             scene,
             ray_queue_pos[current_ray],
@@ -571,11 +569,10 @@ FLOAT3 trace_ray(
             &param
         );
 #ifdef RTX_DIRECT
-        ray_queue_col[current_ray] += compute_direct_lightning(scene, ray_queue_pos[current_ray], ray_queue_dir[current_ray], closest_t);
+//        ray_queue_col[current_ray] += compute_direct_lightning(scene, ray_queue_pos[current_ray], ray_queue_dir[current_ray], closest_t);
 #endif /* RTX_DIRECT */
         //        *distance = closest_t;
         if (closest_obj == NULLPTR) {
-            ray_enqueued[current_ray] = 0;
             continue ;
         }
 
@@ -618,26 +615,30 @@ FLOAT3 trace_ray(
             local_color = get_obj_color(closest_obj);
 #endif /* RTX_EMISSION */
 
-        if (current_ray >= RECURSION_DEPTH / 2) {
+        FLOAT refl = get_obj_reflective(closest_obj);
+        FLOAT trans = get_obj_transparency(closest_obj);
+        FLOAT refr = get_obj_refractive(closest_obj);
+        if (current_ray >= RECURSION_DEPTH / 2 || (refl < EPS && trans < EPS)) {
             ray_queue_col[current_ray] += local_color * reflective_prod[current_ray];
         } else {
-            FLOAT refl = get_obj_reflective(closest_obj);
-            FLOAT trans = get_obj_transparency(closest_obj);
-            FLOAT refr = get_obj_refractive(closest_obj);
-
             reflective_prod[current_ray * 2] = reflective_prod[current_ray] * refl * (ONE - trans);
             reflective_prod[current_ray * 2 + 1] = reflective_prod[current_ray] * (ONE - refl) * trans;
             ray_queue_col[current_ray] += local_color * reflective_prod[current_ray] * (ONE - refl) * (ONE - trans);
 
             ray_queue_dir[current_ray * 2] = reflect_ray(-ray_queue_dir[current_ray], normal);
 # ifdef RTX_REFRACTIVE
-            ray_queue_dir[current_ray * 2 + 1] = -refract_ray(-ray_queue_dir[current_ray], normal, refr);
+            ray_queue_dir[current_ray * 2 + 1] = refract_ray_slow(-ray_queue_dir[current_ray], normal, refr);
 # else /* no RTX_REFRACTIVE */
             ray_queue_dir[current_ray * 2 + 1] = ray_queue_dir[current_ray];
 # endif
             ray_queue_pos[current_ray * 2] = ray_queue_pos[current_ray];
             ray_queue_pos[current_ray * 2 + 1] = ray_queue_pos[current_ray];
+
         }
+        if (trans > EPS)
+            ray_enqueued[current_ray * 2 + 1] = 1;
+        if (refl > EPS)
+            ray_enqueued[current_ray * 2] = 1;
     }
 
     _color += ray_queue_col[1];

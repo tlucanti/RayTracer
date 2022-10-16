@@ -1,5 +1,8 @@
 
 {
+  "config": {
+    "transparency": false
+  },
   "cameras": [
     {
       "position": [0, 0, 0],

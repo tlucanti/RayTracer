@@ -1,5 +1,9 @@
 
 {
+  "config": {
+    "transparency": false,
+    "move_speed": 1.5
+  },
   "lights": [
     {
       "type": "point",
