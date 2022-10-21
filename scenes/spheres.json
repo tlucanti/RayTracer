@@ -1,6 +1,10 @@
 
 {
-
+  "config": {
+    "transparency": true,
+    "blinding": false,
+    "refractive": true
+  },
   "lights": [
     {
       "type": "point",
@@ -30,7 +34,7 @@
       "color": "cyan",
       "specular": 200,
       "reflective": 0.3,
-      "refractive": 0.5,
+      "refractive": 0.9,
       "transparency": 0.4
     },
 

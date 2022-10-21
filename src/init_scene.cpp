@@ -469,7 +469,7 @@ static void parse_sphere_single(const nlohmann::json &sphere)
     parse_undefined_assert("sphere color", got_color);
     parse_undefined_info_set("sphere specular", got_specular, 0u, specular);
     parse_undefined_info_set("sphere reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("sphere refractive", got_refractive, 0., refractive);
+    parse_undefined_info_set("sphere refractive", got_refractive, 1., refractive);
     parse_undefined_info_set("sphere transparency", got_transparency, 0., transparency);
     parse_undefined_info_set("sphere emission", got_emission, 0., emission);
     parse_undefined_assert("sphere position", got_position);
@@ -531,7 +531,7 @@ static void parse_plane_single(const nlohmann::json &plane)
     parse_undefined_assert("plane color", got_color);
     parse_undefined_info_set("plane specular", got_specular, 0u, specular);
     parse_undefined_info_set("plane reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("plane refractive", got_refractive, 0., refractive);
+    parse_undefined_info_set("plane refractive", got_refractive, 1., refractive);
     parse_undefined_info_set("plane transparency", got_transparency, 0., transparency);
     parse_undefined_assert("plane point", got_point);
     parse_undefined_assert("plane normal", got_normal);
@@ -597,7 +597,7 @@ static void parse_triangle_single(const nlohmann::json &triangle)
     parse_undefined_assert("triangle color", got_color);
     parse_undefined_info_set("triangle specular", got_specular, 0u, specular);
     parse_undefined_info_set("triangle reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("triangle refractive", got_refractive, 0., refractive);
+    parse_undefined_info_set("triangle refractive", got_refractive, 1., refractive);
     parse_undefined_info_set("triangle transparency", got_transparency, 0., transparency);
     parse_undefined_info_set("triangle emission", got_emission, 0., emission);
     parse_undefined_assert("triangle point a", got_a);
@@ -665,7 +665,7 @@ static void parse_hyperboloid_single(const nlohmann::json &hyper)
     parse_undefined_assert("hyperboloid color", got_color);
     parse_undefined_info_set("hyperboloid specular", got_specular, 0u, specular);
     parse_undefined_info_set("hyperboloid reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("hyperboloid refractive", got_refractive, 0., refractive);
+    parse_undefined_info_set("hyperboloid refractive", got_refractive, 1., refractive);
     parse_undefined_info_set("hyperboloid transparency", got_transparency, 0., transparency);
     parse_undefined_assert("hyperboloid position", got_position);
     parse_undefined_assert("hyperboloid direction", got_direction);
@@ -734,7 +734,7 @@ static void parse_cylinder_single(const nlohmann::json &cylinder)
     parse_undefined_assert("cylinder color", got_color);
     parse_undefined_info_set("cylinder specular", got_specular, 0u, specular);
     parse_undefined_info_set("cylinder reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("cylinder refractive", got_refractive, 0., refractive);
+    parse_undefined_info_set("cylinder refractive", got_refractive, 1., refractive);
     parse_undefined_info_set("cylinder transparency", got_transparency, 0., transparency);
     parse_undefined_info_set("cylinder height", got_height, std::numeric_limits<double>::infinity(), height);
     parse_undefined_assert("cylinder position", got_position);
@@ -803,7 +803,7 @@ static void parse_torus_single(const nlohmann::json &torus)
     parse_undefined_assert("torus color", got_color);
     parse_undefined_info_set("torus specular", got_specular, 0u, specular);
     parse_undefined_info_set("torus reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("torus refractive", got_refractive, 0., refractive);
+    parse_undefined_info_set("torus refractive", got_refractive, 1., refractive);
     parse_undefined_info_set("torus transparency", got_transparency, 0., transparency);
     parse_undefined_assert("torus position", got_position);
     parse_undefined_assert("torus normal", got_normal);
