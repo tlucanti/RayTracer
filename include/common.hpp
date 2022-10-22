@@ -36,7 +36,18 @@ namespace RTX_NAMESPACE
         inline bool transparency {true};
         inline bool refractive {true};
 
-        inline constexpr const char *kernel_fname = "../cl/kernel.cl";
+        inline constexpr const char *tracer_fname = "../cl/tracer.cl";
+        inline constexpr const char *marcher_fname = "../cl/marcher.cl";
+
+# ifdef RTX_RAY_TRACER
+        inline constexpr const char *kernel_file = tracer_fname;
+        inline constexpr const char *kernel_name = "ray_tracer";
+# elif defined(RTX_RAY_MARCHER)
+        inline constexpr const char *kernel_file = marcher_fname;
+        inline constexpr const char *kernel_name = "ray_marcher";
+# else
+#  error "tracer type not selected"
+# endif
 //        inline constexpr const char *scene_fname = "../scenes/scene.json";
         inline const char *scene_fname;
 //        inline constexpr const char *scene_fname = "../scenes/planes.json";
@@ -74,6 +85,7 @@ namespace RTX_NAMESPACE
 # endif /* __APPLE__ */
 
 # define EPS 1e-4
+# define FARAWAY 1e4
 # define ONE (1. - EPS)
 # define PI M_PI
 

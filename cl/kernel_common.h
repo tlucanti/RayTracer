@@ -6,7 +6,8 @@
 # ifndef NULLLPTR
 #  define NULLPTR    0
 # endif /* NULL */
-# define EPS 1e-4
+# define EPS 0.01
+# define FARAWAY 1e4
 # define ONE (1. - EPS)
 # define PACKED    __attribute__((__packed__))
 # define ALIGNED8  __attribute__((__aligned__(8)))

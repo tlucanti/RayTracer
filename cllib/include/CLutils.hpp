@@ -5,6 +5,7 @@
 # include <regex>
 # include <string>
 # include <fstream>
+# include <CLexception.hpp>
 
 namespace __utils
 {
@@ -37,6 +38,8 @@ namespace __utils
 #  define __GET_STREAM_CONTENT
     inline std::string __get_stream_content(std::ifstream &stream)
     {
+        if (not stream.is_open())
+            throw std::runtime_error("file stream not opened");
         std::streamsize start = stream.gcount();
         stream.ignore(std::numeric_limits<std::streamsize>::max());
         std::streamsize length = stream.gcount();

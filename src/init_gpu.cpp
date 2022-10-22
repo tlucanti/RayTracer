@@ -9,7 +9,7 @@ void rtx::init_gpu()
     rtx::data::context = new cllib::CLcontext(device);
     rtx::data::queue = new cllib::CLqueue(*rtx::data::context, device);
 
-    cllib::CLprogram program(4, std::ifstream(rtx::config::kernel_fname), "ray_tracer", *rtx::data::context);
+    cllib::CLprogram program(4, std::ifstream(rtx::config::kernel_file), rtx::config::kernel_name, *rtx::data::context);
     std::string flags = "-D__OPENCL -I" + std::string(rtx::config::cl_dir);
     if (rtx::config::emission)
         flags += " -DRTX_EMISSION ";
@@ -19,6 +19,11 @@ void rtx::init_gpu()
         flags += " -DRTX_TRANSPARENCY ";
     if (rtx::config::refractive)
         flags += " -DRTX_REFRACTIVE ";
+#ifdef RTX_RAY_TRACER
+    flags += " -DRTX_RAY_TRACER ";
+#elif defined(RTX_RAY_MARCHER)
+    flags += " -DRTX_RAY_MARCHER ";
+#endif
     program.compile(device, true, flags.c_str());
 
 //    cllib::CLprogram blur_program(4, std::ifstream(rtx::config::kernel_fname), "blur_convolution", *rtx::data::context);

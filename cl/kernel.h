@@ -2,6 +2,20 @@
 #ifndef CL_KERNEL_H
 # define CL_KERNEL_H
 
+# define as_sphere(obj_ptr) cstatic_cast(sphere_ptr, obj_ptr)
+# define as_plane(obj_ptr) cstatic_cast(plane_ptr, obj_ptr)
+# define as_triangle(obj_ptr) cstatic_cast(triangle_ptr, obj_ptr)
+# define as_cone(obj_ptr) cstatic_cast(cone_ptr, obj_ptr)
+# define as_cylinder(obj_ptr) cstatic_cast(cylinder_ptr, obj_ptr)
+
+# define get_obj_color(obj_ptr) (as_sphere(obj_ptr)->color)
+# define get_obj_specular(obj_ptr) (as_sphere(obj_ptr)->specular)
+# define get_obj_reflective(obj_ptr) (as_sphere(obj_ptr)->reflective)
+# define get_obj_refractive(obj_ptr) (as_sphere(obj_ptr)->refractive)
+# define get_obj_transparency(obj_ptr) (as_sphere(obj_ptr)->transparency)
+
+# define BLACK ASSIGN_FLOAT3(0., 0., 0.)
+
 # ifndef __CPP
 #  define CPP_UNUSED
 #  define CPP_INLINE
@@ -26,7 +40,7 @@
 #  define CPP_UNUSED __attribute__((unused))
 #  define CPP_INLINE inline
 #  define NULLPTR nullptr
-#  define ASSIGN_FLOAT3(__x, __y, __z) {{__x, __y, __z}}
+#  define ASSIGN_FLOAT3(__x, __y, __z) FLOAT3({{__x,__y, __z}})
 #  define ASSIGN_COMPLEX(__real, __imag) {{__real, __imag}}
 #  define ASSIGN_SCENE(...) {__VA_ARGS__}
 #  define cstatic_cast(__type, __var) static_cast<__type>(__var)

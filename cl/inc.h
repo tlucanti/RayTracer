@@ -57,6 +57,7 @@ FLOAT intersect_torus(
         FLOAT3 *param
 );
 
+# ifdef RTX_RAY_TRACER
 CPP_UNUSED
 void_ptr closest_intersection(
         scene_ptr scene,
@@ -68,6 +69,15 @@ void_ptr closest_intersection(
         obj_type_t *closest_type_ptr,
         FLOAT3 *param
 );
+# elif defined(RTX_RAY_MARCHER)
+CPP_UNUSED
+void_ptr closest_intersection(
+        scene_ptr scene,
+        FLOAT3 camera,
+        FLOAT3 direction,
+        FLOAT3 *__restrict point_ptr
+);
+# endif
 
 CPP_UNUSED
 bool shadow_intersection(

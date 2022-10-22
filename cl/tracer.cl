@@ -1,6 +1,6 @@
 
-#ifndef CL_KERNEL
-# define CL_KERNEL
+#ifndef CL_TRACER
+# define CL_TRACER
 
 # ifndef __CPP
 #  include "kernel_common.h"
@@ -9,20 +9,6 @@
 # include "objects.h"
 # include "algo.h"
 # include "inc.h"
-
-# define as_sphere(obj_ptr) cstatic_cast(sphere_ptr, obj_ptr)
-# define as_plane(obj_ptr) cstatic_cast(plane_ptr, obj_ptr)
-# define as_triangle(obj_ptr) cstatic_cast(triangle_ptr, obj_ptr)
-# define as_cone(obj_ptr) cstatic_cast(cone_ptr, obj_ptr)
-# define as_cylinder(obj_ptr) cstatic_cast(cylinder_ptr, obj_ptr)
-
-# define get_obj_color(obj_ptr) (as_sphere(obj_ptr)->color)
-# define get_obj_specular(obj_ptr) (as_sphere(obj_ptr)->specular)
-# define get_obj_reflective(obj_ptr) (as_sphere(obj_ptr)->reflective)
-# define get_obj_refractive(obj_ptr) (as_sphere(obj_ptr)->refractive)
-# define get_obj_transparency(obj_ptr) (as_sphere(obj_ptr)->transparency)
-
-# define BLACK ASSIGN_FLOAT3(0., 0., 0.)
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
@@ -258,13 +244,13 @@ void_ptr closest_intersection(
         FLOAT3 direction,
         FLOAT start,
         FLOAT end,
-        FLOAT *closest_t_ptr,
-        obj_type_t *closest_type_ptr,
-        FLOAT3 *param
+        FLOAT *__restrict closest_t_ptr,
+        obj_type_t *__restrict closest_type_ptr,
+        FLOAT3 *__restrict param
     )
 {
     FLOAT closest_t = INFINITY;
-    __constant const void *closest_obj = NULLPTR;
+    void_ptr closest_obj = NULLPTR;
     obj_type_t closest_type;
 
     for (uint32_t i=0; i < scene->spheres_num; ++i)
@@ -569,7 +555,7 @@ FLOAT3 trace_ray(
             &param
         );
 #ifdef RTX_DIRECT
-//        ray_queue_col[current_ray] += compute_direct_lightning(scene, ray_queue_pos[current_ray], ray_queue_dir[current_ray], closest_t);
+        ray_queue_col[current_ray] += compute_direct_lightning(scene, ray_queue_pos[current_ray], ray_queue_dir[current_ray], closest_t);
 #endif /* RTX_DIRECT */
         //        *distance = closest_t;
         if (closest_obj == NULLPTR) {
@@ -667,7 +653,6 @@ FLOAT3 trace_ray(
     obj_type_t  closest_type;
     FLOAT3      param;
 
-//    color += compute_direct_lightning(scene, camera, direction, 0);
     uint32_t recursion_depth = RECURSION_DEPTH;
     while (recursion_depth > 0)
     {
@@ -878,4 +863,4 @@ __kernel void blur_convolution(
 # endif /* __CPP */
 
 # define __VERSION 7
-#endif /* CL_KERNEL */
+#endif /* CL_TRACER */

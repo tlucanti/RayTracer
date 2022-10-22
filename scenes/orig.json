@@ -1,0 +1,79 @@
+
+{
+	"config": {
+		"emission": true
+	},
+
+	"cameras": [
+		{
+			"position":		[0, 0, -1],
+			"direction":	[0, 0, 1]
+		}
+	],
+
+	"cylinders": [
+		{
+			"color": "white",
+			"position": [0, 0, 0],
+			"radius": 0.2,
+			"height": 0.05,
+			"direction": [0, 1, 0]
+		}
+	],
+
+	"spheres": [
+		{
+			"color":		"green",
+			"specular":		500,
+			"center":		[0, -1, 3],
+			"radius":		1
+		},
+
+		{
+			"color":		"blue",
+			"specular":		500,
+			"center":		[2, 0, 4],
+			"radius":		1,
+			"emission": 	0.8
+		},
+
+		{
+			"color":		"red",
+			"specular":		500,
+			"center":		[-2, 0, 4],
+			"radius":		1,
+			"_emission": 	0.002
+		},
+
+		{
+			"_color": 		"yellow",
+			"specular": 	300,
+			"radius": 		500,
+			"position": 	[0, -501, 0]
+		},
+
+		{
+			"_color": "white",
+			"position": [1e10, 1e10, 1e10],
+			"radius": 1e-10
+		}
+	],
+
+	"lights": [
+		{
+			"type": "ambient",
+			"intensity": 0.2
+		},
+		{
+			"type": "point",
+			"intensity": 0.6,
+			"position": [2, 1, 0]
+		},
+		{
+			"type": "direct",
+			"intensity": 0.2,
+			"direction": [1, 4, 4]
+		}
+	]
+}
+
