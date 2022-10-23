@@ -22,7 +22,9 @@
 #  define ASSIGN_FLOAT3(__x, __y, __z) (FLOAT3)(__x, __y, __z)
 #  define ASSIGN_COMPLEX(__real, __imag) (COMPLEX)(__real, __imag)
 #  define ASSIGN_SCENE(...) (scene_t){__VA_ARGS__}
-#  define cstatic_cast(__type, __var) ((__type)(__var))
+#  define _cstyle_cast(__type, __var) ((__type)(__var))
+#  define cstatic_cast(__type, __var) _cstyle_cast(__type, __var)
+#  define creinterpret_cast(__type, __var) _cstyle_cast(__type, __var)
 
 #  define SPHRERE_PARAMS
 #  define PLANE_PARAMS
@@ -30,6 +32,7 @@
 #  define CONE_PARAMS
 #  define CYLINDER_PARAMS
 #  define TORUS_PARAMS
+#  define BOX_PARAMS
 #  define LIGHT_PARAMS
 #  define CAMERA_PARAMS
 # else
@@ -44,6 +47,7 @@
 #  define ASSIGN_COMPLEX(__real, __imag) {{__real, __imag}}
 #  define ASSIGN_SCENE(...) {__VA_ARGS__}
 #  define cstatic_cast(__type, __var) static_cast<__type>(__var)
+#  define creinterpret_cast(__type, __var) reinterpret_cast<__type>(__var)
 #  define RTX_EMISSION
 #  define RTX_DIRECT
 #  define RTX_TRANSPARENCY
@@ -106,6 +110,17 @@
     FL3_CREF normal,        \
     FLOAT r,                \
     FLOAT R,                \
+    FL3_CREF color,         \
+    uint32_t specular,      \
+    FLOAT reflective,       \
+    FLOAT refractive,       \
+    FLOAT transparency
+
+#  define BOX_PARAMS        \
+    FLOAT3 position,        \
+    FLOAT a,                \
+    FLOAT b,                \
+    FLOAT c,                \
     FL3_CREF color,         \
     uint32_t specular,      \
     FLOAT reflective,       \

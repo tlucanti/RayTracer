@@ -227,12 +227,7 @@ CPP_UNUSED CPP_INLINE
 __kernel void ray_marcher(
         __global uint32_t *canvas,
 
-        sphere_ptr spheres,
-        plane_ptr planes,
-        triangle_ptr triangles,
-        cone_ptr cones,
-        cylinder_ptr cylinders,
-        torus_ptr torus,
+        byte_ptr figures,
 
         light_ptr lights,
         camera_ptr cameras,
@@ -249,34 +244,45 @@ __kernel void ray_marcher(
 
         const uint32_t width,
         const uint32_t height
-    )
+)
 {
+
     const FLOAT rheight = 1. / height;
     const FLOAT rwidth = 1. / width;
     const uint32_t z = get_global_id(0);
     const uint32_t y = get_global_id(1);
 
-    const scene_t scene = ASSIGN_SCENE(
-        spheres,
-        planes,
-        triangles,
-        cones,
-        cylinders,
-        torus,
+    scene_t scene = {
+            .lights = lights,
+            .cameras = cameras,
+            .spheres_num = spheres_num,
+            .planes_num = planes_num,
+            .triangles_num = triangles_num,
+            .cones_num = cones_num,
+            .cylinders_num = cylinders_num,
+            .torus_num = torus_num,
+            .lights_num = lights_num,
+            .cameras_num = cameras_num
+    };
+    size_t shift = 0;
 
-        lights,
-        cameras,
+    scene.spheres = creinterpret_cast(sphere_ptr, figures + shift);
+    shift += spheres_num * sizeof(sphere_t);
 
-        spheres_num,
-        planes_num,
-        triangles_num,
-        cones_num,
-        cylinders_num,
-        torus_num,
+    scene.planes = creinterpret_cast(plane_ptr, figures + shift);
+    shift += planes_num * sizeof(plane_t);
 
-        lights_num,
-        cameras_num
-    );
+    scene.triangles = creinterpret_cast(triangle_ptr, figures + shift);
+    shift += triangles_num * sizeof(triangle_t);
+
+    scene.cones = creinterpret_cast(cone_ptr, figures + shift);
+    shift += cones_num * sizeof(cone_t);
+
+    scene.cylinders = creinterpret_cast(cylinder_ptr, figures + shift);
+    shift += cylinders_num * sizeof(cylinder_t);
+
+    scene.torus = creinterpret_cast(torus_ptr, figures + shift);
+    shift += torus_num * sizeof(torus_ptr);
 
     FLOAT3 vec = ASSIGN_FLOAT3(
             (z - width / 2.) * rwidth,                                              // FIXME: open brakets (simplify)
@@ -287,9 +293,9 @@ __kernel void ray_marcher(
     vec = rotate_vector(vec, cameras[0].rotate_matrix);
 //    FLOAT distance;
     const FLOAT3 color = trace_ray(
-        &scene,
-        cameras[0].position,
-        vec
+            &scene,
+            cameras[0].position,
+            vec
     );
 
     uint32_t pix_pos;
@@ -302,5 +308,5 @@ __kernel void ray_marcher(
     canvas[pix_pos] = int_color;
 }
 
-# define __VERSION 3
+# define __VERSION 5
 #endif /* CL_MARCHER */

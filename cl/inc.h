@@ -109,12 +109,7 @@ CPP_UNUSED CPP_INLINE
 __kernel void ray_tracer(
         __global uint32_t *canvas,
 
-        sphere_ptr spheres,
-        plane_ptr planes,
-        triangle_ptr triangles,
-        cone_ptr cones,
-        cylinder_ptr cylinders,
-        torus_ptr torus,
+        byte_ptr figures,
 
         light_ptr lights,
         camera_ptr cameras,

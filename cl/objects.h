@@ -130,6 +130,24 @@ typedef struct torus_s
 } PACKED ALIGNED64 torus_t;
 
 // -----------------------------------------------------------------------------
+typedef struct box_s
+{
+    FLOAT3 color;
+    uint32_t specular;
+    PADDING4
+    FLOAT reflective;
+    FLOAT refractive;
+    FLOAT transparency;
+
+    FLOAT3 position;
+    FLOAT a;
+    FLOAT b;
+    FLOAT c;
+
+    DECLARE_CONSTRUCTOR(box_s, BOX_PARAMS);
+} PACKED ALIGNED64 box_t;
+
+// -----------------------------------------------------------------------------
 typedef struct light_s
 {
     FLOAT3          color;              // 0  -- 32
@@ -166,6 +184,7 @@ typedef __constant const torus_t    *__restrict torus_ptr;
 typedef __constant const light_t    *__restrict light_ptr;
 typedef __constant const camera_t   *__restrict camera_ptr;
 typedef __constant const void       *__restrict void_ptr;
+typedef __constant const unsigned char *__restrict byte_ptr;
 
 typedef struct
 {

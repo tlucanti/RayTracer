@@ -17,12 +17,7 @@ namespace data
 namespace scene
 {
     cllib::CLarray<camera_t, cllib::read_only_array> cameras;
-    cllib::CLarray<sphere_t, cllib::read_only_array> spheres;
-    cllib::CLarray<plane_t, cllib::read_only_array> planes;
-    cllib::CLarray<triangle_t, cllib::read_only_array> triangles;
-    cllib::CLarray<cone_t, cllib::read_only_array> cones;
-    cllib::CLarray<cylinder_t, cllib::read_only_array> cylinders;
-    cllib::CLarray<torus_t, cllib::read_only_array> torus;
+    cllib::CLarray<unsigned char, cllib::read_only_array> figures;
 
     cllib::CLarray<light_t, cllib::read_only_array> lights;
 

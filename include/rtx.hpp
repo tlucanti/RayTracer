@@ -29,14 +29,9 @@ namespace data
 
 namespace scene
 {
-    extern cllib::CLarray<camera_t, cllib::read_only_array> cameras;
-    extern cllib::CLarray<sphere_t, cllib::read_only_array> spheres;
-    extern cllib::CLarray<plane_t, cllib::read_only_array> planes;
-    extern cllib::CLarray<triangle_t, cllib::read_only_array> triangles;
-    extern cllib::CLarray<cone_t, cllib::read_only_array> cones;
-    extern cllib::CLarray<cylinder_t, cllib::read_only_array> cylinders;
-    extern cllib::CLarray<torus_t, cllib::read_only_array> torus;
+    extern cllib::CLarray<unsigned char, cllib::read_only_array> figures;
 
+    extern cllib::CLarray<camera_t, cllib::read_only_array> cameras;
     extern cllib::CLarray<light_t, cllib::read_only_array> lights;
 
     extern cllib::CLarray<unsigned int, cllib::write_only_array> canvas;

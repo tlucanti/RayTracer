@@ -53,16 +53,7 @@ static void reload_scene()
     rtx::objects::li_vec.clear();
 
     rtx::parse_scene();
-
-    rtx::scene::spheres = cllib::CLarray<sphere_t, cllib::read_only_array>(rtx::objects::sp_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::planes = cllib::CLarray<plane_t, cllib::read_only_array>(rtx::objects::pl_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::triangles = cllib::CLarray<triangle_t, cllib::read_only_array>(rtx::objects::tr_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::cones = cllib::CLarray<cone_t, cllib::read_only_array>(rtx::objects::cn_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::cylinders = cllib::CLarray<cylinder_t, cllib::read_only_array>(rtx::objects::cy_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::torus = cllib::CLarray<torus_t, cllib::read_only_array>(rtx::objects::to_vec, *rtx::data::context, *rtx::data::queue);
-
-    rtx::scene::cameras = cllib::CLarray<camera_t, cllib::read_only_array>(rtx::objects::cam_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::lights = cllib::CLarray<light_t, cllib::read_only_array>(rtx::objects::li_vec, *rtx::data::context, *rtx::data::queue);
+    rtx::init_scene();
 
     rtx::init_kernel();
 }

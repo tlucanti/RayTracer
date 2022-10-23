@@ -8,17 +8,47 @@
 
 void rtx::init_scene()
 {
-    rtx::scene::spheres = cllib::CLarray<sphere_t, cllib::read_only_array>(rtx::objects::sp_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::planes = cllib::CLarray<plane_t, cllib::read_only_array>(rtx::objects::pl_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::triangles = cllib::CLarray<triangle_t, cllib::read_only_array>(rtx::objects::tr_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::cones = cllib::CLarray<cone_t, cllib::read_only_array>(rtx::objects::cn_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::cylinders = cllib::CLarray<cylinder_t, cllib::read_only_array>(rtx::objects::cy_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::torus = cllib::CLarray<torus_t, cllib::read_only_array>(rtx::objects::to_vec, *rtx::data::context, *rtx::data::queue);
+    size_t full_size = \
+            rtx::objects::sp_vec.size() * sizeof(sphere_t) +
+            rtx::objects::pl_vec.size() * sizeof(plane_t) +
+            rtx::objects::tr_vec.size() * sizeof(triangle_t) +
+            rtx::objects::cn_vec.size() * sizeof(cone_t) +
+            rtx::objects::cy_vec.size() * sizeof(cylinder_t) +
+            rtx::objects::to_vec.size() * sizeof(torus_t);
+    std::vector<unsigned char> fig_vec(full_size);
+    size_t size=0;
+    size_t ds = 0;
+    ds = rtx::objects::sp_vec.size() * sizeof(sphere_t);
+    std::memcpy(fig_vec.data() + size, rtx::objects::sp_vec.data(), ds);
+    size += ds;
+
+    ds = rtx::objects::pl_vec.size() * sizeof(plane_t);
+    std::memcpy(fig_vec.data() + size, rtx::objects::pl_vec.data(), ds);
+    size += ds;
+
+    ds = rtx::objects::tr_vec.size() * sizeof(triangle_t);
+    std::memcpy(fig_vec.data() + size, rtx::objects::tr_vec.data(), ds);
+    size += ds;
+
+    ds = rtx::objects::cn_vec.size() * sizeof(cone_t);
+    std::memcpy(fig_vec.data() + size, rtx::objects::cn_vec.data(), ds);
+    size += ds;
+
+    ds = rtx::objects::cy_vec.size() * sizeof(cylinder_t);
+    std::memcpy(fig_vec.data() + size, rtx::objects::cy_vec.data(), ds);
+    size += ds;
+
+    ds = rtx::objects::to_vec.size() * sizeof(torus_t);
+    std::memcpy(fig_vec.data() + size, rtx::objects::to_vec.data(), ds);
+    size += ds;
+
+    rtx::scene::figures = cllib::CLarray<unsigned char, cllib::read_only_array>(fig_vec, *rtx::data::context, *rtx::data::queue);
 
     rtx::scene::cameras = cllib::CLarray<camera_t, cllib::read_only_array>(rtx::objects::cam_vec, *rtx::data::context, *rtx::data::queue);
     rtx::scene::lights = cllib::CLarray<light_t, cllib::read_only_array>(rtx::objects::li_vec, *rtx::data::context, *rtx::data::queue);
 
     rtx::scene::canvas = cllib::CLarray<uint32_t, cllib::write_only_array>(rtx::config::width * rtx::config::height, *rtx::data::context);
+
 //    rtx::scene::canvas2 = cllib::CLarray<uint32_t, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
 //    rtx::scene::distances = cllib::CLarray<FLOAT, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
 //    rtx::scene::canvas.memset(0, *rtx::data::queue);
@@ -33,22 +63,17 @@ void rtx::init_kernel()
     kernel.set_next_arg(rtx::scene::canvas);
 //    kernel.set_next_arg(rtx::scene::distances);
 
-    kernel.set_next_arg(rtx::scene::spheres);
-    kernel.set_next_arg(rtx::scene::planes);
-    kernel.set_next_arg(rtx::scene::triangles);
-    kernel.set_next_arg(rtx::scene::cones);
-    kernel.set_next_arg(rtx::scene::cylinders);
-    kernel.set_next_arg(rtx::scene::torus);
+    kernel.set_next_arg(rtx::scene::figures);
 
     kernel.set_next_arg(rtx::scene::lights);
     kernel.set_next_arg(rtx::scene::cameras);
 
-    kernel.set_next_arg(static_cast<int>(rtx::scene::spheres.size()));
-    kernel.set_next_arg(static_cast<int>(rtx::scene::planes.size()));
-    kernel.set_next_arg(static_cast<int>(rtx::scene::triangles.size()));
-    kernel.set_next_arg(static_cast<int>(rtx::scene::cones.size()));
-    kernel.set_next_arg(static_cast<int>(rtx::scene::cylinders.size()));
-    kernel.set_next_arg(static_cast<int>(rtx::scene::torus.size()));
+    kernel.set_next_arg(static_cast<int>(rtx::objects::sp_vec.size()));
+    kernel.set_next_arg(static_cast<int>(rtx::objects::pl_vec.size()));
+    kernel.set_next_arg(static_cast<int>(rtx::objects::tr_vec.size()));
+    kernel.set_next_arg(static_cast<int>(rtx::objects::cn_vec.size()));
+    kernel.set_next_arg(static_cast<int>(rtx::objects::cy_vec.size()));
+    kernel.set_next_arg(static_cast<int>(rtx::objects::to_vec.size()));
 
     kernel.set_next_arg(static_cast<int>(rtx::scene::lights.size()));
     kernel.set_next_arg(static_cast<int>(rtx::scene::cameras.size()));
@@ -183,7 +208,6 @@ int main(int argc, char **argv)
 {
     argparse(argc, argv);
     putenv(const_cast<char *>("CUDA_CACHE_DISABLE=1"));
-
 
 //    COMPLEX x1, x2;
 //    cubic_complex_solve(-10/3., 14/3., 27/3., &x1, &x2);
