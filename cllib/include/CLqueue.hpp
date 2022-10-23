@@ -16,8 +16,8 @@ public:
         const CLcontext &context,
         const CLdevice &device,
         const cl_command_queue_properties *properties=nullptr
-    ) :
-        queue(), ref_count(new int(1))
+    ) THROW :
+        queue()
     {
         cl_int  error;
 
@@ -31,7 +31,7 @@ public:
             throw CLexception(error);
     }
 
-    void finish() const
+    void finish() const THROW
     {
         cl_int  error;
 
@@ -40,7 +40,7 @@ public:
             throw CLexception(error);
     }
 
-    void flush() const
+    void flush() const THROW
     {
         cl_int  error;
 
@@ -60,26 +60,31 @@ public:
     }
 
     CLqueue() NOEXCEPT
-        : queue(nullptr), ref_count(nullptr)
+        : queue(nullptr)
     {}
 
-    CLqueue &operator =(const CLqueue &cpy)
+    CLqueue &operator =(CLqueue &&mv) THROW
     {
-        if (this == &cpy or cpy.ref_count == nullptr)
+        if (this == &mv)
             return *this;
         _destroy();
-        queue = cpy.queue;
-        ref_count = cpy.ref_count;
-        ++*ref_count;
+        queue = std::move(mv.queue);
+        mv.queue = nullptr;
         return *this;
     }
 
+    CLqueue(CLqueue &&mv) THROW
+        : queue(nullptr)
+    {
+        *this = std::move(mv);
+    }
+
 private:
-    void _destroy()
+    void _destroy() THROW
     {
         cl_int  error;
 
-        if (ref_count != nullptr and --*ref_count == 0)
+        if (queue != nullptr)
         {
             error = clReleaseCommandQueue(queue);
             if (error != CL_SUCCESS)
@@ -88,7 +93,6 @@ private:
     }
 
     cl_command_queue    queue;
-    int                 *ref_count;
 };
 
 CLLIB_NAMESPACE_END

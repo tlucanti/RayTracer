@@ -4,6 +4,7 @@
 #include <cl/marcher.cl>
 #include <thread>
 #include <exception.hpp>
+#include <utils.hpp>
 
 void rtx::init_scene()
 {
@@ -76,16 +77,113 @@ NORET void rtx::collapse(int status)
     exit(status);
 }
 
+static inline std::string _cy(const char *s)
+{
+    return rtx::C["`"_s + s + "`"_s];
+}
+
+static inline bool endthwith(std::string const &fullString, std::string const &ending) {
+    if (fullString.length() >= ending.length()) {
+        return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+    } else {
+        return false;
+    }
+}
+
+void argparse(int argc, char **argv)
+{
+    bool got_scene = false;
+    bool got_tracer = false;
+
+    --argc;
+    int i=1;
+    while (i <= argc) {
+        switch (rtx::hash(argv[i])) {
+            case "--scene"_hash: {
+                got_scene = true;
+                if (i == argc) {
+                    rtx::Error("argparse", rtx::W["expected scene name after " + rtx::C["`--scene`"] + " option"_W]);
+                    exit(1);
+                } else {
+                    ++i;
+                    if (not endthwith(argv[i], ".json")) {
+                        rtx::Error("argparse", "scene name should have "_W + ".json"_Y + " extension"_W);
+                        exit(1);
+                    }
+                    rtx::config::scene_fname = argv[i];
+                }
+                break ;
+            }
+            case "--tracer"_hash: {
+                got_tracer = true;
+                if (i == argc) {
+                    rtx::Error("argparse", "expected tracer name after "_W + "`--tracer`"_C + "option"_W);
+                    exit(1);
+                } else {
+                    ++i;
+                    switch (rtx::hash(argv[i])) {
+                        case ("tracer"_hash):
+                        case ("tracing"_hash):
+                        case ("rtx"_hash): {
+                            rtx::config::tracer = RTX_RAY_TRACER;
+                            rtx::config::kernel_file = rtx::config::tracer_fname;
+                            rtx::config::kernel_name = "ray_tracer";
+                            break ;
+                        }
+                        case ("marcher"_hash):
+                        case ("marching"_hash):
+                        case ("rmc"_hash): {
+                            rtx::config::tracer = RTX_RAY_MARCHER;
+                            rtx::config::kernel_file = rtx::config::marcher_fname;
+                            rtx::config::kernel_name = "ray_marcher";
+                            break ;
+                        }
+                        default: {
+                            rtx::Error("argparse", "unknown "_W + "tracer"_Y + " option "_W + _cy(argv[i]));
+                            exit(1);
+                        }
+                    }
+                    break ;
+                }
+            }
+            case "--help"_hash: {
+                rtx::Info("help", "ray tracer program with GPU computing"_W);
+                rtx::Info("help", "");
+                rtx::Info("help", "program arguments:"_W);
+                rtx::Info("help", "    " + "--tracer"_P + " [TRACER]"_C + " choose tracing algorithm"_W);
+                rtx::Info("help", "        " + "[TRACER]"_C + " can be one of:"_W);
+                rtx::Info("help", "            " + "tracer"_Y + "/"_W + "tracing"_Y + "/"_W + "rtx"_Y + ": classical ray tracing algorithm"_W);
+                rtx::Info("help", "            " + "marcher"_Y + "/"_W + "marching"_Y + "/"_W + "rmc"_Y + ": ray marching algorithm"_W);
+                rtx::Info("help", "    " + "--scene"_P + " [PATH]"_C + " scene configuration file"_W);
+                rtx::Info("help", "        " + "[PATH]"_C + " is absolute or relative path to "_W + ".json"_Y + " file"_W);
+                rtx::Info("help", "");
+                rtx::Info("help", "tlucanti (c) https://github.com/tlucanti/RayTracer"_W);
+                exit(0);
+            }
+            default: {
+                rtx::Error("argparse", "unknown option "_W + _cy(argv[i]));
+                exit(1);
+            }
+        }
+        ++i;
+    }
+    if (not (got_scene || got_tracer)) {
+        rtx::Error("argparse", "parameters expected, run with option "_W + "--help"_C);
+        exit(1);
+    }
+    if (not got_scene)
+        rtx::Error("argparse", "expected scene name with option "_W + "--scene"_C);
+    if (not got_tracer)
+        rtx::Error("argparse", "expected tracer algorithm with option "_W + "--tracer"_C);
+    if (not (got_scene && got_tracer))
+        exit(1);
+}
+
 int main(int argc, char **argv)
 {
-    if (argc < 2) {
-        rtx::Error("rtx", "expected scene name as argument");
-        return 1;
-    } else if (argc > 2) {
-        rtx::Warning("rtx", "extra options ignored");
-    }
-    rtx::config::scene_fname = argv[1];
+    argparse(argc, argv);
     putenv(const_cast<char *>("CUDA_CACHE_DISABLE=1"));
+
 
 //    COMPLEX x1, x2;
 //    cubic_complex_solve(-10/3., 14/3., 27/3., &x1, &x2);
@@ -110,7 +208,7 @@ int main(int argc, char **argv)
 //    std::cout << newton_solve(0, 0.657082, -1.056095, 14.076677, -7.052426, 51.848435) << std::endl;
 //    return 0;
 
-//    try {
+    try {
         rtx::parse_scene();
         rtx::init_mlx();
         rtx::init_gpu();
@@ -119,12 +217,12 @@ int main(int argc, char **argv)
 //        gpu_initializer.join();
 //        mlx_initializer.join();
 //    return 0;
-//    } catch (std::exception &e) {
-//        std::cout << e.what() << std::endl;
+    } catch (std::exception &e) {
+        std::cout << e.what() << std::endl;
 //        std::cout << "-------------------------------------\n";
 //        std::cout << "aborting program\n";
-//        return 1;
-//    }
+        return 1;
+    }
 
     rtx::init_scene();
     rtx::init_kernel();

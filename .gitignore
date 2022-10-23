@@ -8,6 +8,8 @@ dep
 *.so
 a.out
 *.swp
+build
+RayTracer
 
 mlxlib/mlxlinux
 mlxlib/mlxosx

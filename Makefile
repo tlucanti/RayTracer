@@ -7,14 +7,14 @@ LIB_MLX_DIR		=	mlxlib
 MLX_LINUX_DIR	=	mlxlinux
 MLX_OSX_DIR		=	mlxosx
 
+CMAKE_ENV		= __ENV_CXX_OPT='-D__MAKE'
 
 
 all:
-	g++ -Wall -Wextra -std=c++2a test.cpp -L${LIB_DIR} -l${OPENCL}
-
-
-_mlx_lib:
-	$(MAKE)	-C ${LIB_MLX_DIR}/${MLX_SRC_DIR}
+	mkdir -p build
+	${CMAKE_ENV} cmake -S . -B build
+	${CMAKE_ENV} cmake --build build --target RayTracer
+	mv build/RayTracer .
 
 install:
 	@printf		"[TAR]\t${LIB_SRC_DIR}/${LIB_JSON_DIR}.tar.gz \n"

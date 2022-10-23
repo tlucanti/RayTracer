@@ -18,7 +18,7 @@ const cl_mem_flags write_only_array = CL_MEM_WRITE_ONLY;
 // =============================================================================
 // ---------------------------------- CLarray ----------------------------------
 template <class value_type, cl_mem_flags flag=read_write_array>
-class CLarray : public __utils::__noncopymovable<value_type>
+class CLarray : public __utils::__noncopyble<value_type>
 {
 public:
 // -----------------------------------------------------------------------------
@@ -27,7 +27,7 @@ public:
         const CLcontext &context,
         void *host_ptr=nullptr
     ) THROW
-     : buffer(), buff_size(size), ref_cnt(new int(1))
+     : buffer(), buff_size(size)
     /**
         \brief sized constructor
         \details constructor allocates empty block of GPU memory of size `size`
@@ -74,7 +74,7 @@ public:
         bool block=true,
         void *host_ptr=nullptr
     ) THROW
-     : buffer(), buff_size(vec.size()), ref_cnt(new int(1))
+     : buffer(), buff_size(vec.size())
     /**
         \brief valued constructor
         \details constructor allocaes block GPU memory and fills it with
@@ -381,7 +381,7 @@ public:
 
 // -----------------------------------------------------------------------------
     CLarray() NOEXCEPT
-        : buffer(nullptr), buff_size(0), ref_cnt(nullptr)
+        : buffer(nullptr), buff_size(0)
     /**
         \bruef default contsructor
         \detailed empty constructor, do not allocating GPU memory
@@ -395,12 +395,12 @@ public:
     {}
 
 // -----------------------------------------------------------------------------
-    CLarray &operator =(const CLarray &cpy) THROW
+    CLarray &operator =(CLarray &&mv) THROW
     /**
-        \brief assignment operator
+        \brief move operator
         \detailed copy reference to GPU memory block to other object, do not
             creating new GPU buffer
-        \param cpy source CLarray object
+        \param mv source CLarray object
 
         \time O(1)
         \memory O(1)
@@ -409,31 +409,31 @@ public:
         \GPUmemory O(1)
     */
     {
-        if (this == &cpy or cpy.ref_cnt == nullptr)
+        if (this == &mv)
             return *this;
         _destroy();
-        buffer = cpy.buffer;
-        buff_size = cpy.buff_size;
-        ref_cnt = cpy.ref_cnt;
-        ++*ref_cnt;
+        buffer = std::move(mv.buffer);
+        buff_size = mv.buff_size;
+        mv.buffer = nullptr;
+        mv.buff_size = 0;
         return *this;
     }
 
 // -----------------------------------------------------------------------------
-    CLarray(const CLarray &cpy)
-        : buffer(nullptr), buff_size(0), ref_cnt(nullptr)
+    CLarray(CLarray &&cpy) THROW
+        : buffer(nullptr), buff_size(0)
     /**
-        \brief copy operator
+        \brief move operator
         \detailed see `operator =`
     */
     {
-        *this = cpy;
+        *this = std::move(cpy);
     }
 
 // =============================================================================
 // -------------------------------- array info ---------------------------------
 # ifdef CL_MEM_TYPE
-    WUR UNUSED cl_mem_object_type get_mem_type() const
+    WUR UNUSED cl_mem_object_type get_mem_type() const THROW
     {
         return static_cast<cl_mem_object_type>(_get_numeric_data(
             CL_MEM_TYPE, sizeof(cl_mem_object_type)));
@@ -442,7 +442,7 @@ public:
 
 // -----------------------------------------------------------------------------
 # ifdef CL_MEM_FLAGS
-    WUR UNUSED cl_mem_flags get_mem_flags() const
+    WUR UNUSED cl_mem_flags get_mem_flags() const THROW
     {
         return static_cast<cl_mem_flags>(_get_numeric_data(
             CL_MEM_FLAGS, sizeof(cl_mem_flags)));
@@ -451,7 +451,7 @@ public:
 
 // -----------------------------------------------------------------------------
 # ifdef CL_MEM_SIZE
-    WUR UNUSED size_t get_mem_size() const
+    WUR UNUSED size_t get_mem_size() const THROW
     {
         return static_cast<size_t>(_get_numeric_data(
             CL_MEM_SIZE, sizeof(size_t)));
@@ -460,7 +460,7 @@ public:
 
 // -----------------------------------------------------------------------------
 # ifdef CL_MEM_HOST_PTR
-    WUR UNUSED void *get_mem_host_ptr() const
+    WUR UNUSED void *get_mem_host_ptr() const THROW
     {
         return reinterpret_cast<void *>(_get_numeric_data(
             CL_MEM_HOST_PTR, sizeof(void *)));
@@ -469,7 +469,7 @@ public:
 
 // -----------------------------------------------------------------------------
 # ifdef CL_MEM_MAP_COUNT
-    WUR UNUSED cl_uint get_mem_map_count() const
+    WUR UNUSED cl_uint get_mem_map_count() const THROW
     {
         return static_cast<cl_uint>(_get_numeric_data(
             CL_MEM_MAP_COUNT, sizeof(cl_uint)));
@@ -478,7 +478,7 @@ public:
 
 // -----------------------------------------------------------------------------
 # ifdef CL_MEM_REFERENCE_COUNT
-    WUR UNUSED cl_uint get_mem_reference_count() const
+    WUR UNUSED cl_uint get_mem_reference_count() const THROW
     {
         return static_cast<cl_uint>(_get_numeric_data(
             CL_MEM_REFERENCE_COUNT, sizeof(cl_uint)));
@@ -487,7 +487,7 @@ public:
 
 // -----------------------------------------------------------------------------
 # ifdef CL_MEM_CONTEXT
-    WUR UNUSED cl_context get_mem_context() const
+    WUR UNUSED cl_context get_mem_context() const THROW
     {
         return static_cast<cl_context>(_get_numeric_data(
             CL_MEM_CONTEXT, sizeof(cl_context)));
@@ -496,7 +496,7 @@ public:
 
 // -----------------------------------------------------------------------------
 # ifdef CL_MEM_ASSOCIATED_MEMOBJECT
-    WUR UNUSED cl_mem get_mem_associated_memobject() const
+    WUR UNUSED cl_mem get_mem_associated_memobject() const THROW
     {
         return static_cast<cl_mem>(_get_numeric_data(
             CL_MEM_ASSOCIATED_MEMOBJECT, sizeof(cl_mem)));
@@ -505,7 +505,7 @@ public:
 
 // -----------------------------------------------------------------------------
 # ifdef CL_MEM_OFFSET
-    WUR UNUSED size_t get_mem_offset() const
+    WUR UNUSED size_t get_mem_offset() const THROW
     {
         return static_cast<size_t>(_get_numeric_data(
             CL_MEM_OFFSET, sizeof(size_t)));
@@ -547,15 +547,13 @@ private:
     void _destroy() THROW
     /**
         \brief destructor routine
-        \detailed removes reference from assotiated GPU memory block and if
-            no references to this block after that - deallocates it
+        \detailed deallocates GPU memory block
     */
     {
         cl_int  error;
 
-        if (buffer != nullptr and --*ref_cnt == 0)
+        if (buffer != nullptr)
         {
-            delete ref_cnt;
             if (__VERBOSE)
                 std::cout << "released array " << this
                     << " (" << buffer << ')' << std::endl;
@@ -570,7 +568,6 @@ private:
 private:
     cl_mem      buffer;
     size_t      buff_size;
-    int         *ref_cnt;
 
     friend class CLkernel;
 

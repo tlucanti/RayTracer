@@ -4,6 +4,7 @@
 #include <rtx.hpp>
 #include <exception.hpp>
 #include <objects.hpp>
+#include <utils.hpp>
 
 union Flags
 {
@@ -26,20 +27,6 @@ union Flags
 
 inline static Flags flags;
 
-template <uintmax_t mod=10000000001191, uintmax_t prime=257>
-inline constexpr uintmax_t poly_hash(const char *str, size_t size, size_t idx)
-{
-    if (size == 0)
-        return 0;
-    else if (size == 1)
-        return static_cast<uintmax_t>(str[0]);
-    else if (idx < size)
-        return (
-            static_cast<uintmax_t>(str[idx])
-            + poly_hash<mod, prime>(str, size, idx + 1) * prime % mod
-        ) % mod;
-    return static_cast<uintmax_t>(str[idx]);
-}
 
 typedef enum
 {
@@ -54,16 +41,6 @@ typedef enum
     OBJECT_TYPE,
     ARRAY_TYPE
 } item_type;
-
-inline uintmax_t hash(const std::string &str)
-{
-    return poly_hash(str.c_str(), str.size(), 0);
-}
-
-inline constexpr uintmax_t operator ""_hash(const char *str, size_t len)
-{
-    return poly_hash(str, len, 0);
-}
 
 template <typename value_type>
 static std::string str(const value_type &t)
@@ -297,7 +274,7 @@ static void parse_color(const std::string &name, const item_type &item, bool &fl
         color = to_vec3(item.value());
     else if (item.value().is_string())
     {
-        switch(hash(std::string(item.value())))
+        switch(rtx::hash(std::string(item.value())))
         {
             case ("white"_hash): color = rtx::color::white; break ;
             case ("black"_hash): color = rtx::color::black; break ;
@@ -330,7 +307,7 @@ template <class item_type>
 static void parse_light_type(const std::string &name, const item_type &item, bool &flag, light_type_t &type)
 {
     parse_type_assert(name, item.value(), STRING_TYPE);
-    switch (hash(std::string(item.value())))
+    switch (rtx::hash(std::string(item.value())))
     {
         case ("ambient"_hash): type = AMBIENT; break ;
         case ("point"_hash): type = POINT; break ;
@@ -356,7 +333,7 @@ static void parse_config(const nlohmann::json &res)
     parse_type_assert("config", res, OBJECT_TYPE);
     for (const auto &item : res.items())
     {
-        switch (hash(item.key()))
+        switch (rtx::hash(item.key()))
         {
             case ("width"_hash):
             case ("screen_width"_hash): parse_int_positive("window resolution width", item, width, rtx::config::width); break ;
@@ -400,7 +377,7 @@ static void parse_cameras_single(const nlohmann::json &camera)
 
     for (const auto &item : camera.items())
     {
-        switch (hash(item.key()))
+        switch (rtx::hash(item.key()))
         {
             case ("position"_hash): parse_vec3_point("camera position", item, got_position, position); break ;
             case ("direction"_hash): parse_vec3_unit("camera direction", item, got_direction, direction); break ;
@@ -452,7 +429,7 @@ static void parse_sphere_single(const nlohmann::json &sphere)
 
     for (const auto &item : sphere.items())
     {
-        switch (hash(item.key()))
+        switch (rtx::hash(item.key()))
         {
             case ("color"_hash): parse_color("sphere color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("sphere specular", item, got_specular, specular); break ;
@@ -515,7 +492,7 @@ static void parse_plane_single(const nlohmann::json &plane)
 
     for (const auto &item : plane.items())
     {
-        switch (hash(item.key()))
+        switch (rtx::hash(item.key()))
         {
             case ("color"_hash): parse_color("plane color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("plane specular", item, got_specular, specular); break ;
@@ -580,7 +557,7 @@ static void parse_triangle_single(const nlohmann::json &triangle)
 
     for (const auto &item : triangle.items())
     {
-        switch (hash(item.key()))
+        switch (rtx::hash(item.key()))
         {
             case ("color"_hash): parse_color("triangle color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("triangle specular", item, got_specular, specular); break ;
@@ -648,7 +625,7 @@ static void parse_hyperboloid_single(const nlohmann::json &hyper)
 
     for (const auto &item : hyper.items())
     {
-        switch (hash(item.key()))
+        switch (rtx::hash(item.key()))
         {
             case ("color"_hash): parse_color("hyperboloid color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("hyperboloid specular", item, got_specular, specular); break ;
@@ -716,7 +693,7 @@ static void parse_cylinder_single(const nlohmann::json &cylinder)
 
     for (const auto &item : cylinder.items())
     {
-        switch (hash(item.key()))
+        switch (rtx::hash(item.key()))
         {
             case ("color"_hash): parse_color("cylinder color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("cylinder specular", item, got_specular, specular); break ;
@@ -785,7 +762,7 @@ static void parse_torus_single(const nlohmann::json &torus)
 
     for (const auto &item : torus.items())
     {
-        switch (hash(item.key()))
+        switch (rtx::hash(item.key()))
         {
             case ("color"_hash): parse_color("torus color", item, got_color, color); break ;
             case ("specular"_hash): parse_int_positive("torus specular", item, got_specular, specular); break ;
@@ -845,7 +822,7 @@ static void parse_light_single(const nlohmann::json &light)
 
     for (const auto &item : light.items())
     {
-        switch (hash(item.key()))
+        switch (rtx::hash(item.key()))
         {
             case ("type"_hash): parse_light_type("light type", item, got_type, type); break ;
             case ("intensity"_hash): parse_float_unit("light intensity", item, got_intensity, intensity); break ;

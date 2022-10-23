@@ -1,15 +1,22 @@
 
 #include <rtx.hpp>
+#include <exception.hpp>
 
 void rtx::init_gpu()
 {
-    auto platform = cllib::get_platforms().at(0);
-    auto device = platform.get_devices().at(0);
+    auto platform = std::move(cllib::get_platforms().at(0));
+    auto device = std::move(platform.get_devices().at(0));
 
     rtx::data::context = new cllib::CLcontext(device);
     rtx::data::queue = new cllib::CLqueue(*rtx::data::context, device);
 
-    cllib::CLprogram program(4, std::ifstream(rtx::config::kernel_file), rtx::config::kernel_name, *rtx::data::context);
+    cllib::CLprogram program;
+    try {
+        program = cllib::CLprogram(4, std::ifstream(rtx::config::kernel_file), rtx::config::kernel_name, *rtx::data::context);
+    } catch (std::invalid_argument &e) {
+        rtx::Error("gpuinit", "cannot open file "_W + rtx::Y[rtx::config::kernel_file]);
+        exit(1);
+    }
     std::string flags = "-D__OPENCL -I" + std::string(rtx::config::cl_dir);
     if (rtx::config::emission)
         flags += " -DRTX_EMISSION ";

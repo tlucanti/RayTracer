@@ -198,11 +198,32 @@ public:
         return argc;
     }
 
-    CLprogram()=delete;
+    CLprogram()
+        : program(nullptr)
+    {}
+
+    CLprogram &operator =(CLprogram &&mv) THROW
+    {
+        if (this == &mv)
+            return *this;
+        program = std::move(mv.program);
+        argc = mv.argc;
+        name = std::move(mv.name);
+        mv.program = nullptr;
+        mv.argc = 0;
+        mv.name.clear();
+        return *this;
+    }
+
+    CLprogram(CLprogram &&mv)
+        : program(nullptr), argc(0), name()
+    {
+        *this = std::move(mv);
+    }
 
 private:
 
-    WUR unsigned long long _get_numeric_data(cl_program_info type, size_t value_size) const
+    WUR unsigned long long _get_numeric_data(cl_program_info type, size_t value_size) const THROW
     {
         cl_int              error;
         unsigned long long  info;
@@ -221,7 +242,7 @@ private:
     }
 
     template <class struct_T>
-    WUR struct_T _get_struct_data(cl_program_info type) const
+    WUR struct_T _get_struct_data(cl_program_info type) const THROW
     {
         cl_int      error;
         struct_T    info;
@@ -239,7 +260,7 @@ private:
         return info;
     }
 
-    WUR std::string _get_string_data(cl_program_info type) const
+    WUR std::string _get_string_data(cl_program_info type) const THROW
     {
         cl_int      error;
         size_t      info_size;
@@ -283,28 +304,28 @@ private:
             {}
 
 # ifdef CL_PROGRAM_BUILD_STATUS
-            WUR UNUSED cl_build_status get_program_build_status()
+            WUR UNUSED cl_build_status get_program_build_status() THROW
             {
                 return static_cast<cl_build_status>(_get_numeric_data(CL_PROGRAM_BUILD_STATUS, sizeof(cl_build_status)));
             }
 # endif
 
 # ifdef CL_PROGRAM_BUILD_OPTIONS
-            WUR UNUSED std::string get_program_build_options()
+            WUR UNUSED std::string get_program_build_options() THROW
             {
                 return _get_string_data(CL_PROGRAM_BUILD_OPTIONS);
             }
 # endif
 
 # ifdef CL_PROGRAM_BUILD_LOG
-            WUR UNUSED std::string get_program_log()
+            WUR UNUSED std::string get_program_log() THROW
             {
                 return _get_string_data(CL_PROGRAM_BUILD_LOG);
             }
 # endif
 
 # ifdef CL_PROGRAM_BINARY_TYPE
-            WUR UNUSED cl_program_binary_type get_program_binary_type()
+            WUR UNUSED cl_program_binary_type get_program_binary_type() THROW
             {
                 return static_cast<cl_program_binary_type>(_get_numeric_data(CL_PROGRAM_BINARY_TYPE, sizeof(cl_program_binary_type)));
             }
@@ -318,7 +339,7 @@ private:
 # endif
 
         private:
-            WUR UNUSED unsigned long long _get_numeric_data(cl_program_build_info type, size_t value_size) const
+            WUR UNUSED unsigned long long _get_numeric_data(cl_program_build_info type, size_t value_size) const THROW
             {
                 cl_int              error;
                 unsigned long long  info;
@@ -339,7 +360,7 @@ private:
                 return info;
             }
 
-            WUR std::string _get_string_data(cl_program_info type) const
+            WUR std::string _get_string_data(cl_program_info type) const THROW
             {
                 cl_int      error;
                 size_t      info_size;

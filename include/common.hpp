@@ -18,6 +18,11 @@ typedef cl_double3 FLOAT3;
 typedef cl_double2 COMPLEX;
 typedef const FLOAT3 &FL3_CREF;
 
+enum rtx_tracer_type {
+    RTX_RAY_TRACER,
+    RTX_RAY_MARCHER
+};
+
 namespace RTX_NAMESPACE
 {
     namespace config
@@ -36,29 +41,21 @@ namespace RTX_NAMESPACE
         inline bool transparency {true};
         inline bool refractive {true};
 
-        inline constexpr const char *tracer_fname = "../cl/tracer.cl";
-        inline constexpr const char *marcher_fname = "../cl/marcher.cl";
+        inline rtx_tracer_type tracer;
+        inline const char *kernel_file;
+        inline const char *kernel_name;
 
-# ifdef RTX_RAY_TRACER
-        inline constexpr const char *kernel_file = tracer_fname;
-        inline constexpr const char *kernel_name = "ray_tracer";
-# elif defined(RTX_RAY_MARCHER)
-        inline constexpr const char *kernel_file = marcher_fname;
-        inline constexpr const char *kernel_name = "ray_marcher";
-# else
-#  error "tracer type not selected"
-# endif
-//        inline constexpr const char *scene_fname = "../scenes/scene.json";
         inline const char *scene_fname;
-//        inline constexpr const char *scene_fname = "../scenes/planes.json";
-//        inline constexpr const char *scene_fname = "../scenes/cylinders.json";
+# ifdef __MAKE
+#  define _CL_DIR "cl/"
+# else
+#  define _CL_DIR "../cl/"
+# endif /* __MAKE */
 
-//        inline constexpr const char *scene_fname = "../scenes/torus.json";
+        inline constexpr const char *cl_dir = _CL_DIR;
+        inline constexpr const char *tracer_fname = _CL_DIR "/tracer.cl";
+        inline constexpr const char *marcher_fname = _CL_DIR "/marcher.cl";
 
-//        inline constexpr const char *scene_fname = "../scenes/lights.json";
-//        inline constexpr const char *scene_fname = "../scenes/colors.json";
-//        inline constexpr const char *scene_fname = "../scenes/caustics.json";
-        inline constexpr const char *cl_dir = "../cl";
         inline unsigned int current_camera;
     } /* config */
 
@@ -79,7 +76,6 @@ namespace RTX_NAMESPACE
 
 } /* rtx */
 
-
 # ifdef __APPLE__
 #  define sincos __sincos
 # endif /* __APPLE__ */
@@ -95,6 +91,9 @@ namespace RTX_NAMESPACE
 # ifndef PACKED
 #  define PACKED ATTRIBUTE(__packed__)
 # endif /* PACKED */
+# ifndef UNUSED
+#  define UNUSED ATTRIBUTE(unused)
+# endif
 # ifndef ALIGNED8
 #  define ALIGNED8 ATTRIBUTE(__aligned__(8))
 # endif /* ALIGNED8 */

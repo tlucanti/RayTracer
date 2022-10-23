@@ -13,7 +13,7 @@ RTX_NAMESPACE_BEGIN
 struct Exception : public std::runtime_error
 {
     Exception(const std::string &msg) NOEXCEPT
-        : std::runtime_error(rtx::Red["[FATAL]: "] + rtx::DarkRed[msg])
+        : std::runtime_error(rtx::Red["[FATAL]: "] + rtx::Red[msg])
     {}
 };
 

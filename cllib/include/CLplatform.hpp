@@ -11,13 +11,13 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-class CLplatform /*: public __utils::__noncopymovable<>*/
+class CLplatform : public __utils::__noncopyble<>
 {
 public:
     WUR std::vector<CLdevice> get_devices(
         cl_device_type type=CLdevice::any_type,
         cl_uint num_entries=static_cast<cl_uint>(-1)
-    ) const
+    ) const THROW
     {
         cl_int      error;
         cl_uint     max_num;
@@ -51,49 +51,49 @@ public:
     }
 
 # ifdef CL_PLATFORM_PROFILE
-    WUR UNUSED std::string get_platform_profile() const
+    WUR UNUSED std::string get_platform_profile() const THROW
     {
         return _get_string_data(CL_PLATFORM_PROFILE);
     }
 # endif
 
 # ifdef CL_PLATFORM_VERSION
-    WUR UNUSED std::string get_platform_version() const
+    WUR UNUSED std::string get_platform_version() const THROW
     {
         return _get_string_data(CL_PLATFORM_VERSION);
     }
 # endif
 
 # ifdef CL_PLATFORM_NAME
-    WUR UNUSED std::string get_platform_name() const
+    WUR UNUSED std::string get_platform_name() const THROW
     {
         return _get_string_data(CL_PLATFORM_NAME);
     }
 # endif
 
 # ifdef CL_PLATFORM_VENDOR
-    WUR UNUSED std::string get_platform_vendor() const
+    WUR UNUSED std::string get_platform_vendor() const THROW
     {
         return _get_string_data(CL_PLATFORM_VENDOR);
     }
 # endif
 
 # ifdef CL_PLATFORM_EXTENSIONS
-    WUR UNUSED std::string get_platform_extensions() const
+    WUR UNUSED std::string get_platform_extensions() const THROW
     {
         return _get_string_data(CL_PLATFORM_EXTENSIONS);
     }
 # endif
 
 # ifdef CL_PLATFORM_HOST_TIMER_RESOLUTION
-    WUR UNUSED cl_ulong get_platform_timer_resolution() const
+    WUR UNUSED cl_ulong get_platform_timer_resolution() const THROW
     {
         return _get_ulong_data(CL_PLATFORM_HOST_TIMER_RESOLUTION);
     }
 # endif
 
 #ifdef CL_PLATFORM_ICD_SUFFIX_KHR
-    WUR UNUSED std::string get_platform_icd_suffix_khr() const
+    WUR UNUSED std::string get_platform_icd_suffix_khr() const THROW
     {
         return _get_string_data(CL_PLATFORM_ICD_SUFFIX_KHR);
     }
@@ -101,20 +101,35 @@ public:
 
 //    CLplatform(const CLplatform &cpy) = default;
 
-    WUR const cl_platform_id &__get_platform() const
+    WUR const cl_platform_id &__get_platform() const NOEXCEPT
     {
         return platform_id;
     }
 
-    CLplatform()=delete;
+    CLplatform() = delete;
+
+    CLplatform &operator =(CLplatform &&mv) THROW
+    {
+        if (this == &mv)
+            return *this;
+        platform_id = std::move(mv.platform_id);
+        mv.platform_id = nullptr;
+        return *this;
+    }
+
+    CLplatform(CLplatform &&mv) THROW
+        : platform_id(nullptr)
+    {
+        *this = std::move(mv);
+    }
 
 private:
-    void _set_platform_id(cl_platform_id id)
+    void _set_platform_id(cl_platform_id id) NOEXCEPT
     {
         platform_id = id;
     }
 
-    WUR std::string _get_string_data(cl_platform_info type) const
+    WUR std::string _get_string_data(cl_platform_info type) const THROW
     {
         cl_int      error;
         size_t      info_size;
@@ -144,7 +159,7 @@ private:
         return info;
     }
 
-    WUR cl_ulong _get_ulong_data(cl_platform_info type) const
+    WUR cl_ulong _get_ulong_data(cl_platform_info type) const THROW
     {
         cl_int      error;
         cl_ulong    info;
@@ -163,7 +178,7 @@ private:
     }
 
 private:
-    CLplatform(cl_platform_id platform)
+    CLplatform(cl_platform_id platform) NOEXCEPT
         : platform_id(platform)
     {}
 

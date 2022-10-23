@@ -8,29 +8,29 @@
 
 CLLIB_NAMESPACE_BEGIN
 
-class CLbuiltinprog
+class CLbuiltinprog : __utils::__noncopymovable<>
 {
 public:
-    CLbuiltinprog(unsigned int arg_count, const std::string &program_name, const std::string &program_code)
+    CLbuiltinprog(unsigned int arg_count, const std::string &program_name, const std::string &program_code) NOEXCEPT
         : program(program_code), argc(arg_count), name(program_name)
     {}
 
-    WUR UNUSED const std::string &get_program_source() const
+    WUR UNUSED const std::string &get_program_source() const NOEXCEPT
     {
         return program;
     }
 
-    WUR UNUSED unsigned int get_programd_arg_num() const
+    WUR UNUSED unsigned int get_programd_arg_num() const NOEXCEPT
     {
         return argc;
     }
 
-    WUR std::string get_program_name() const
+    WUR std::string get_program_name() const NOEXCEPT
     {
         return name;
     }
 
-    CLbuiltinprog()=delete;
+    CLbuiltinprog() = delete;
 
 private:
     std::string     program;

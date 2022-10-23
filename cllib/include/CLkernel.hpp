@@ -20,7 +20,7 @@ public:
         size_t global_work_size,
         size_t local_work_size=0,
         size_t global_work_offset=0
-    ) :
+    ) THROW :
         kernel(),
         argc(program.__get_argc()),
         argi(0)
@@ -41,7 +41,7 @@ public:
         const std::vector<size_t> &global_work_size,
         const std::vector<size_t> &local_work_size=std::vector<size_t>(),
         const std::vector<size_t> &global_work_offset=std::vector<size_t>()
-    ) :
+    ) THROW :
         kernel(),
         argc(program.__get_argc()),
         argi(0),
@@ -194,7 +194,7 @@ public:
         return kernel;
     }
 
-    CLkernel()=delete;
+    CLkernel() = delete;
 
 //private:
 //    template <size_t argi=0, class ...type>

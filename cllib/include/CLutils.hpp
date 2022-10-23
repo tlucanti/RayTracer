@@ -39,7 +39,7 @@ namespace __utils
     inline std::string __get_stream_content(std::ifstream &stream)
     {
         if (not stream.is_open())
-            throw std::runtime_error("file stream not opened");
+            throw std::invalid_argument("file stream not opened");
         std::streamsize start = stream.gcount();
         stream.ignore(std::numeric_limits<std::streamsize>::max());
         std::streamsize length = stream.gcount();
