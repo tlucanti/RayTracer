@@ -16,6 +16,8 @@ namespace move_params
     static int do_update(0);
     static bool mouse_press(false);
     static struct timespec fps_meter;
+    static void_ptr selected_obj = nullptr;
+    static obj_type_t selected_type;
 }
 
 static void screenshot(const char *fname)
@@ -127,34 +129,44 @@ void rtx::hooks::mouserelease_hook(int button, int x, int y, void *)
 {
     if (button == mlxlib::mouse::MOUSE_LEFT)
         move_params::mouse_press = false;
-    if (button == mlxlib::mouse::MOUSE_RIGHT)
-    {
-        obj_type_t obj_type;
-        FLOAT3 center;
-        camera_t &cur_cam = rtx::objects::cam_vec.at(rtx::config::current_camera);
-
-        void_ptr obj = object_at_pos(x, y, &obj_type);
-        if (obj == nullptr)
-            return ;
-        switch (obj_type)
-        {
-            case SPHERE: center = as_sphere(obj)->position; break ;
-
-            case BOX: center = as_box(obj)->position; break ;
-            default: center = {{0., 0., 0.}};
-        }
-        FLOAT3 oc = center - cur_cam.position;
-        rtx::linalg::normalize_ref(oc);
-        cur_cam.recompute_reverse_matrix();
-        FLOAT3 direction = rotate_vector(oc, cur_cam.reverse_rotate_matrix);
-
-        uint32_t cx, cy;
-        pixpos_from_vec3(direction, &cx, &cy, rtx::config::width, rtx::config::height);
-
-        std::cout << "released mouse at: (" << x << ", " << y << ")\n";
-        std::cout << "hit object: " << obj << " (" << obj_type << ")\n";
-        std::cout << "object center: (" << cx << ", " << cy << ")\n";
+    if (button == mlxlib::mouse::MOUSE_RIGHT) {
+        move_params::selected_obj = object_at_pos(x, y, &move_params::selected_type);
+        move_params::do_update = true;
     }
+}
+
+static cl_uint2 update_sel_obj_center(void_ptr obj)
+{
+    FLOAT3 center;
+    camera_t &cur_cam = rtx::objects::cam_vec.at(rtx::config::current_camera);
+
+    switch (move_params::selected_type)
+    {
+        case SPHERE: center = as_sphere(obj)->position; break ;
+
+        case BOX: center = as_box(obj)->position; break ;
+        default: center = {{0., 0., 0.}};
+    }
+    FLOAT3 oc = center - cur_cam.position;
+    rtx::linalg::normalize_ref(oc);
+    cur_cam.recompute_reverse_matrix();
+    FLOAT3 direction = rotate_vector(oc, cur_cam.reverse_rotate_matrix);
+
+    uint32_t cx, cy;
+    pixpos_from_vec3(
+            direction,
+            &cx,
+            &cy,
+            rtx::config::width,
+            rtx::config::height
+    );
+
+    move_params::do_update = true;
+    return {{cx, cy}};
+
+//        std::cout << "released mouse at: (" << x << ", " << y << ")\n";
+//    std::cout << "hit object: " << obj << " (" << obj_type << ")\n";
+//    std::cout << "object center: (" << move_params::center_pos.x << ", " << move_params::center_pos.y << ")\n";
 }
 
 void rtx::hooks::framehook(void *)
@@ -182,6 +194,23 @@ void rtx::hooks::framehook(void *)
     rtx::data::kernel->run(*rtx::data::queue, false);
 //    rtx::data::blur_kernel->run(*rtx::data::queue, true);
     rtx::scene::canvas.dump(rtx::data::img->raw_pixel_data(), *rtx::data::queue);
+    rtx::data::win->put_string(ss.str(), 10, 15);
+
+    if (move_params::selected_obj != nullptr)
+    {
+        cl_uint2 center = update_sel_obj_center(move_params::selected_obj);
+        if (center.x < rtx::config::width and center.y < rtx::config::height)
+        {
+            for (uint32_t i=0; i < 50; ++i) {
+                rtx::data::img->put_pixel(center.x + i, center.y - 1, mlxlib::color::red);
+                rtx::data::img->put_pixel(center.x + i, center.y, mlxlib::color::red);
+                rtx::data::img->put_pixel(center.x + i, center.y + 1, mlxlib::color::red);
+                rtx::data::img->put_pixel(center.x - 1, center.y + i, mlxlib::color::blue);
+                rtx::data::img->put_pixel(center.x, center.y + i, mlxlib::color::blue);
+                rtx::data::img->put_pixel(center.x + 1, center.y + i, mlxlib::color::blue);
+            }
+        }
+    }
     rtx::data::win->put_image(*rtx::data::img);
     if (fps_period == 30)
     {
@@ -192,7 +221,6 @@ void rtx::hooks::framehook(void *)
         ss << "fps: " << -30. / fps;
         fps_period = 0;
     }
-    rtx::data::win->put_string(ss.str(), 10, 15);
     move_params::look_direction.x = 0;
     move_params::look_direction.y = 0;
 }
