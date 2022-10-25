@@ -164,11 +164,13 @@ typedef struct camera_s
     FLOAT3   position;                  // 0  -- 32
     FLOAT3   direction;                 // 32 -- 64
     FLOAT3   rotate_matrix[3];          // 64 -- 160
-    FLOAT    alpha;                     // 160-- 168
-    FLOAT    theta;                     // 168-- 176
+    FLOAT3   reverse_rotate_matrix[3];
+    FLOAT    alpha;                     //
+    FLOAT    theta;                     //
 
     DECLARE_CONSTRUCTOR(camera_s, CAMERA_PARAMS);
     DECLARE_METHOD(void, recompute_matrix, void);
+    DECLARE_METHOD(void, recompute_reverse_matrix, void);
 } PACKED ALIGNED64 camera_t;
 
 // -----------------------------------------------------------------------------
@@ -198,29 +200,30 @@ typedef struct
     light_ptr       lights;
     camera_ptr      cameras;
 
-    const uint32_t spheres_num;
-    const uint32_t planes_num;
-    const uint32_t triangles_num;
-    const uint32_t cones_num;
-    const uint32_t cylinders_num;
-    const uint32_t torus_num;
-    const uint32_t boxes_num;
+    CL_CONST uint32_t spheres_num;
+    CL_CONST uint32_t planes_num;
+    CL_CONST uint32_t triangles_num;
+    CL_CONST uint32_t cones_num;
+    CL_CONST uint32_t cylinders_num;
+    CL_CONST uint32_t torus_num;
+    CL_CONST uint32_t boxes_num;
 
-    const uint32_t lights_num;
-    const uint32_t cameras_num;
+    CL_CONST uint32_t lights_num;
+    CL_CONST uint32_t cameras_num;
 } scene_t;
 
 typedef const scene_t *__restrict scene_ptr;
 
 // -----------------------------------------------------------------------------
-typedef enum obj_type_e
+typedef enum
 {
     SPHERE,
     PLANE,
     TRIANGLE,
     CONE,
     CYLINDER,
-    TOR
+    TOR,
+    BOX
 } obj_type_t;
 
 #endif /* OBJECTS_HPP */

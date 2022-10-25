@@ -89,7 +89,7 @@ bool shadow_intersection(
 );
 
 CPP_UNUSED
-FLOAT3 compute_lightning(
+FLOAT3 compute_lightning_rtx(
         const scene_t *scene,
         FLOAT3 point,
         FLOAT3 normal,
@@ -99,14 +99,31 @@ FLOAT3 compute_lightning(
 );
 
 CPP_UNUSED
-FLOAT3 trace_ray(
+FLOAT3 compute_lightning_rmc(
         const scene_t *scene,
+        FLOAT3 point,
+        FLOAT3 normal,
+        FLOAT3 direction,
+        uint32_t specular,
+        FLOAT3 *specular_computed
+);
+
+CPP_UNUSED
+FLOAT3 trace_ray_rtx(
+        scene_ptr scene,
         FLOAT3 point,
         FLOAT3 direction
 );
 
-CPP_UNUSED CPP_INLINE
-__kernel void ray_tracer(
+CPP_UNUSED
+FLOAT3 trace_ray_rmc(
+        scene_ptr scene,
+        FLOAT3 point,
+        FLOAT3 direction
+);
+
+CPP_UNUSED
+__kernel void tracer_kernel(
         __global uint32_t *canvas,
 
         byte_ptr figures,
@@ -120,6 +137,7 @@ __kernel void ray_tracer(
         uint32_t cones_num,
         uint32_t cylinders_num,
         uint32_t torus_num,
+        uint32_t boxes_num,
 
         uint32_t lights_num,
         uint32_t cameras_num,

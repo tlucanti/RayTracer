@@ -6,27 +6,35 @@
 #include <exception.hpp>
 #include <utils.hpp>
 
-template <class value_type>
-static void add_figures_next(std::vector<unsigned char> &obj_vec, const std::vector<value_type> &fig_vec)
+template <class value_type, class ptr_type>
+static void add_figures_next(
+        std::vector<unsigned char> &obj_vec,
+        const std::vector<value_type> &fig_vec,
+        ptr_type local_obj_ptr,
+        uint32_t *obj_cnt
+    )
 {
     size_t new_size = fig_vec.size() * sizeof(value_type);
     size_t old_size = obj_vec.size() * sizeof(unsigned char);
 
     obj_vec.resize(old_size + new_size);
     std::memcpy(obj_vec.data() + old_size, fig_vec.data(), new_size);
+    *local_obj_ptr = fig_vec.data();
+    *obj_cnt = static_cast<uint32_t>(fig_vec.size());
 }
 
 void rtx::init_scene()
 {
     std::vector<unsigned char> fig_vec;
+    scene_t &local_scene = rtx::scene::local_scene;
 
-    add_figures_next(fig_vec, rtx::objects::sp_vec);
-    add_figures_next(fig_vec, rtx::objects::pl_vec);
-    add_figures_next(fig_vec, rtx::objects::tr_vec);
-    add_figures_next(fig_vec, rtx::objects::cn_vec);
-    add_figures_next(fig_vec, rtx::objects::cy_vec);
-    add_figures_next(fig_vec, rtx::objects::to_vec);
-    add_figures_next(fig_vec, rtx::objects::box_vec);
+    add_figures_next(fig_vec, rtx::objects::sp_vec, &local_scene.spheres, &local_scene.spheres_num);
+    add_figures_next(fig_vec, rtx::objects::pl_vec, &local_scene.planes, &local_scene.planes_num);
+    add_figures_next(fig_vec, rtx::objects::tr_vec, &local_scene.triangles, &local_scene.triangles_num);
+    add_figures_next(fig_vec, rtx::objects::cn_vec, &local_scene.cones, &local_scene.cones_num);
+    add_figures_next(fig_vec, rtx::objects::cy_vec, &local_scene.cylinders, &local_scene.cylinders_num);
+    add_figures_next(fig_vec, rtx::objects::to_vec, &local_scene.torus, &local_scene.torus_num);
+    add_figures_next(fig_vec, rtx::objects::box_vec, &local_scene.boxes,  &local_scene.boxes_num);
 
     rtx::scene::figures = cllib::CLarray<unsigned char, cllib::read_only_array>(fig_vec, *rtx::data::context, *rtx::data::queue);
 
@@ -191,31 +199,20 @@ void argparse(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
+    camera_t cam({{0., 0., 0.}}, {{1., 1., 1.}});
+    std::cout << "alpha: " << cam.alpha << ", theta: " << cam.theta << std::endl;
+    cam.recompute_matrix();
+    FLOAT3 dir = {{1, 0, 0}};
+    std::cout << "origin: " << dir << std::endl;
+    FLOAT3 d2 = rotate_vector(dir, cam.rotate_matrix);
+    std::cout << "rotated: " << d2 << std::endl;
+    cam.recompute_reverse_matrix();
+    FLOAT3 d3 = rotate_vector(d2, cam.reverse_rotate_matrix);
+    std::cout << "rotated back: " << d3 << std::endl;
+//    return 0;
+
     argparse(argc, argv);
     putenv(const_cast<char *>("CUDA_CACHE_DISABLE=1"));
-
-//    COMPLEX x1, x2;
-//    cubic_complex_solve(-10/3., 14/3., 27/3., &x1, &x2);
-//    std::cout << x1 << ' ' << x2 << std::endl;
-//    cubic_complex_solve(-21.25, 122.75, 0, &x1, &x2);
-//    std::cout << x1 << ' ' << x2 << std::endl;
-//    std::cout << quartic_complex_solve(2, -41, -42, 360);
-//    return 0;
-
-//    test_ferrari();
-//    return 0;
-
-//    nlohmann::json a = R"({"a": 123, "a": 432})"_json;
-//    std::cout << a["a"] << std::endl;
-//    return 0;
-
-//    std::cout << newton_cubic_solve(-2.3333, 0.2, 1.4, 0.6, -4.8) << std::endl;
-//    std::cout << cubic_solve(2.1, -6.7, 10, -1.8) << std::endl;
-//    std::cout << ferrari_solve(0.5, -5, 10, -6.3, 4.9) << std::endl;
-//    return 0;
-
-//    std::cout << newton_solve(0, 0.657082, -1.056095, 14.076677, -7.052426, 51.848435) << std::endl;
-//    return 0;
 
 #ifndef __DEBUG
     try {

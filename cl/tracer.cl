@@ -239,7 +239,7 @@ FLOAT intersect_torus(
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
-void_ptr closest_intersection(
+void_ptr closest_intersection_rtx(
         scene_ptr scene,
         FLOAT3 camera,
         FLOAT3 direction,
@@ -425,7 +425,7 @@ FLOAT3 compute_emission(scene_ptr scene, FLOAT3 point, FLOAT3 normal)
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
-FLOAT3 compute_lightning(
+FLOAT3 compute_lightning_rtx(
         scene_ptr scene,
         FLOAT3 point,
         FLOAT3 normal,
@@ -516,7 +516,7 @@ FLOAT3 compute_direct_lightning(
 #ifdef RTX_TRANSPARENCY
 # define RECURSION_DEPTH 16
 CPP_UNUSED CPP_INLINE
-FLOAT3 trace_ray(
+FLOAT3 trace_ray_rtx(
         scene_ptr scene,
         FLOAT3 camera,
         FLOAT3 direction
@@ -545,7 +545,7 @@ FLOAT3 trace_ray(
         if (ray_enqueued[current_ray] == 0) {
             continue;
         }
-        closest_obj = closest_intersection(
+        closest_obj = closest_intersection_rtx(
             scene,
             ray_queue_pos[current_ray],
             ray_queue_dir[current_ray],
@@ -581,10 +581,11 @@ FLOAT3 trace_ray(
                 break ;
             }
             case TOR: normal = normalize(param); break ;
+            case BOX: break ; // FIXME: add box support to rtx
         }
 
         FLOAT3 specular_val = BLACK;
-        FLOAT3 factor = compute_lightning(
+        FLOAT3 factor = compute_lightning_rtx(
             scene,
             ray_queue_pos[current_ray],
             normal,
@@ -637,7 +638,7 @@ FLOAT3 trace_ray(
 #else /* no RTX_TRANSPARENCY */
 # define RECURSION_DEPTH 4
 CPP_UNUSED CPP_INLINE
-FLOAT3 trace_ray(
+FLOAT3 trace_ray_rtx(
         scene_ptr scene,
         FLOAT3 camera,
         FLOAT3 direction
@@ -729,5 +730,6 @@ FLOAT3 trace_ray(
 #  undef cross
 # endif /* __CPP */
 
+# undef __VERSION
 # define __VERSION 8
 #endif /* TRACER_CL */

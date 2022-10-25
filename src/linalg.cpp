@@ -14,6 +14,21 @@ FLOAT rtx::linalg::det(const FLOAT3 &v1, const FLOAT3 &v2, const FLOAT3 &v3)
     return a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
 }
 
+void rtx::linalg::inv(const FLOAT3 matr[3], FLOAT3 dest[3])
+{
+    FLOAT invdet = 1. / rtx::linalg::det(matr[0], matr[1], matr[2]);
+
+    dest[0].x = (matr[1].y * matr[2].z - matr[2].y * matr[1].z) * invdet;
+    dest[0].y = (matr[0].z * matr[2].y - matr[0].y * matr[2].z) * invdet;
+    dest[0].z = (matr[0].y * matr[1].z - matr[0].z * matr[1].y) * invdet;
+    dest[1].x = (matr[1].z * matr[2].x - matr[1].x * matr[2].z) * invdet;
+    dest[1].y = (matr[0].x * matr[2].z - matr[0].z * matr[2].x) * invdet;
+    dest[1].z = (matr[1].x * matr[0].z - matr[0].x * matr[1].z) * invdet;
+    dest[2].x = (matr[1].x * matr[2].y - matr[2].x * matr[1].y) * invdet;
+    dest[2].y = (matr[2].x * matr[0].y - matr[0].x * matr[2].y) * invdet;
+    dest[2].z = (matr[0].x * matr[1].y - matr[1].x * matr[0].y) * invdet;
+}
+
 FLOAT rtx::linalg::dot(const FLOAT3 &v1, const FLOAT3 &v2)
 {
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
@@ -84,7 +99,7 @@ void rtx::linalg::compute_angles(const FLOAT3 &direction, FLOAT &alpha, FLOAT &t
     if (std::isinf(alpha) or std::isnan(alpha))
         alpha = 0;
 
-    theta = -atan2(direction.y, (direction.z * direction.z + direction.x * direction.x));
+    theta = -atan2(direction.y, sqrt(direction.z * direction.z + direction.x * direction.x));
     if (std::isinf(theta) or std::isnan(theta))
         theta = 0;
 }
@@ -119,44 +134,56 @@ void rtx::linalg::compute_matrix(FLOAT3 rotate_matrix[3], FLOAT alpha, FLOAT the
     rotate_matrix[2] = {{-sin_alpha, sin_theta * cos_alpha, cos_alpha * cos_theta}};
 }
 
-void rtx::linalg::compute_matrix_gamma(FLOAT3 rotate_matrix[3], FLOAT3 atg)
+void rtx::linalg::compute_matrix_gamma_abg(FLOAT3 rotate_matrix[3], FLOAT3 abg)
 {
     FLOAT  _sin[3];
     FLOAT  _cos[3];
 
-    sincos(atg.x, _sin, _cos);
-    sincos(atg.y, _sin + 1, _cos + 1);
-    sincos(atg.z, _sin + 2, _cos + 2);
-//     rotate_matrix[0] = {
-//         _cos[0] * _cos[1],
-//         _cos[0] * _sin[1] * _sin[2] - _sin[0] * _cos[2],
-//         _cos[0] * _sin[1] * _cos[2] + _sin[0] * _sin[2]
-//     };
-//     rotate_matrix[1] = {
-//         _sin[0] * _cos[1],
-//         _sin[0] * _sin[1] * _sin[2] + _cos[0] * _cos[2],
-//         _sin[0] * _sin[1] * _cos[2] - _cos[0] * _sin[2]
-//     };
-//     rotate_matrix[2] = {
-//         -_sin[1],
-//         _cos[1] * _sin[2],
-//         _cos[1] * _cos[2]
-//     };
-	rotate_matrix[0] = {
-		{_cos[1] * _cos[2],
-		_sin[0] * _sin[1] * _cos[2] - _cos[0] * _sin[2],
-		_cos[0] * _sin[1] * _cos[2] + _sin[0] * _sin[2]}
-	};
-	rotate_matrix[1] = {
-		{_cos[1] * _sin[2],
-		_sin[0] * _sin[1] * _sin[2] + _cos[0] * _cos[2],
-		_cos[0] * _sin[1] * _sin[2] - _sin[0] * _cos[2]}
-	};
-	rotate_matrix[2] = {
-		{-_sin[1],
-		_sin[0] * _cos[1],
-		_cos[0] * _cos[1]}
-	};
+    sincos(abg.x, _sin, _cos);
+    sincos(abg.y, _sin + 1, _cos + 1);
+    sincos(abg.z, _sin + 2, _cos + 2);
+
+    rotate_matrix[0] = {{
+        _cos[0] * _cos[1],
+        _cos[0] * _sin[1] * _sin[2] - _sin[0] * _cos[2],
+        _cos[0] * _sin[1] * _cos[2] + _sin[0] * _sin[2]
+    }};
+    rotate_matrix[1] = {{
+        _sin[0] * _cos[1],
+        _sin[0] * _sin[1] * _sin[2] + _cos[0] * _cos[2],
+        _sin[0] * _sin[1] * _cos[2] - _cos[0] * _sin[2]
+    }};
+    rotate_matrix[2] = {{
+        -_sin[1],
+        _cos[1] * _sin[2],
+        _cos[1] * _cos[2]
+    }};
+}
+
+void rtx::linalg::compute_matrix_gamma_gba(FLOAT3 rotate_matrix[3], FLOAT3 abg)
+{
+    FLOAT  _sin[3];
+    FLOAT  _cos[3];
+
+    sincos(abg.x, _sin, _cos);
+    sincos(abg.y, _sin + 1, _cos + 1);
+    sincos(abg.z, _sin + 2, _cos + 2);
+
+    rotate_matrix[0] = {
+            {_cos[1] * _cos[2],
+             _sin[0] * _sin[1] * _cos[2] - _cos[0] * _sin[2],
+             _cos[0] * _sin[1] * _cos[2] + _sin[0] * _sin[2]
+    }};
+    rotate_matrix[1] = {
+            {_cos[1] * _sin[2],
+             _sin[0] * _sin[1] * _sin[2] + _cos[0] * _cos[2],
+             _cos[0] * _sin[1] * _sin[2] - _sin[0] * _cos[2]
+    }};
+    rotate_matrix[2] = {
+            {-_sin[1],
+             _sin[0] * _cos[1],
+             _cos[0] * _cos[1]
+    }};
 }
 
 void rtx::linalg::set_rotation_matrix(FLOAT3 *matrix, const FLOAT3 &v1, const FLOAT3 &v2)
@@ -164,7 +191,7 @@ void rtx::linalg::set_rotation_matrix(FLOAT3 *matrix, const FLOAT3 &v1, const FL
     FLOAT3 k = cross(v1, v2);
     FLOAT cos_theta = dot(v1, v2);
     FLOAT sin_theta = sqrt(dot(k, k));
-    if (abs(sin_theta) < EPS)
+    if (std::abs(sin_theta) < EPS)
     {
         FLOAT factor = -2. * sin_theta + 1;
         matrix[0] = FLOAT3({{1, 0, 0}}) * factor;

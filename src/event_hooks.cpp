@@ -3,6 +3,7 @@
 #include <linalg.hpp>
 #include <event_hooks.hpp>
 #include <exception.hpp>
+#include <scene_helper.hpp>
 
 #include <sstream>
 #include <mlxlib>
@@ -122,10 +123,38 @@ void rtx::hooks::mousepress_hook(int button, int x, int y, void *)
         move_params::mouse_press = true;
 }
 
-void rtx::hooks::mouserelease_hook(int button, void *)
+void rtx::hooks::mouserelease_hook(int button, int x, int y, void *)
 {
     if (button == mlxlib::mouse::MOUSE_LEFT)
         move_params::mouse_press = false;
+    if (button == mlxlib::mouse::MOUSE_RIGHT)
+    {
+        obj_type_t obj_type;
+        FLOAT3 center;
+        camera_t &cur_cam = rtx::objects::cam_vec.at(rtx::config::current_camera);
+
+        void_ptr obj = object_at_pos(x, y, &obj_type);
+        if (obj == nullptr)
+            return ;
+        switch (obj_type)
+        {
+            case SPHERE: center = as_sphere(obj)->position; break ;
+
+            case BOX: center = as_box(obj)->position; break ;
+            default: center = {{0., 0., 0.}};
+        }
+        FLOAT3 oc = center - cur_cam.position;
+        rtx::linalg::normalize_ref(oc);
+        cur_cam.recompute_reverse_matrix();
+        FLOAT3 direction = rotate_vector(oc, cur_cam.reverse_rotate_matrix);
+
+        uint32_t cx, cy;
+        pixpos_from_vec3(direction, &cx, &cy, rtx::config::width, rtx::config::height);
+
+        std::cout << "released mouse at: (" << x << ", " << y << ")\n";
+        std::cout << "hit object: " << obj << " (" << obj_type << ")\n";
+        std::cout << "object center: (" << cx << ", " << cy << ")\n";
+    }
 }
 
 void rtx::hooks::framehook(void *)

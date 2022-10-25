@@ -171,6 +171,19 @@ namespace masks
     inline constexpr int mouse_motion_hint = 1L << 7;
 }
 
+namespace style
+{
+    inline constexpr int middle = 0;
+    inline constexpr int left = 1;
+    inline constexpr int right = 2;
+    inline constexpr int up = 3;
+    inline constexpr int bottom = 4;
+    inline constexpr int top_left = 5;
+    inline constexpr int top_right = 6;
+    inline constexpr int bottom_left = 7;
+    inline constexpr int bottom_right = 8;
+}
+
 class MLXwindow : public __utils::__noncopymovable<>
 {
 public:
@@ -202,6 +215,17 @@ public:
     void put_string(const std::string &str, int x, int y, int color=color::white)
     {
         mlx_string_put(mlx_ptr, window_ptr, x, y, color, const_cast<char *>(str.c_str()));
+    }
+
+    void put_textbox(const std::string &line, int position=style::middle)
+    {
+        put_textbox(std::vector<std::string>{line}, position);
+    }
+
+    void put_textbox(const std::vector<std::string> &lines, int position=style::middle)
+    {
+        (void)lines;
+        (void)position;
     }
 
     template <class T>

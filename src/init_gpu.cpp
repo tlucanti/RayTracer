@@ -26,11 +26,10 @@ void rtx::init_gpu()
         flags += " -DRTX_TRANSPARENCY ";
     if (rtx::config::refractive)
         flags += " -DRTX_REFRACTIVE ";
-#ifdef RTX_RAY_TRACER
-    flags += " -DRTX_RAY_TRACER ";
-#elif defined(RTX_RAY_MARCHER)
-    flags += " -DRTX_RAY_MARCHER ";
-#endif
+    if (rtx::config::tracer_type == RTX_RAY_TRACER)
+        flags += " -DRTX_RAY_TRACER ";
+    else if (rtx::config::tracer_type == RTX_RAY_MARCHER)
+        flags += " -DRTX_RAY_MARCHER ";
     program.compile(device, true, flags.c_str());
 
 //    cllib::CLprogram blur_program(4, std::ifstream(rtx::config::kernel_fname), "blur_convolution", *rtx::data::context);

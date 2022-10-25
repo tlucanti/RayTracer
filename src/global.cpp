@@ -18,6 +18,7 @@ namespace scene
 {
     cllib::CLarray<camera_t, cllib::read_only_array> cameras;
     cllib::CLarray<unsigned char, cllib::read_only_array> figures;
+    scene_t local_scene {};
 
     cllib::CLarray<light_t, cllib::read_only_array> lights;
 

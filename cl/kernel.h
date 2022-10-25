@@ -7,6 +7,8 @@
 # define as_triangle(obj_ptr) cstatic_cast(triangle_ptr, obj_ptr)
 # define as_cone(obj_ptr) cstatic_cast(cone_ptr, obj_ptr)
 # define as_cylinder(obj_ptr) cstatic_cast(cylinder_ptr, obj_ptr)
+# define as_torus(obj_ptr) cstatic_cast(torus_ptr, obj_ptr)
+# define as_box(obj_ptr) cstatic_cast(box_ptr, obj_ptr)
 
 # define get_obj_color(obj_ptr) (as_sphere(obj_ptr)->color)
 # define get_obj_specular(obj_ptr) (as_sphere(obj_ptr)->specular)
@@ -19,6 +21,7 @@
 # ifndef __CPP
 #  define CPP_UNUSED
 #  define CPP_INLINE
+#  define CL_CONST const
 #  define ASSIGN_FLOAT3(__x, __y, __z) (FLOAT3)(__x, __y, __z)
 #  define ASSIGN_COMPLEX(__real, __imag) (COMPLEX)(__real, __imag)
 #  define ASSIGN_SCENE(...) (scene_t){__VA_ARGS__}
@@ -42,6 +45,7 @@
 #  define __kernel
 #  define CPP_UNUSED __attribute__((unused))
 #  define CPP_INLINE inline
+#  define CL_CONST
 #  define NULLPTR nullptr
 #  define ASSIGN_FLOAT3(__x, __y, __z) FLOAT3({{__x,__y, __z}})
 #  define ASSIGN_COMPLEX(__real, __imag) {{__real, __imag}}

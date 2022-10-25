@@ -11,8 +11,6 @@
 # include "inc.h"
 # include "tracing_base.cl"
 
-# define as_sphere(obj_ptr) cstatic_cast(sphere_ptr, obj_ptr)
-
 # define get_obj_color(obj_ptr) (as_sphere(obj_ptr)->color)
 
 # define BLACK ASSIGN_FLOAT3(0., 0., 0.)
@@ -50,7 +48,7 @@ FLOAT box_dfs(
     return length(fmax(fabs(co) - box->sides, 0.));
 }
 
-# define update_closest_t(__dsf_func, __obj_name)       \
+# define update_closest_t(__dsf_func, __obj_name, __obj_type)       \
 do {                                                    \
     FLOAT t = __dsf_func(point, __obj_name + i);        \
                                                         \
@@ -58,29 +56,30 @@ do {                                                    \
     {                                                   \
         closest_t = t;                                  \
         *closest_obj = __obj_name + i;                  \
+        *obj_type = __obj_type;                         \
     }                                                   \
 } while (false)
 
 CPP_UNUSED CPP_INLINE
-FLOAT scene_dsf(scene_ptr scene, FLOAT3 point, void_ptr *closest_obj)
+FLOAT scene_dsf(scene_ptr scene, FLOAT3 point, void_ptr *closest_obj, obj_type_t *obj_type)
 {
     FLOAT closest_t = INFINITY;
 
     for (uint32_t i=0; i < scene->spheres_num; ++i)
     {
-        update_closest_t(sphere_dsf, scene->spheres);
+        update_closest_t(sphere_dsf, scene->spheres, SPHERE);
         if (closest_t < HIT_DISTANCE)
             break ;
     }
     for (uint32_t i=0; i < scene->planes_num; ++i)
     {
-        update_closest_t(plane_dsf, scene->planes);
+        update_closest_t(plane_dsf, scene->planes, PLANE);
         if (closest_t < HIT_DISTANCE)
             break ;
     }
     for (uint32_t i=0; i < scene->boxes_num; ++i)
     {
-        update_closest_t(box_dfs, scene->boxes);
+        update_closest_t(box_dfs, scene->boxes, BOX);
         if (closest_t < HIT_DISTANCE)
             break ;
     }
@@ -137,18 +136,19 @@ FLOAT3 get_normal(scene_ptr scene, FLOAT3 point)
 }
 
 CPP_UNUSED CPP_INLINE
-void_ptr closest_intersection(
+void_ptr closest_intersection_rmc(
         scene_ptr scene,
         FLOAT3 camera,
         FLOAT3 direction,
-        FLOAT3 *__restrict point_ptr
+        FLOAT3 *__restrict point_ptr,
+        obj_type_t *__restrict obj_type
     )
 {
     void_ptr closest_obj = NULLPTR;
 
     for (uint32_t iter = 0; iter < RTX_RECURSION_DEPTH; ++iter)
     {
-        FLOAT t = scene_dsf(scene, camera, &closest_obj);
+        FLOAT t = scene_dsf(scene, camera, &closest_obj, obj_type);
 
         if (t < HIT_DISTANCE)
         {
@@ -163,7 +163,7 @@ void_ptr closest_intersection(
 }
 
 CPP_UNUSED CPP_INLINE
-FLOAT3 compute_lightning(
+FLOAT3 compute_lightning_rmc(
         scene_ptr scene,
         FLOAT3 point,
         FLOAT3 normal,
@@ -212,7 +212,7 @@ FLOAT3 compute_lightning(
 }
 
 CPP_UNUSED CPP_INLINE
-FLOAT3 trace_ray(
+FLOAT3 trace_ray_rmc(
         scene_ptr scene,
         FLOAT3 camera,
         FLOAT3 direction
@@ -222,15 +222,16 @@ FLOAT3 trace_ray(
     FLOAT3 color = BLACK;
     FLOAT3 point;
     FLOAT3 normal;
+    obj_type_t dummy_closest_type;
 
-    closest_obj = closest_intersection(scene, camera, direction, &point);
+    closest_obj = closest_intersection_rmc(scene, camera, direction, &point, &dummy_closest_type);
 
     if (closest_obj == NULLPTR)
         return color;
 
     normal = get_normal(scene, point);
     FLOAT3 specular_val = ASSIGN_FLOAT3(0., 0., 0.);
-    FLOAT3 factor = compute_lightning(
+    FLOAT3 factor = compute_lightning_rmc(
         scene,
         point,
         normal,
@@ -241,11 +242,10 @@ FLOAT3 trace_ray(
 
     color = get_obj_color(closest_obj) * factor;
     color += specular_val * 255.;
-    color.x = fmin(255., color.x);
-    color.y = fmin(255., color.y);
-    color.z = fmin(255., color.z);
+    color = fmin(color, 255.);
     return color;
 }
 
+# undef __VERSION
 # define __VERSION 5
 #endif /* MARCHER_CL */

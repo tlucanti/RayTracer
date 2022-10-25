@@ -12,7 +12,7 @@ namespace hooks
     void keyrelease_hook(int keycode, void *);
     void mouse_hook(int x, int y, void *);
     void mousepress_hook(int button, int x, int y, void *);
-    void mouserelease_hook(int button, void *);
+    void mouserelease_hook(int button, int x, int y, void *);
     void framehook(void *);
 } /* hooks */
 

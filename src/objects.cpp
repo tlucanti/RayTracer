@@ -194,6 +194,7 @@ camera_s::camera_s(
         position(pos),
         direction(dir),
         rotate_matrix(),
+        reverse_rotate_matrix(),
         alpha(),
         theta()
 {
@@ -205,5 +206,12 @@ camera_s::camera_s(
 // -----------------------------------------------------------------------------
 void camera_s::recompute_matrix()
 {
-    rtx::linalg::compute_matrix(rotate_matrix, alpha, theta);
+//    rtx::linalg::compute_matrix_gamma_abg(rotate_matrix, {{alpha, 0., theta}});
+    rtx::linalg::compute_matrix(rotate_matrix,alpha, theta);
+    }
+
+// -----------------------------------------------------------------------------
+void camera_s::recompute_reverse_matrix()
+{
+    rtx::linalg::inv(rotate_matrix, reverse_rotate_matrix);
 }

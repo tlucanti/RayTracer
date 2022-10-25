@@ -30,6 +30,7 @@ namespace data
 namespace scene
 {
     extern cllib::CLarray<unsigned char, cllib::read_only_array> figures;
+    extern scene_t local_scene;
 
     extern cllib::CLarray<camera_t, cllib::read_only_array> cameras;
     extern cllib::CLarray<light_t, cllib::read_only_array> lights;
