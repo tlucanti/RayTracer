@@ -223,6 +223,15 @@ FLOAT3 trace_ray(
     return color;
 }
 
+#define set_scene_fig_next(__field, __type, __cnt, __base_ptr, __shift_var) \
+do {                                                                        \
+    __field = creinterpret_cast(                                            \
+        __constant const __type *__restrict,                                \
+        __base_ptr + __shift_var                                            \
+    );                                                                      \
+    __shift_var += __cnt * sizeof(__type);                                  \
+} while (false)
+
 CPP_UNUSED CPP_INLINE
 __kernel void ray_marcher(
         __global uint32_t *canvas,
@@ -266,23 +275,14 @@ __kernel void ray_marcher(
     };
     size_t shift = 0;
 
-    scene.spheres = creinterpret_cast(sphere_ptr, figures + shift);
-    shift += spheres_num * sizeof(sphere_t);
+    set_scene_fig_next(scene.spheres, sphere_t, spheres_num, figures, shift);
+    set_scene_fig_next(scene.planes, plane_t, planes_num, figures, shift);
+    set_scene_fig_next(scene.triangles, triangle_t, triangles_num, figures, shift);
+    set_scene_fig_next(scene.cones, cone_t, cones_num, figures, shift);
+    set_scene_fig_next(scene.cylinders, cylinder_t, cylinders_num, figures, shift);
+    set_scene_fig_next(scene.torus, torus_t, torus_num, figures, shift);
 
-    scene.planes = creinterpret_cast(plane_ptr, figures + shift);
-    shift += planes_num * sizeof(plane_t);
-
-    scene.triangles = creinterpret_cast(triangle_ptr, figures + shift);
-    shift += triangles_num * sizeof(triangle_t);
-
-    scene.cones = creinterpret_cast(cone_ptr, figures + shift);
-    shift += cones_num * sizeof(cone_t);
-
-    scene.cylinders = creinterpret_cast(cylinder_ptr, figures + shift);
-    shift += cylinders_num * sizeof(cylinder_t);
-
-    scene.torus = creinterpret_cast(torus_ptr, figures + shift);
-    shift += torus_num * sizeof(torus_ptr);
+//    shift += torus_num * sizeof(torus_ptr);
 
     FLOAT3 vec = ASSIGN_FLOAT3(
             (z - width / 2.) * rwidth,                                              // FIXME: open brakets (simplify)

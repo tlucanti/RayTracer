@@ -35,6 +35,7 @@ namespace objects
     std::vector<cone_t> cn_vec;
     std::vector<cylinder_t> cy_vec;
     std::vector<torus_t> to_vec;
+    std::vector<box_t> box_vec;
 
     std::vector<light_t> li_vec;
 } /* objects */

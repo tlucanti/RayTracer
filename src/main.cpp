@@ -6,41 +6,27 @@
 #include <exception.hpp>
 #include <utils.hpp>
 
+template <class value_type>
+static void add_figures_next(std::vector<unsigned char> &obj_vec, const std::vector<value_type> &fig_vec)
+{
+    size_t new_size = fig_vec.size() * sizeof(value_type);
+    size_t old_size = obj_vec.size() * sizeof(unsigned char);
+
+    obj_vec.resize(old_size + new_size);
+    std::memcpy(obj_vec.data() + old_size, fig_vec.data(), new_size);
+}
+
 void rtx::init_scene()
 {
-    size_t full_size = \
-            rtx::objects::sp_vec.size() * sizeof(sphere_t) +
-            rtx::objects::pl_vec.size() * sizeof(plane_t) +
-            rtx::objects::tr_vec.size() * sizeof(triangle_t) +
-            rtx::objects::cn_vec.size() * sizeof(cone_t) +
-            rtx::objects::cy_vec.size() * sizeof(cylinder_t) +
-            rtx::objects::to_vec.size() * sizeof(torus_t);
-    std::vector<unsigned char> fig_vec(full_size);
-    size_t size=0;
-    size_t ds = 0;
-    ds = rtx::objects::sp_vec.size() * sizeof(sphere_t);
-    std::memcpy(fig_vec.data() + size, rtx::objects::sp_vec.data(), ds);
-    size += ds;
+    std::vector<unsigned char> fig_vec;
 
-    ds = rtx::objects::pl_vec.size() * sizeof(plane_t);
-    std::memcpy(fig_vec.data() + size, rtx::objects::pl_vec.data(), ds);
-    size += ds;
-
-    ds = rtx::objects::tr_vec.size() * sizeof(triangle_t);
-    std::memcpy(fig_vec.data() + size, rtx::objects::tr_vec.data(), ds);
-    size += ds;
-
-    ds = rtx::objects::cn_vec.size() * sizeof(cone_t);
-    std::memcpy(fig_vec.data() + size, rtx::objects::cn_vec.data(), ds);
-    size += ds;
-
-    ds = rtx::objects::cy_vec.size() * sizeof(cylinder_t);
-    std::memcpy(fig_vec.data() + size, rtx::objects::cy_vec.data(), ds);
-    size += ds;
-
-    ds = rtx::objects::to_vec.size() * sizeof(torus_t);
-    std::memcpy(fig_vec.data() + size, rtx::objects::to_vec.data(), ds);
-    size += ds;
+    add_figures_next(fig_vec, rtx::objects::sp_vec);
+    add_figures_next(fig_vec, rtx::objects::pl_vec);
+    add_figures_next(fig_vec, rtx::objects::tr_vec);
+    add_figures_next(fig_vec, rtx::objects::cn_vec);
+    add_figures_next(fig_vec, rtx::objects::cy_vec);
+    add_figures_next(fig_vec, rtx::objects::to_vec);
+    add_figures_next(fig_vec, rtx::objects::box_vec);
 
     rtx::scene::figures = cllib::CLarray<unsigned char, cllib::read_only_array>(fig_vec, *rtx::data::context, *rtx::data::queue);
 
@@ -232,7 +218,9 @@ int main(int argc, char **argv)
 //    std::cout << newton_solve(0, 0.657082, -1.056095, 14.076677, -7.052426, 51.848435) << std::endl;
 //    return 0;
 
+#ifndef __DEBUG
     try {
+#endif
         rtx::parse_scene();
         rtx::init_mlx();
         rtx::init_gpu();
@@ -241,12 +229,14 @@ int main(int argc, char **argv)
 //        gpu_initializer.join();
 //        mlx_initializer.join();
 //    return 0;
+#ifndef __DEBUG
     } catch (std::exception &e) {
         std::cout << e.what() << std::endl;
 //        std::cout << "-------------------------------------\n";
 //        std::cout << "aborting program\n";
         return 1;
     }
+#endif
 
     rtx::init_scene();
     rtx::init_kernel();

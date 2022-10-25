@@ -47,11 +47,7 @@ public:
 
     ~CLprogram() THROW
     {
-        cl_int error;
-
-        error = clReleaseProgram(program);
-        if (error != CL_SUCCESS)
-            throw CLexception(error);
+        _destroy();
     }
 
     void compile(
@@ -222,6 +218,17 @@ public:
     }
 
 private:
+
+    void _destroy() THROW
+    {
+        cl_int error;
+
+        if (program == nullptr)
+            return ;
+        error = clReleaseProgram(program);
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+    }
 
     WUR unsigned long long _get_numeric_data(cl_program_info type, size_t value_size) const THROW
     {

@@ -48,6 +48,7 @@ namespace objects
     extern std::vector<cone_t> cn_vec;
     extern std::vector<cylinder_t> cy_vec;
     extern std::vector<torus_t> to_vec;
+    extern std::vector<box_t> box_vec;
 
     extern std::vector<light_t> li_vec;
 } /* objects */
