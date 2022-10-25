@@ -138,7 +138,6 @@ void argparse(int argc, char **argv)
                         case ("rtx"_hash): {
                             rtx::config::tracer = RTX_RAY_TRACER;
                             rtx::config::kernel_file = rtx::config::tracer_fname;
-                            rtx::config::kernel_name = "ray_tracer";
                             break ;
                         }
                         case ("marcher"_hash):
@@ -146,7 +145,6 @@ void argparse(int argc, char **argv)
                         case ("rmc"_hash): {
                             rtx::config::tracer = RTX_RAY_MARCHER;
                             rtx::config::kernel_file = rtx::config::marcher_fname;
-                            rtx::config::kernel_name = "ray_marcher";
                             break ;
                         }
                         default: {

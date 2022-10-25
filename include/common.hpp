@@ -43,7 +43,7 @@ namespace RTX_NAMESPACE
 
         inline rtx_tracer_type tracer;
         inline const char *kernel_file;
-        inline const char *kernel_name;
+        inline constexpr const char *kernel_name = "tracer_kernel";
 
         inline const char *scene_fname;
 # ifdef __MAKE

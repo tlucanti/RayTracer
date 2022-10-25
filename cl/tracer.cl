@@ -1,6 +1,6 @@
 
-#ifndef CL_TRACER
-# define CL_TRACER
+#ifndef TRACER_CL
+# define TRACER_CL
 
 # ifndef __CPP
 #  include "kernel_common.h"
@@ -9,6 +9,7 @@
 # include "objects.h"
 # include "algo.h"
 # include "inc.h"
+# include "tracing_base.cl"
 
 // -----------------------------------------------------------------------------
 CPP_UNUSED CPP_INLINE
@@ -731,141 +732,10 @@ FLOAT3 trace_ray(
 }
 #endif /* RTX_TRANSPARENCY */
 
-// -----------------------------------------------------------------------------
-CPP_UNUSED CPP_INLINE
-__kernel void ray_tracer(
-        __global uint32_t *canvas,
-
-        byte_ptr figures,
-
-        light_ptr lights,
-        camera_ptr cameras,
-
-        const uint32_t spheres_num,
-        const uint32_t planes_num,
-        const uint32_t triangles_num,
-        const uint32_t cones_num,
-        const uint32_t cylinders_num,
-        const uint32_t torus_num,
-
-        const uint32_t lights_num,
-        const uint32_t cameras_num,
-
-        const uint32_t width,
-        const uint32_t height
-    )
-{
-
-    const FLOAT rheight = 1. / height;
-    const FLOAT rwidth = 1. / width;
-    const uint32_t z = get_global_id(0);
-    const uint32_t y = get_global_id(1);
-
-    scene_t scene = {
-        .lights = lights,
-        .cameras = cameras,
-        .spheres_num = spheres_num,
-        .planes_num = planes_num,
-        .triangles_num = triangles_num,
-        .cones_num = cones_num,
-        .cylinders_num = cylinders_num,
-        .torus_num = torus_num,
-        .lights_num = lights_num,
-        .cameras_num = cameras_num
-    };
-    size_t shift = 0;
-
-    scene.spheres = creinterpret_cast(sphere_ptr, figures + shift);
-    shift += spheres_num * sizeof(sphere_t);
-
-    scene.planes = creinterpret_cast(plane_ptr, figures + shift);
-    shift += planes_num * sizeof(plane_t);
-
-    scene.triangles = creinterpret_cast(triangle_ptr, figures + shift);
-    shift += triangles_num * sizeof(triangle_t);
-
-    scene.cones = creinterpret_cast(cone_ptr, figures + shift);
-    shift += cones_num * sizeof(cone_t);
-
-    scene.cylinders = creinterpret_cast(cylinder_ptr, figures + shift);
-    shift += cylinders_num * sizeof(cylinder_t);
-
-    scene.torus = creinterpret_cast(torus_ptr, figures + shift);
-    shift += torus_num * sizeof(torus_ptr);
-
-    FLOAT3 vec = ASSIGN_FLOAT3(
-        (z - width / 2.) * rwidth,                                              // FIXME: open brakets (simplify)
-        (y - height / 2.) * rheight,
-        1
-    );
-    vec = normalize(vec);
-    vec = rotate_vector(vec, cameras[0].rotate_matrix);
-//    FLOAT distance;
-    const FLOAT3 color = trace_ray(
-        &scene,
-        cameras[0].position,
-        vec
-    );
-
-    uint32_t pix_pos;
-
-    pix_pos = (height - y - 1u) * (width) + z;
-    const uint32_t int_color =
-          cstatic_cast(uint32_t, color.x) << 16u
-        | cstatic_cast(uint32_t, color.y) << 8u
-        | cstatic_cast(uint32_t, color.z);
-    canvas[pix_pos] = int_color;
-}
-
-CPP_UNUSED CPP_INLINE
-__kernel void blur_convolution(
-    __global uint32_t *input,
-    __global uint32_t *output,
-    __global FLOAT *distances,
-
-    const int32_t width,
-    const int32_t height
-)
-{
-    const int32_t z = cstatic_cast(int, get_global_id(0));
-    const int32_t y = cstatic_cast(int, get_global_id(1));
-    const int pix_pos = (height - y - 1) * (width) + z;
-
-    FLOAT3 convolution_val = ASSIGN_FLOAT3(0., 0., 0.);
-    int conv_size = cstatic_cast(int, fmin(distances[pix_pos], 20.));
-    int conv_step = conv_size / 10;
-    int cnt = 0;
-
-    for (int i=-conv_size; i <= conv_size; i+=conv_step) {
-        for (int j=-conv_size; j <= conv_size; j+=conv_step) {
-            int column = z + j;
-            int row = height - y - 1 + i;
-
-            row = max(0, row);
-            row = min(height - 1, row);
-            column = max(0, column);
-            column = min(width - 1, column);
-
-            const int pos = row * width + column;
-            convolution_val.z += input[pos] & 0xFF;
-            convolution_val.y += (input[pos] >> 8u) & 0xFF;
-            convolution_val.x += (input[pos] >> 16u) & 0xFF;
-            ++cnt;
-        }
-    }
-    convolution_val *= 1. / cnt;
-    const uint32_t blur_val =
-            cstatic_cast(uint32_t, convolution_val.x) << 16u
-            | cstatic_cast(uint32_t, convolution_val.y) << 8u
-            | cstatic_cast(uint32_t, convolution_val.z);
-    output[pix_pos] = blur_val;
-}
-
-
 # ifdef __CPP
 #  undef dot
 #  undef cross
 # endif /* __CPP */
 
 # define __VERSION 8
-#endif /* CL_TRACER */
+#endif /* TRACER_CL */

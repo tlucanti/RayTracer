@@ -1,6 +1,6 @@
 
-#ifndef CL_MARCHER
-# define CL_MARCHER
+#ifndef MARCHER_CL
+# define MARCHER_CL
 
 # ifndef __CPP
 #  include "kernel_common.h"
@@ -9,13 +9,16 @@
 # include "objects.h"
 # include "algo.h"
 # include "inc.h"
+# include "tracing_base.cl"
 
 # define as_sphere(obj_ptr) cstatic_cast(sphere_ptr, obj_ptr)
 
 # define get_obj_color(obj_ptr) (as_sphere(obj_ptr)->color)
 
 # define BLACK ASSIGN_FLOAT3(0., 0., 0.)
-# define RTX_RECURSION_DEPTH 64
+# define RTX_RECURSION_DEPTH 32
+# define HIT_DISTANCE 0.01
+# define MISS_DISTANCE 100
 
 CPP_UNUSED CPP_INLINE
 FLOAT sphere_dsf(
@@ -126,12 +129,12 @@ void_ptr closest_intersection(
     {
         FLOAT t = scene_dsf(scene, camera, &closest_obj);
 
-        if (t < EPS)
+        if (t < HIT_DISTANCE)
         {
             *point_ptr = camera;
             return closest_obj;
         }
-        else if (t > FARAWAY)
+        else if (t > MISS_DISTANCE)
             break ;
         camera = camera + direction * t;
     }
@@ -223,90 +226,5 @@ FLOAT3 trace_ray(
     return color;
 }
 
-#define set_scene_fig_next(__field, __type, __cnt, __base_ptr, __shift_var) \
-do {                                                                        \
-    __field = creinterpret_cast(                                            \
-        __constant const __type *__restrict,                                \
-        __base_ptr + __shift_var                                            \
-    );                                                                      \
-    __shift_var += __cnt * sizeof(__type);                                  \
-} while (false)
-
-CPP_UNUSED CPP_INLINE
-__kernel void ray_marcher(
-        __global uint32_t *canvas,
-
-        byte_ptr figures,
-
-        light_ptr lights,
-        camera_ptr cameras,
-
-        const uint32_t spheres_num,
-        const uint32_t planes_num,
-        const uint32_t triangles_num,
-        const uint32_t cones_num,
-        const uint32_t cylinders_num,
-        const uint32_t torus_num,
-
-        const uint32_t lights_num,
-        const uint32_t cameras_num,
-
-        const uint32_t width,
-        const uint32_t height
-)
-{
-
-    const FLOAT rheight = 1. / height;
-    const FLOAT rwidth = 1. / width;
-    const uint32_t z = get_global_id(0);
-    const uint32_t y = get_global_id(1);
-
-    scene_t scene = {
-            .lights = lights,
-            .cameras = cameras,
-            .spheres_num = spheres_num,
-            .planes_num = planes_num,
-            .triangles_num = triangles_num,
-            .cones_num = cones_num,
-            .cylinders_num = cylinders_num,
-            .torus_num = torus_num,
-            .lights_num = lights_num,
-            .cameras_num = cameras_num
-    };
-    size_t shift = 0;
-
-    set_scene_fig_next(scene.spheres, sphere_t, spheres_num, figures, shift);
-    set_scene_fig_next(scene.planes, plane_t, planes_num, figures, shift);
-    set_scene_fig_next(scene.triangles, triangle_t, triangles_num, figures, shift);
-    set_scene_fig_next(scene.cones, cone_t, cones_num, figures, shift);
-    set_scene_fig_next(scene.cylinders, cylinder_t, cylinders_num, figures, shift);
-    set_scene_fig_next(scene.torus, torus_t, torus_num, figures, shift);
-
-//    shift += torus_num * sizeof(torus_ptr);
-
-    FLOAT3 vec = ASSIGN_FLOAT3(
-            (z - width / 2.) * rwidth,                                              // FIXME: open brakets (simplify)
-            (y - height / 2.) * rheight,
-            1
-    );
-    vec = normalize(vec);
-    vec = rotate_vector(vec, cameras[0].rotate_matrix);
-//    FLOAT distance;
-    const FLOAT3 color = trace_ray(
-            &scene,
-            cameras[0].position,
-            vec
-    );
-
-    uint32_t pix_pos;
-
-    pix_pos = (height - y - 1u) * (width) + z;
-    const uint32_t int_color =
-            cstatic_cast(uint32_t, color.x) << 16u
-            | cstatic_cast(uint32_t, color.y) << 8u
-            | cstatic_cast(uint32_t, color.z);
-    canvas[pix_pos] = int_color;
-}
-
 # define __VERSION 5
-#endif /* CL_MARCHER */
+#endif /* MARCHER_CL */
