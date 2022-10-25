@@ -130,6 +130,16 @@ std::ostream &operator <<(std::ostream &out, const torus_t &to)
 
 // -----------------------------------------------------------------------------
 inline
+std::ostream &operator <<(std::ostream &out, const box_t box)
+{
+    out << "box[pos: " << box.position << ", sides: " << box.sides <<
+        ", color: " << _clprt(box.color, out)
+        << ", " << _SRRT(box, out) << " ]";
+    return out;
+}
+
+// -----------------------------------------------------------------------------
+inline
 std::ostream &operator <<(std::ostream &out, const light_t &li)
 {
     switch (li.type)

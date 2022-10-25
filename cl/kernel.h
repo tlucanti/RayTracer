@@ -117,10 +117,8 @@
     FLOAT transparency
 
 #  define BOX_PARAMS        \
-    FLOAT3 position,        \
-    FLOAT a,                \
-    FLOAT b,                \
-    FLOAT c,                \
+    FL3_CREF position,      \
+    FL3_CREF sides,         \
     FL3_CREF color,         \
     uint32_t specular,      \
     FLOAT reflective,       \
@@ -144,6 +142,9 @@ using rtx::linalg::length;
 using rtx::linalg::normalize;
 using rtx::linalg::dot;
 using rtx::linalg::cross;
+using rtx::linalg::fmin;
+using rtx::linalg::fmax;
+using rtx::linalg::fabs;
 
 using std::isnan;
 using std::isinf;

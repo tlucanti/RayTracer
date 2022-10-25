@@ -15,24 +15,25 @@ CPP_UNUSED CPP_INLINE
 __kernel void tracer_kernel(
         __global uint32_t *canvas,
 
-byte_ptr figures,
+        byte_ptr figures,
 
         light_ptr lights,
-camera_ptr cameras,
+        camera_ptr cameras,
 
-const uint32_t spheres_num,
-const uint32_t planes_num,
-const uint32_t triangles_num,
-const uint32_t cones_num,
-const uint32_t cylinders_num,
-const uint32_t torus_num,
+        const uint32_t spheres_num,
+        const uint32_t planes_num,
+        const uint32_t triangles_num,
+        const uint32_t cones_num,
+        const uint32_t cylinders_num,
+        const uint32_t torus_num,
+        const uint32_t boxes_num,
 
-const uint32_t lights_num,
-const uint32_t cameras_num,
+        const uint32_t lights_num,
+        const uint32_t cameras_num,
 
-const uint32_t width,
-const uint32_t height
-)
+        const uint32_t width,
+        const uint32_t height
+    )
 {
 
 const FLOAT rheight = 1. / height;
@@ -49,6 +50,7 @@ scene_t scene = {
         .cones_num = cones_num,
         .cylinders_num = cylinders_num,
         .torus_num = torus_num,
+        .boxes_num = boxes_num,
         .lights_num = lights_num,
         .cameras_num = cameras_num
 };
@@ -60,6 +62,7 @@ set_scene_fig_next(scene.triangles, triangle_t, triangles_num, figures, shift);
 set_scene_fig_next(scene.cones, cone_t, cones_num, figures, shift);
 set_scene_fig_next(scene.cylinders, cylinder_t, cylinders_num, figures, shift);
 set_scene_fig_next(scene.torus, torus_t, torus_num, figures, shift);
+set_scene_fig_next(scene.boxes, box_t, boxes_num, figures, shift);
 
 //    shift += torus_num * sizeof(torus_ptr);
 

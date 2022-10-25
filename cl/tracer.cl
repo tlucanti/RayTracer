@@ -594,9 +594,7 @@ FLOAT3 trace_ray(
         );
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
         local_color += specular_val * 255.;
-        local_color.x = fmin(255. - EPS, local_color.x);
-        local_color.y = fmin(255. - EPS, local_color.y);
-        local_color.z = fmin(255. - EPS, local_color.z);
+        local_color = fmin(local_color, 255. - EPS);
 #ifdef RTX_EMISSION
         if (closest_type == SPHERE && as_sphere(closest_obj)->emission > 0.)
             local_color = get_obj_color(closest_obj);
@@ -633,9 +631,7 @@ FLOAT3 trace_ray(
         _color += ray_queue_col[i];
     }
 
-    _color.x = fmin(255. - EPS, _color.x);
-    _color.y = fmin(255. - EPS, _color.y);
-    _color.z = fmin(255. - EPS, _color.z);
+    _color = fmin(_color, 255. - EPS);
     return _color;
 }
 #else /* no RTX_TRANSPARENCY */
@@ -707,9 +703,7 @@ FLOAT3 trace_ray(
         );
         FLOAT3 local_color = get_obj_color(closest_obj) * factor;
         local_color += specular_val;
-        local_color.x = fmin(255. - EPS, local_color.x);
-        local_color.y = fmin(255. - EPS, local_color.y);
-        local_color.z = fmin(255. - EPS, local_color.z);
+        local_color = fmin(local_color, 255. - EPS);
 # ifdef RTX_EMISSION
         if (closest_type == SPHERE && as_sphere(closest_obj)->emission > 0.)
             local_color = get_obj_color(closest_obj);
@@ -725,9 +719,7 @@ FLOAT3 trace_ray(
         direction = reflect_ray(-direction, normal);
     }
 
-    color.x = fmin(255. - EPS, color.x);
-    color.y = fmin(255. - EPS, color.y);
-    color.z = fmin(255. - EPS, color.z);
+    color = fmin(color, 255. - EPS);
     return color;
 }
 #endif /* RTX_TRANSPARENCY */

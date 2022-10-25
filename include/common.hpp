@@ -41,7 +41,7 @@ namespace RTX_NAMESPACE
         inline bool transparency {true};
         inline bool refractive {true};
 
-        inline rtx_tracer_type tracer;
+        inline rtx_tracer_type tracer_type;
         inline const char *kernel_file;
         inline constexpr const char *kernel_name = "tracer_kernel";
 

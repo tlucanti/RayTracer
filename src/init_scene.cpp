@@ -15,10 +15,11 @@ union Flags
         unsigned triangles : 1;
         unsigned hyperboloids : 1;
         unsigned cylinders : 1;
+        unsigned torus : 1;
+        unsigned boxes : 1;
         unsigned : 0;
         unsigned config : 1;
         unsigned cameras : 1;
-        unsigned torus : 1;
         unsigned lights : 1;
     };
     unsigned objects;
@@ -805,6 +806,69 @@ static void parse_torus(const nlohmann::json &torus)
     parse_ok(true, "scene::torus "_W + "parsed"_G);
 }
 
+static void parse_box_single(const nlohmann::json &box)
+{
+    parse_type_assert("box", box, OBJECT_TYPE);
+
+    FLOAT3 color;
+    uint32_t specular;
+    FLOAT reflective;
+    FLOAT refractive;
+    FLOAT transparency;
+    FLOAT3 position;
+    FLOAT3 sides;
+
+    bool got_color = false;
+    bool got_specular = false;
+    bool got_reflective = false;
+    bool got_refractive = false;
+    bool got_transparency = false;
+    bool got_position = false;
+    bool got_sides = false;
+
+    for (const auto &item : box.items())
+    {
+        switch (rtx::hash(item.key()))
+        {
+            case ("color"_hash): parse_color("box color", item, got_color, color); break ;
+            case ("specular"_hash): parse_int_positive("box specular", item, got_specular, specular); break ;
+            case ("reflective"_hash): parse_float_unit("box reflective", item, got_reflective, reflective); break ;
+            case ("refractive"_hash): parse_float_positive("box refractive", item, got_refractive, refractive); break ;
+            case ("transparency"_hash): parse_float_unit("box transparency", item, got_transparency, transparency); break ;
+            case ("position"_hash): parse_vec3_point("box position", item, got_position, position); break ;
+            case ("sides"_hash): parse_vec3_point("box sides", item, got_sides, sides); break ;
+            default: parse_unknown_notify(item.key()); break ;
+        }
+    }
+
+    parse_undefined_assert("box color", got_color);
+    parse_undefined_info_set("box specular", got_specular, 0u, specular);
+    parse_undefined_info_set("box reflective", got_reflective, 0., reflective);
+    parse_undefined_info_set("box refractive", got_refractive, 1., refractive);
+    parse_undefined_info_set("box transparency", got_transparency, 0., transparency);
+    parse_undefined_assert("box position", got_position);
+    parse_undefined_assert("box sides", got_sides);
+
+    parse_assert(rtx::config::tracer_type != RTX_RAY_TRACER, "box object is not supported in RAY_TRACER tracer");
+    if (got_color && got_position && got_sides)
+    {
+        box_t bo(position, sides, color, specular, reflective, refractive, transparency);
+        parse_print("added box " + rtx::B["["
+            + to_string(rtx::objects::box_vec.size()) + "]"] + ": "
+            + rtx::Orange[to_string(bo)]);
+        rtx::objects::box_vec.push_back(bo);
+        flags.boxes = true;
+    }
+}
+
+static void parse_boxes(const nlohmann::json &boxes)
+{
+    parse_type_assert("boxes array", boxes, ARRAY_TYPE);
+    for (const auto &item : boxes)
+        parse_box_single(item);
+    parse_ok(true, "scene::boxes "_W + "parsed"_G);
+}
+
 static void parse_light_single(const nlohmann::json &light)
 {
     parse_type_assert("light", light, OBJECT_TYPE);
@@ -908,6 +972,7 @@ void rtx::parse_scene()
             case("cones"_hash): parse_hyperboloids(i.value()); break ;
             case("cylinders"_hash): parse_cylinders(i.value()); break ;
             case("torus"_hash): parse_torus(i.value()); break ;
+            case("boxes"_hash): parse_boxes(i.value()); break ;
             case("lights"_hash): parse_lights(i.value()); break ;
             default: parse_unknown_notify(i.key());
         }

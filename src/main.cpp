@@ -60,6 +60,7 @@ void rtx::init_kernel()
     kernel.set_next_arg(static_cast<int>(rtx::objects::cn_vec.size()));
     kernel.set_next_arg(static_cast<int>(rtx::objects::cy_vec.size()));
     kernel.set_next_arg(static_cast<int>(rtx::objects::to_vec.size()));
+    kernel.set_next_arg(static_cast<int>(rtx::objects::box_vec.size()));
 
     kernel.set_next_arg(static_cast<int>(rtx::scene::lights.size()));
     kernel.set_next_arg(static_cast<int>(rtx::scene::cameras.size()));
@@ -136,14 +137,14 @@ void argparse(int argc, char **argv)
                         case ("tracer"_hash):
                         case ("tracing"_hash):
                         case ("rtx"_hash): {
-                            rtx::config::tracer = RTX_RAY_TRACER;
+                            rtx::config::tracer_type = RTX_RAY_TRACER;
                             rtx::config::kernel_file = rtx::config::tracer_fname;
                             break ;
                         }
                         case ("marcher"_hash):
                         case ("marching"_hash):
                         case ("rmc"_hash): {
-                            rtx::config::tracer = RTX_RAY_MARCHER;
+                            rtx::config::tracer_type = RTX_RAY_MARCHER;
                             rtx::config::kernel_file = rtx::config::marcher_fname;
                             break ;
                         }

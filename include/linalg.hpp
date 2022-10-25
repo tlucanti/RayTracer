@@ -29,6 +29,12 @@ namespace linalg
     FLOAT length(const COMPLEX &v);
     FLOAT3 normalize(const FLOAT3 &v);
     COMPLEX normalize(const COMPLEX &v);
+    FLOAT3 fmin(FLOAT3 x, FLOAT y);
+    FLOAT3 fmin(FLOAT3 x, FLOAT3 y);
+    FLOAT3 fmax(FLOAT3 x, FLOAT y);
+    FLOAT3 fmax(FLOAT3 x, FLOAT3 y);
+    FLOAT3 fabs(FLOAT3 x);
+
     void normalize_ref(FLOAT3 &vec);
     void compute_angles(const FLOAT3 &direction, FLOAT &alpha, FLOAT &theta);
     void compute_angles_gamma(const FLOAT3 &direction, FLOAT3 &atg);

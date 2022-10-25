@@ -149,6 +149,27 @@ torus_s::torus_s(
 }
 
 // -----------------------------------------------------------------------------
+box_t::box_s(
+        const FLOAT3 &position,
+        const FLOAT3 &sides,
+        const FLOAT3 &color,
+        uint32_t specular,
+        FLOAT reflective,
+        FLOAT refractive,
+        FLOAT transparency
+    ) :
+        color(color),
+        specular(specular),
+        reflective(reflective),
+        refractive(refractive),
+        transparency(transparency),
+        position(position),
+        sides(sides)
+{
+
+}
+
+// -----------------------------------------------------------------------------
 light_s::light_s(
         light_type_t type,
         FLOAT intensity,

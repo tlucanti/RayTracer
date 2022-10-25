@@ -45,6 +45,31 @@ COMPLEX rtx::linalg::normalize(const COMPLEX &v)
     return (1. / length(v)) * v;
 }
 
+FLOAT3 rtx::linalg::fmin(FLOAT3 x, FLOAT y)
+{
+    return {{std::min(x.x, y), std::min(x.y, y), std::min(x.z, y)}};
+}
+
+FLOAT3 rtx::linalg::fmin(FLOAT3 x, FLOAT3 y)
+{
+    return {{std::min(x.x, y.x), std::min(x.y, y.y), std::min(x.z, y.z)}};
+}
+
+FLOAT3 rtx::linalg::fmax(FLOAT3 x, FLOAT y)
+{
+    return {{std::max(x.x, y), std::max(x.y, y), std::max(x.z, y)}};
+}
+
+FLOAT3 rtx::linalg::fmax(FLOAT3 x, FLOAT3 y)
+{
+    return {{std::max(x.x, y.x), std::max(x.y, y.y), std::max(x.z, y.z)}};
+}
+
+FLOAT3 rtx::linalg::fabs(FLOAT3 x)
+{
+    return {{std::abs(x.x), std::abs(x.y), std::abs(x.z)}};
+}
+
 void rtx::linalg::normalize_ref(FLOAT3 &vec)
 {
     FLOAT ln = 1. / sqrt(dot(vec, vec));

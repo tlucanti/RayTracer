@@ -140,9 +140,7 @@ typedef struct box_s
     FLOAT transparency;
 
     FLOAT3 position;
-    FLOAT a;
-    FLOAT b;
-    FLOAT c;
+    FLOAT3 sides;
 
     DECLARE_CONSTRUCTOR(box_s, BOX_PARAMS);
 } PACKED ALIGNED64 box_t;
@@ -180,6 +178,7 @@ typedef __constant const triangle_t *__restrict triangle_ptr;
 typedef __constant const cone_t     *__restrict cone_ptr;
 typedef __constant const cylinder_t *__restrict cylinder_ptr;
 typedef __constant const torus_t    *__restrict torus_ptr;
+typedef __constant const box_t      *__restrict box_ptr;
 
 typedef __constant const light_t    *__restrict light_ptr;
 typedef __constant const camera_t   *__restrict camera_ptr;
@@ -194,6 +193,7 @@ typedef struct
     cone_ptr        cones;
     cylinder_ptr    cylinders;
     torus_ptr       torus;
+    box_ptr         boxes;
 
     light_ptr       lights;
     camera_ptr      cameras;
@@ -204,6 +204,7 @@ typedef struct
     const uint32_t cones_num;
     const uint32_t cylinders_num;
     const uint32_t torus_num;
+    const uint32_t boxes_num;
 
     const uint32_t lights_num;
     const uint32_t cameras_num;
