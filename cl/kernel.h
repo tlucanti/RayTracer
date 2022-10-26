@@ -15,6 +15,7 @@
 # define get_obj_reflective(obj_ptr) (as_sphere(obj_ptr)->reflective)
 # define get_obj_refractive(obj_ptr) (as_sphere(obj_ptr)->refractive)
 # define get_obj_transparency(obj_ptr) (as_sphere(obj_ptr)->transparency)
+# define get_obj_position(obj_ptr) (as_sphere(obj_ptr)->position)
 
 # define BLACK ASSIGN_FLOAT3(0., 0., 0.)
 
@@ -28,6 +29,7 @@
 #  define _cstyle_cast(__type, __var) ((__type)(__var))
 #  define cstatic_cast(__type, __var) _cstyle_cast(__type, __var)
 #  define creinterpret_cast(__type, __var) _cstyle_cast(__type, __var)
+#  define AUTO(__type) __type
 
 #  define SPHRERE_PARAMS
 #  define PLANE_PARAMS
@@ -52,6 +54,8 @@
 #  define ASSIGN_SCENE(...) {__VA_ARGS__}
 #  define cstatic_cast(__type, __var) static_cast<__type>(__var)
 #  define creinterpret_cast(__type, __var) reinterpret_cast<__type>(__var)
+#  define AUTO(__type) auto
+
 #  define RTX_EMISSION
 #  define RTX_DIRECT
 #  define RTX_TRANSPARENCY

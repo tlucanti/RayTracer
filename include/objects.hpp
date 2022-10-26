@@ -80,7 +80,7 @@ std::ostream &operator <<(std::ostream &out, const sphere_t &sp)
 inline
 std::ostream &operator <<(std::ostream &out, const plane_t &pl)
 {
-    out << "plane[point: " << pl.point << ", normal: " << pl.normal
+    out << "plane[point: " << pl.position << ", normal: " << pl.normal
         << ", color: " << _clprt(pl.color, out) << ", "
         << _SRRT(pl, out) << " ]";
     return out;

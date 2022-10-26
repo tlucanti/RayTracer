@@ -9,8 +9,11 @@
 #include <mlxlib>
 
 #define as_mutable_sphere(obj_ptr) static_cast<sphere_t *>(obj_ptr)
+#define as_mutable_triangle(obj_ptr) static_cast<triangle_t *>(obj_ptr)
 //...
 #define as_mutable_box(obj_ptr) static_cast<box_t *>(obj_ptr)
+
+#define get_mutable_obj_position(obj_ptr) (as_mutable_sphere(obj_ptr)->position)
 
 typedef enum
 {
@@ -170,42 +173,37 @@ static inline void move_object(void *obj, obj_type_t type, move_direction_t dir,
     if (dot(arrow_dir, move_vec) < 0)
         len = -len;
 
+    if (type != TRIANGLE) {
+        switch (dir)
+        {
+            case (AXIS_OX): get_mutable_obj_position(obj).x += len; break ;
+            case (AXIS_OY): get_mutable_obj_position(obj).y += len; break ;
+            case (AXIS_OZ): get_mutable_obj_position(obj).z += len; break ;
+            default: break ;
+        }
+    } else {
+        FLOAT3 add;
+        switch (dir)
+        {
+            case (AXIS_OX): add = ASSIGN_FLOAT3(len, 0., 0.); break ;
+            case (AXIS_OY): add = ASSIGN_FLOAT3(0., len, 0.); break ;
+            case (AXIS_OZ): add = ASSIGN_FLOAT3(0., 0., len); break ;
+            default: break ;
+        }
+        as_mutable_triangle(obj)->a += add;
+        as_mutable_triangle(obj)->b += add;
+        as_mutable_triangle(obj)->c += add;
+    }
+
     switch (type)
     {
-        case (SPHERE): {
-            switch (dir)
-            {
-                case (AXIS_OX): as_mutable_sphere(obj)->position.x += len; break ;
-                case (AXIS_OY): as_mutable_sphere(obj)->position.y += len; break ;
-                case (AXIS_OZ): as_mutable_sphere(obj)->position.z += len; break ;
-                default: break ;
-            }
-            rtx::scene::figures.fill(
-                reinterpret_cast<const unsigned char *>(rtx::objects::sp_vec.data()),
-                rtx::objects::sp_vec.size() * sizeof(sphere_t),
-                *rtx::data::queue,
-                true,
-                rtx::objects::sphere_offset
-            );
-            break ;
-        }
-        case (BOX): {
-            switch (dir)
-            {
-                case (AXIS_OX): as_mutable_box(obj)->position.x += len; break ;
-                case (AXIS_OY): as_mutable_box(obj)->position.y += len; break ;
-                case (AXIS_OZ): as_mutable_box(obj)->position.z += len; break ;
-                default: break ;
-            }
-            rtx::scene::figures.fill(
-                reinterpret_cast<const unsigned char *>(rtx::objects::box_vec.data()),
-                rtx::objects::box_vec.size() * sizeof(box_t),
-                *rtx::data::queue,
-                true,
-                rtx::objects::box_offset
-            );
-            break ;
-        }
+        case (SPHERE): rtx::refill_spheres(); break ;
+        case (PLANE): rtx::refill_planes(); break ;
+        case (TRIANGLE): rtx::refill_triangles(); break ;
+        case (CONE): rtx::refill_cones(); break ;
+        case (CYLINDER): rtx::refill_cylinders(); break ;
+        case (TOR): rtx::refill_torus(); break ;
+        case (BOX): rtx::refill_boxes(); break ;
         default: break ;
     }
 }
@@ -346,13 +344,10 @@ static void update_sel_obj_center(void_ptr obj)
     FLOAT3 center;
     camera_t &cur_cam = rtx::objects::cam_vec.at(rtx::config::current_camera);
 
-    switch (move_params::selected_type)
-    {
-        case SPHERE: center = as_sphere(obj)->position; break ;
-
-        case BOX: center = as_box(obj)->position; break ;
-        default: center = {{0., 0., 0.}};
-    }
+    if (move_params::selected_type != TRIANGLE)
+        center = get_obj_position(obj);
+    else
+        center = as_triangle(obj)->a;
     cur_cam.recompute_reverse_matrix();
 
     FLOAT3 oc = center - cur_cam.position;

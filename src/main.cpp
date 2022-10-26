@@ -6,52 +6,6 @@
 #include <exception.hpp>
 #include <utils.hpp>
 
-template <class value_type, class ptr_type>
-static void add_figures_next(
-        std::vector<unsigned char> &obj_vec,
-        const std::vector<value_type> &fig_vec,
-        ptr_type local_obj_ptr,
-        uint32_t *obj_cnt,
-        size_t *offset_ptr
-    )
-{
-    size_t new_size = fig_vec.size() * sizeof(value_type);
-    size_t old_size = obj_vec.size() * sizeof(unsigned char);
-
-    obj_vec.resize(old_size + new_size);
-    std::memcpy(obj_vec.data() + old_size, fig_vec.data(), new_size);
-    *local_obj_ptr = fig_vec.data();
-    *obj_cnt = static_cast<uint32_t>(fig_vec.size());
-    *offset_ptr = old_size;
-}
-
-void rtx::init_scene()
-{
-    std::vector<unsigned char> fig_vec;
-    scene_t &local_scene = rtx::scene::local_scene;
-
-    add_figures_next(fig_vec, rtx::objects::sp_vec, &local_scene.spheres, &local_scene.spheres_num, &rtx::objects::sphere_offset);
-    add_figures_next(fig_vec, rtx::objects::pl_vec, &local_scene.planes, &local_scene.planes_num, &rtx::objects::plane_offset);
-    add_figures_next(fig_vec, rtx::objects::tr_vec, &local_scene.triangles, &local_scene.triangles_num, &rtx::objects::triangle_offset);
-    add_figures_next(fig_vec, rtx::objects::cn_vec, &local_scene.cones, &local_scene.cones_num, &rtx::objects::cone_offset);
-    add_figures_next(fig_vec, rtx::objects::cy_vec, &local_scene.cylinders, &local_scene.cylinders_num, &rtx::objects::cylinder_offset);
-    add_figures_next(fig_vec, rtx::objects::to_vec, &local_scene.torus, &local_scene.torus_num, &rtx::objects::torus_offset);
-    add_figures_next(fig_vec, rtx::objects::box_vec, &local_scene.boxes,  &local_scene.boxes_num, &rtx::objects::box_offset);
-
-    rtx::scene::figures = cllib::CLarray<unsigned char, cllib::read_only_array>(fig_vec, *rtx::data::context, *rtx::data::queue);
-
-    rtx::scene::cameras = cllib::CLarray<camera_t, cllib::read_only_array>(rtx::objects::cam_vec, *rtx::data::context, *rtx::data::queue);
-    rtx::scene::lights = cllib::CLarray<light_t, cllib::read_only_array>(rtx::objects::li_vec, *rtx::data::context, *rtx::data::queue);
-
-    rtx::scene::canvas = cllib::CLarray<uint32_t, cllib::write_only_array>(rtx::config::width * rtx::config::height, *rtx::data::context);
-
-//    rtx::scene::canvas2 = cllib::CLarray<uint32_t, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
-//    rtx::scene::distances = cllib::CLarray<FLOAT, cllib::read_write_array>((rtx::config::width) * (rtx::config::height), *rtx::data::context);
-//    rtx::scene::canvas.memset(0, *rtx::data::queue);
-//    rtx::scene::canvas2.memset(0, *rtx::data::queue);
-//    rtx::scene::distances.memset(0., *rtx::data::queue);
-}
-
 void rtx::init_kernel()
 {
     cllib::CLkernel &kernel = *rtx::data::kernel;
@@ -201,18 +155,6 @@ void argparse(int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-    camera_t cam({{0., 0., 0.}}, {{1., 1., 1.}});
-    std::cout << "alpha: " << cam.alpha << ", theta: " << cam.theta << std::endl;
-    cam.recompute_matrix();
-    FLOAT3 dir = {{1, 0, 0}};
-    std::cout << "origin: " << dir << std::endl;
-    FLOAT3 d2 = rotate_vector(dir, cam.rotate_matrix);
-    std::cout << "rotated: " << d2 << std::endl;
-    cam.recompute_reverse_matrix();
-    FLOAT3 d3 = rotate_vector(d2, cam.reverse_rotate_matrix);
-    std::cout << "rotated back: " << d3 << std::endl;
-//    return 0;
-
     argparse(argc, argv);
     putenv(const_cast<char *>("CUDA_CACHE_DISABLE=1"));
 

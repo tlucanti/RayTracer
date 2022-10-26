@@ -61,6 +61,7 @@ add_executable(RayTracer
 	src/init_gpu.cpp
 	src/init_mlx.cpp
 	src/init_scene.cpp
+	src/parse_scene.cpp
 	src/linalg.cpp
 	src/objects.cpp
 )

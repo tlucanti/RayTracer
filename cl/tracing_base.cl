@@ -116,10 +116,10 @@ __kernel void blur_convolution(
 
         const int32_t width,
         const int32_t height
-)
+    )
 {
-    const int32_t z = cstatic_cast(int, get_global_id(0));
-    const int32_t y = cstatic_cast(int, get_global_id(1));
+    AUTO(const int32_t) z = cstatic_cast(int, get_global_id(0));
+    AUTO(const int32_t) y = cstatic_cast(int, get_global_id(1));
     const int pix_pos = (height - y - 1) * (width) + z;
 
     FLOAT3 convolution_val = ASSIGN_FLOAT3(0., 0., 0.);

@@ -18,9 +18,9 @@ sphere_s::sphere_s(
         reflective(reflective),
         refractive(refractive),
         transparency(transparency),
+        position(position),
         emission(emission),
-        radius(radius),
-        position(position)
+        radius(radius)
 {}
 
 // -----------------------------------------------------------------------------
@@ -38,7 +38,7 @@ plane_s::plane_s(
         reflective(reflective),
         refractive(refractive),
         transparency(transparency),
-        point(point),
+        position(point),
         normal(normal)
 {
     rtx::linalg::normalize_ref(this->normal);
@@ -88,9 +88,9 @@ cone_s::cone_s(
         reflective(reflective),
         refractive(refractive),
         transparency(transparency),
+        position(position),
         width(width),
         gamma(gamma),
-        position(position),
         direction(direction)
 {
     rtx::linalg::normalize_ref(this->direction);
@@ -114,9 +114,9 @@ cylinder_s::cylinder_s(
         reflective(reflective),
         refractive(refractive),
         transparency(transparency),
+        position(position),
         radius(radius),
         height(height),
-        position(position),
         direction(direction)
 {
     rtx::linalg::normalize_ref(this->direction);
@@ -139,9 +139,9 @@ torus_s::torus_s(
         reflective(reflective),
         refractive(refractive),
         transparency(transparency),
+        position(position),
         r(r),
         R(R),
-        position(position),
         normal(normal)
 {
     rtx::linalg::normalize_ref(this->normal);

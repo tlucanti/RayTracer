@@ -35,9 +35,9 @@ typedef struct sphere_s
     FLOAT               reflective;     // 40 -- 48
     FLOAT               refractive;     // 48 -- 56
     FLOAT               transparency;   // 56 -- 64
+    FLOAT3              position;       //
     FLOAT               emission;       //
     FLOAT               radius;         //
-    FLOAT3              position;       //
 
     DECLARE_CONSTRUCTOR(sphere_s, SPHERE_PARAMS);
 } PACKED ALIGNED64 sphere_t;
@@ -51,7 +51,7 @@ typedef struct plane_s
     FLOAT               reflective;      // 40 -- 48
     FLOAT               refractive;     // 48 -- 56
     FLOAT               transparency;   // 56 -- 64
-    FLOAT3              point;          //
+    FLOAT3              position;          //
     FLOAT3              normal;         //
 
     DECLARE_CONSTRUCTOR(plane_s, PLANE_PARAMS);
@@ -66,9 +66,9 @@ typedef struct triangle_s
     FLOAT           reflective;          // 40 -- 48
     FLOAT           refractive;         // 48 -- 56
     FLOAT           transparency;       // 56 -- 64
+    FLOAT3          normal;             //
     FLOAT           emission;           //
     PADDING16                           //
-    FLOAT3          normal;             //
     FLOAT3          a;                  //
     FLOAT3          b;                  //
     FLOAT3          c;                  //
@@ -85,9 +85,9 @@ typedef struct cone_s
     FLOAT           reflective;          // 40 -- 48
     FLOAT           refractive;
     FLOAT           transparency;
+    FLOAT3          position;           //
     FLOAT           width;              //
     FLOAT           gamma;              //
-    FLOAT3          position;           //
     FLOAT3          direction;          //
     FLOAT3          matr[3];            //
 
@@ -103,9 +103,9 @@ typedef struct cylinder_s
     FLOAT           reflective;          // 40 -- 48
     FLOAT           refractive;
     FLOAT           transparency;
+    FLOAT3          position;           // 64 -- 96
     FLOAT           radius;             // 48 -- 56
     FLOAT           height;             // 56 -- 64
-    FLOAT3          position;           // 64 -- 96
     FLOAT3          direction;          // 96 -- 128
 
     DECLARE_CONSTRUCTOR(cylinder_s, CYLINDER_PARAMS);
@@ -120,9 +120,9 @@ typedef struct torus_s
     FLOAT           reflective;          // 40 -- 48
     FLOAT           refractive;         //
     FLOAT           transparency;       //
+    FLOAT3          position;           //
     FLOAT           r;                  //
     FLOAT           R;                  //
-    FLOAT3          position;           //
     FLOAT3          normal;             //
     FLOAT3          matr[3];            //
 
@@ -138,8 +138,8 @@ typedef struct box_s
     FLOAT reflective;
     FLOAT refractive;
     FLOAT transparency;
-
     FLOAT3 position;
+
     FLOAT3 sides;
 
     DECLARE_CONSTRUCTOR(box_s, BOX_PARAMS);

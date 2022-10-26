@@ -63,7 +63,7 @@ FLOAT intersect_plane(
         plane_ptr pl
     )
 {
-    FLOAT3 co = pl->point - camera;                                             // FIXME: maybe not creating new object,
+    FLOAT3 co = pl->position - camera;                                             // FIXME: maybe not creating new object,
                                                                                 // and use camera object here
     return dot(co, pl->normal) / dot(direction, pl->normal);                    // TODO: maybe get denumenator as
                                                                                 // function argument
@@ -694,7 +694,7 @@ FLOAT3 trace_ray_rtx(
         }
 
         FLOAT3 specular_val = BLACK;
-        FLOAT3 factor = compute_lightning(
+        FLOAT3 factor = compute_lightning_rtx(
                 scene,
                 camera,
                 normal,

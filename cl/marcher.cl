@@ -11,8 +11,6 @@
 # include "inc.h"
 # include "tracing_base.cl"
 
-# define get_obj_color(obj_ptr) (as_sphere(obj_ptr)->color)
-
 # define BLACK ASSIGN_FLOAT3(0., 0., 0.)
 # define RTX_RECURSION_DEPTH 32
 # define HIT_DISTANCE 0.01
@@ -34,7 +32,7 @@ FLOAT plane_dsf(
         plane_ptr pl
     )
 {
-    FLOAT3 co = pl->point - point;
+    FLOAT3 co = pl->position - point;
     return fabs(dot(pl->normal, co));
 }
 

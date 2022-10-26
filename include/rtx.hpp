@@ -15,6 +15,13 @@ void init_mlx();
 NORET void collapse(int status);
 void init_scene();
 void init_kernel();
+void refill_spheres();
+void refill_planes();
+void refill_triangles();
+void refill_cones();
+void refill_cylinders();
+void refill_torus();
+void refill_boxes();
 
 namespace data
 {
