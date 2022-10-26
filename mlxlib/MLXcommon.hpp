@@ -28,15 +28,15 @@ MLXLIB_NAMESPACE_BEGIN
 
 namespace color
 {
-    const int white =   0xFFFFFF;
-    const int black =   0x000000;
-    const int red =     0xFF0000;
-    const int green =   0x00FF00;
-    const int blue =    0x0000FF;
-    const int cyan =    0x00FFFF;
-    const int magenta = 0xFF00FF;
-    const int yellow =  0xFFFF00;
-    const int purple =  magenta;
+    inline constexpr unsigned int white =   0xFFFFFF;
+    inline constexpr unsigned int black =   0x000000;
+    inline constexpr unsigned int red =     0xFF0000;
+    inline constexpr unsigned int green =   0x00FF00;
+    inline constexpr unsigned int blue =    0x0000FF;
+    inline constexpr unsigned int cyan =    0x00FFFF;
+    inline constexpr unsigned int magenta = 0xFF00FF;
+    inline constexpr unsigned int yellow =  0xFFFF00;
+    inline constexpr unsigned int purple =  magenta;
 }
 
 MLXLIB_NAMESPACE_END

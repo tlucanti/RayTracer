@@ -33,10 +33,10 @@ FLOAT3 vec3_from_pixpos(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 }
 
 CPP_INLINE
-void pixpos_from_vec3(FLOAT3 vec, uint32_t *x, uint32_t *y, uint32_t width, uint32_t height)
+void pixpos_from_vec3(FLOAT3 vec, int *x, int *y, int width, int height)
 {
-    *x = cstatic_cast(uint32_t, (vec.x + 0.5) * width);
-    *y = height - cstatic_cast(uint32_t, (vec.y + 0.5) * height);
+    *x = cstatic_cast(int, (vec.x + 0.5) * width);
+    *y = height - cstatic_cast(int, (vec.y + 0.5) * height);
 }
 
 CPP_UNUSED CPP_INLINE

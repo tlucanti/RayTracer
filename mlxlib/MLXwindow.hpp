@@ -137,11 +137,17 @@ namespace keys
 
 namespace mouse
 {
+# ifdef __APPLE__
+    inline constexpr int MOUSE_LEFT = 1;
+    inline constexpr int MOUSE_WHEEL = 3;
+    inline constexpr int MOUSE_RIGHT = 2;
+# else
     inline constexpr int MOUSE_LEFT = 1;
     inline constexpr int MOUSE_WHEEL = 2;
     inline constexpr int MOUSE_RIGHT = 3;
     inline constexpr int MOUSE_WHEEL_DOWN = 4;
     inline constexpr int MOUSE_WHEEL_UP = 5;
+# endif
 }
 
 namespace events
