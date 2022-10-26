@@ -23,7 +23,12 @@ FLOAT sphere_dsf(
     )
 {
     FLOAT d = length(point - sp->position);
-    return d - sp->radius;
+    FLOAT ret = d - sp->radius;
+
+    if (sp->negative)
+        return -ret;
+    else
+        return ret;
 }
 
 CPP_UNUSED CPP_INLINE
@@ -47,12 +52,17 @@ FLOAT box_dfs(
 }
 
 # define update_closest_t(__dsf_func, __obj_name, __obj_type)       \
-do {                                                    \
-    FLOAT t = __dsf_func(point, __obj_name + i);        \
-                                                        \
-    if (t < closest_t)                                  \
+do {                                                               \
+    FLOAT __t = __dsf_func(point, __obj_name + i);              \
+    bool __expr;    \
+                                                                    \
+    if (__obj_name[i].negative)     \
+        __expr = -__t > closest_t;      \
+    else        \
+        __expr = __t < closest_t; \
+    if (__expr)                                  \
     {                                                   \
-        closest_t = t;                                  \
+        closest_t = __t;                                  \
         *closest_obj = __obj_name + i;                  \
         *obj_type = __obj_type;                         \
     }                                                   \
@@ -69,18 +79,18 @@ FLOAT scene_dsf(scene_ptr scene, FLOAT3 point, void_ptr *closest_obj, obj_type_t
         if (closest_t < HIT_DISTANCE)
             break ;
     }
-    for (uint32_t i=0; i < scene->planes_num; ++i)
-    {
-        update_closest_t(plane_dsf, scene->planes, PLANE);
-        if (closest_t < HIT_DISTANCE)
-            break ;
-    }
-    for (uint32_t i=0; i < scene->boxes_num; ++i)
-    {
-        update_closest_t(box_dfs, scene->boxes, BOX);
-        if (closest_t < HIT_DISTANCE)
-            break ;
-    }
+//    for (uint32_t i=0; i < scene->planes_num; ++i)
+//    {
+//        update_closest_t(plane_dsf, scene->planes, PLANE);
+//        if (closest_t < HIT_DISTANCE)
+//            break ;
+//    }
+//    for (uint32_t i=0; i < scene->boxes_num; ++i)
+//    {
+//        update_closest_t(box_dfs, scene->boxes, BOX);
+//        if (closest_t < HIT_DISTANCE)
+//            break ;
+//    }
     return closest_t;
 }
 
@@ -88,10 +98,15 @@ CPP_UNUSED CPP_INLINE
 FLOAT shadow_dsf(scene_ptr scene, FLOAT3 point)
 {
     FLOAT closest_t = INFINITY;
+//    closest_t = fmax(sphere_dsf(point, scene->spheres + 0), -sphere_dsf(point, scene->spheres + 1));
+    return closest_t;
 
     for (uint32_t i=0; i < scene->spheres_num; ++i)
     {
-        closest_t = fmin(closest_t, sphere_dsf(point, scene->spheres + i));
+//        if (scene->spheres[i].negative)
+//            closest_t = fmax(closest_t, sphere_dsf(point, scene->spheres + i));
+//        else
+            closest_t = fmin(closest_t, sphere_dsf(point, scene->spheres + i));
         if (closest_t < HIT_DISTANCE)
             break ;
     }

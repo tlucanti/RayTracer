@@ -36,6 +36,7 @@ typedef struct sphere_s
     FLOAT               refractive;     // 48 -- 56
     FLOAT               transparency;   // 56 -- 64
     FLOAT3              position;       //
+    uint32_t            negative;       //
     FLOAT               emission;       //
     FLOAT               radius;         //
 

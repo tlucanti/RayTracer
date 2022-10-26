@@ -32,13 +32,13 @@
 		{
 			"color":		"blue",
 			"specular":		500,
-			"center":		[2, 0, 4],
+			"center":		[1, 0, 3],
 			"radius":		1,
-			"emission": 	0.8
+            "negative":     true
 		},
 
 		{
-			"color":		"red",
+			"_color":		"red",
 			"specular":		500,
 			"center":		[-2, 0, 4],
 			"radius":		1,

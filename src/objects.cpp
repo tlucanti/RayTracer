@@ -11,7 +11,8 @@ sphere_s::sphere_s(
         FLOAT reflective,
         FLOAT refractive,
         FLOAT transparency,
-        FLOAT emission
+        FLOAT emission,
+        uint32_t negative
     ) :
         color(color),
         specular(specular),
@@ -19,6 +20,7 @@ sphere_s::sphere_s(
         refractive(refractive),
         transparency(transparency),
         position(position),
+        negative(negative),
         emission(emission),
         radius(radius)
 {}

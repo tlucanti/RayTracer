@@ -418,6 +418,7 @@ static void parse_sphere_single(const nlohmann::json &sphere)
     FLOAT3 position;
     FLOAT radius;
     FLOAT emission;
+    bool negative;
 
     bool got_color = false;
     bool got_specular = false;
@@ -427,6 +428,7 @@ static void parse_sphere_single(const nlohmann::json &sphere)
     bool got_position = false;
     bool got_radius = false;
     bool got_emission = false;
+    bool got_negative = false;
 
     for (const auto &item : sphere.items())
     {
@@ -441,6 +443,7 @@ static void parse_sphere_single(const nlohmann::json &sphere)
             case ("position"_hash): parse_vec3_point("sphere position", item, got_position, position); break ;
             case ("radius"_hash): parse_float_positive("sphere radius", item, got_radius, radius); break ;
             case ("emission"_hash): parse_float_positive("sphere emission", item, got_emission, emission); break ;
+            case ("negative"_hash): parse_bool("sphere negative", item, got_negative, negative); break ;
             default: parse_unknown_notify(item.key()); break ;
         }
     }
@@ -452,9 +455,10 @@ static void parse_sphere_single(const nlohmann::json &sphere)
     parse_undefined_info_set("sphere emission", got_emission, 0., emission);
     parse_undefined_assert("sphere position", got_position);
     parse_undefined_assert("sphere radius", got_radius);
+    parse_undefined_info_set("sphere negative", got_negative, false, negative);
     if (got_color && got_position && got_radius)
     {
-        sphere_t sp(position, radius, color, specular, reflective, refractive, transparency, emission);
+        sphere_t sp(position, radius, color, specular, reflective, refractive, transparency, emission, negative);
         parse_print("added sphere " + rtx::B["["
             + to_string(rtx::objects::sp_vec.size()) + "]"] + ": "
             + rtx::Orange[to_string(sp)]);

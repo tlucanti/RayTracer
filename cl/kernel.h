@@ -69,7 +69,8 @@
     FLOAT reflective,       \
     FLOAT refractive,       \
     FLOAT transparency,     \
-    FLOAT emission
+    FLOAT emission,         \
+    uint32_t negative
 
 #  define PLANE_PARAMS      \
     FL3_CREF point,         \
