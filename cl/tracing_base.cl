@@ -26,8 +26,8 @@ CPP_INLINE
 FLOAT3 vec3_from_pixpos(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
     return normalize(ASSIGN_FLOAT3(
-        x / cstatic_cast(FLOAT, width) - 0.5,
-        y / cstatic_cast(FLOAT, height) - 0.5,
+        cstatic_cast(FLOAT, x) / cstatic_cast(FLOAT, width) - 0.5,
+        cstatic_cast(FLOAT, y) / cstatic_cast(FLOAT, height) - 0.5,
         1.
     ));
 }

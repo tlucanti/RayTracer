@@ -8,6 +8,7 @@
 
 void_ptr object_at_pos(int x, int y, obj_type_t *obj_type)
 {
+    y = static_cast<int>(rtx::config::height) - y;
     camera_t &cur_cam = rtx::objects::cam_vec.at(rtx::config::current_camera);
     FLOAT3 direction = vec3_from_pixpos(
         static_cast<uint32_t>(x),

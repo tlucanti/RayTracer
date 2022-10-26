@@ -51,6 +51,14 @@ namespace objects
     extern std::vector<torus_t> to_vec;
     extern std::vector<box_t> box_vec;
 
+    extern size_t sphere_offset;
+    extern size_t plane_offset;
+    extern size_t triangle_offset;
+    extern size_t cone_offset;
+    extern size_t cylinder_offset;
+    extern size_t torus_offset;
+    extern size_t box_offset;
+
     extern std::vector<light_t> li_vec;
 } /* objects */
 

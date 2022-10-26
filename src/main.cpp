@@ -11,7 +11,8 @@ static void add_figures_next(
         std::vector<unsigned char> &obj_vec,
         const std::vector<value_type> &fig_vec,
         ptr_type local_obj_ptr,
-        uint32_t *obj_cnt
+        uint32_t *obj_cnt,
+        size_t *offset_ptr
     )
 {
     size_t new_size = fig_vec.size() * sizeof(value_type);
@@ -21,6 +22,7 @@ static void add_figures_next(
     std::memcpy(obj_vec.data() + old_size, fig_vec.data(), new_size);
     *local_obj_ptr = fig_vec.data();
     *obj_cnt = static_cast<uint32_t>(fig_vec.size());
+    *offset_ptr = old_size;
 }
 
 void rtx::init_scene()
@@ -28,13 +30,13 @@ void rtx::init_scene()
     std::vector<unsigned char> fig_vec;
     scene_t &local_scene = rtx::scene::local_scene;
 
-    add_figures_next(fig_vec, rtx::objects::sp_vec, &local_scene.spheres, &local_scene.spheres_num);
-    add_figures_next(fig_vec, rtx::objects::pl_vec, &local_scene.planes, &local_scene.planes_num);
-    add_figures_next(fig_vec, rtx::objects::tr_vec, &local_scene.triangles, &local_scene.triangles_num);
-    add_figures_next(fig_vec, rtx::objects::cn_vec, &local_scene.cones, &local_scene.cones_num);
-    add_figures_next(fig_vec, rtx::objects::cy_vec, &local_scene.cylinders, &local_scene.cylinders_num);
-    add_figures_next(fig_vec, rtx::objects::to_vec, &local_scene.torus, &local_scene.torus_num);
-    add_figures_next(fig_vec, rtx::objects::box_vec, &local_scene.boxes,  &local_scene.boxes_num);
+    add_figures_next(fig_vec, rtx::objects::sp_vec, &local_scene.spheres, &local_scene.spheres_num, &rtx::objects::sphere_offset);
+    add_figures_next(fig_vec, rtx::objects::pl_vec, &local_scene.planes, &local_scene.planes_num, &rtx::objects::plane_offset);
+    add_figures_next(fig_vec, rtx::objects::tr_vec, &local_scene.triangles, &local_scene.triangles_num, &rtx::objects::triangle_offset);
+    add_figures_next(fig_vec, rtx::objects::cn_vec, &local_scene.cones, &local_scene.cones_num, &rtx::objects::cone_offset);
+    add_figures_next(fig_vec, rtx::objects::cy_vec, &local_scene.cylinders, &local_scene.cylinders_num, &rtx::objects::cylinder_offset);
+    add_figures_next(fig_vec, rtx::objects::to_vec, &local_scene.torus, &local_scene.torus_num, &rtx::objects::torus_offset);
+    add_figures_next(fig_vec, rtx::objects::box_vec, &local_scene.boxes,  &local_scene.boxes_num, &rtx::objects::box_offset);
 
     rtx::scene::figures = cllib::CLarray<unsigned char, cllib::read_only_array>(fig_vec, *rtx::data::context, *rtx::data::queue);
 

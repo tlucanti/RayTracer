@@ -17,6 +17,8 @@ COMPLEX operator +(const COMPLEX &a, const COMPLEX &b);
 COMPLEX operator -(const COMPLEX &a, const COMPLEX &b);
 COMPLEX operator -(const COMPLEX &a);
 
+cl_int2 operator -(const cl_int2 &a, const cl_int2 &b);
+
 RTX_NAMESPACE_BEGIN
 
 namespace linalg
@@ -26,6 +28,7 @@ namespace linalg
     void inv(const FLOAT3 matr[3], FLOAT3 dest[3]);
     FLOAT dot(const FLOAT3 &v1, const FLOAT3 &v2);
     FLOAT dot(const COMPLEX &v1, const COMPLEX &v2);
+    int dot(const cl_int2 &v1, const cl_int2 &v2);
     FLOAT length(const FLOAT3 &v);
     FLOAT length(const COMPLEX &v);
     FLOAT3 normalize(const FLOAT3 &v);

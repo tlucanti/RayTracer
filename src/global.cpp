@@ -38,6 +38,14 @@ namespace objects
     std::vector<torus_t> to_vec;
     std::vector<box_t> box_vec;
 
+    size_t sphere_offset;
+    size_t plane_offset;
+    size_t triangle_offset;
+    size_t cone_offset;
+    size_t cylinder_offset;
+    size_t torus_offset;
+    size_t box_offset;
+
     std::vector<light_t> li_vec;
 } /* objects */
 

@@ -8,6 +8,18 @@
 #include <sstream>
 #include <mlxlib>
 
+#define as_mutable_sphere(obj_ptr) static_cast<sphere_t *>(obj_ptr)
+//...
+#define as_mutable_box(obj_ptr) static_cast<box_t *>(obj_ptr)
+
+typedef enum
+{
+    NONE_DIR,
+    AXIS_OX,
+    AXIS_OY,
+    AXIS_OZ
+} move_direction_t;
+
 namespace move_params
 {
     static FLOAT3 move_direction;
@@ -16,12 +28,18 @@ namespace move_params
     static int do_update(0);
     static bool mouse_press(false);
     static struct timespec fps_meter;
-    static void_ptr selected_obj = nullptr;
+    static void *selected_obj = nullptr;
     static obj_type_t selected_type;
     static cl_int2 sel_c;
     static cl_int2 sel_ox;
     static cl_int2 sel_oy;
     static cl_int2 sel_oz;
+    static FLOAT sel_obj_dist;
+    static move_direction_t selected_move_dir {NONE_DIR};
+}
+
+static inline int trunc(int x, int start, int end) {
+    return std::min(std::max(x, start), end);
 }
 
 static inline void _draw_line_low(int x0, int y0, int x1, int y1, uint32_t color)
@@ -95,12 +113,101 @@ static inline void draw_line(const cl_int2 &start, const cl_int2 &end, uint32_t 
     const int w = static_cast<int>(rtx::config::width) - 2;
     const int h = static_cast<int>(rtx::config::height) - 2;
     _draw_line(
-        std::max(std::min(start.x, w), 1),
-        std::max(std::min(start.y, h), 1),
-        std::max(std::min(end.x, w), 1),
-        std::max(std::min(end.y, h), 1),
+        trunc(start.x,  1, w),
+        trunc(start.y, 1, h),
+        trunc(end.x, 1, w),
+        trunc(end.y, 1, h),
         color
     );
+}
+
+static inline void draw_rect(const cl_int2 &center, int side, uint32_t color)
+{
+    const int x_start = trunc(center.x - side, 0, static_cast<int>(rtx::config::width));
+    const int x_end = trunc(center.x + side, 0, static_cast<int>(rtx::config::width));
+    const int y_start = trunc(center.y - side, 0, static_cast<int>(rtx::config::height));
+    const int y_end = trunc(center.y + side, 0, static_cast<int>(rtx::config::height));
+
+    for (int x=x_start; x < x_end; ++x) {
+        for (int y=y_start; y < y_end; ++y) {
+            rtx::data::img->put_pixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), color);
+        }
+    }
+}
+
+static inline void draw_circle(const cl_int2 &center, int radius, uint32_t color)
+{
+    const int w = static_cast<int>(rtx::config::width) - 1;
+    const int h = static_cast<int>(rtx::config::height) - 1;
+
+    for (int x = trunc(center.x - radius, 0, w) ; x <= trunc(center.x + radius, 0, w); ++x) {
+        for (int y = trunc(center.y - radius, 0, h); y < trunc(center.y + radius, 0, h); ++y) {
+            if (x + y < radius)
+                rtx::data::img->put_pixel(static_cast<uint32_t>(x), static_cast<uint32_t>(y), color);
+        }
+    }
+}
+
+static inline bool point_near(const cl_int2 &point, const cl_int2 &near, int gap)
+{
+    return std::abs(point.x - near.x) <= gap and std::abs(point.y - near.y) <= gap;
+}
+
+static inline void move_object(void *obj, obj_type_t type, move_direction_t dir, const cl_int2 &move_vec)
+{
+    FLOAT dx = static_cast<FLOAT>(move_vec.x) / static_cast<FLOAT>(rtx::config::width);
+    FLOAT dy = static_cast<FLOAT>(move_vec.y) / static_cast<FLOAT>(rtx::config::height);
+    FLOAT len = move_params::sel_obj_dist * sqrt(dx * dx + dy * dy);
+    cl_int2 arrow_dir;
+
+    switch (dir)
+    {
+        case (AXIS_OX): arrow_dir = move_params::sel_ox - move_params::sel_c; break ;
+        case (AXIS_OY): arrow_dir = move_params::sel_oy - move_params::sel_c; break ;
+        case (AXIS_OZ): arrow_dir = move_params::sel_oz - move_params::sel_c; break ;
+        default: break ;
+    }
+    if (dot(arrow_dir, move_vec) < 0)
+        len = -len;
+
+    switch (type)
+    {
+        case (SPHERE): {
+            switch (dir)
+            {
+                case (AXIS_OX): as_mutable_sphere(obj)->position.x += len; break ;
+                case (AXIS_OY): as_mutable_sphere(obj)->position.y += len; break ;
+                case (AXIS_OZ): as_mutable_sphere(obj)->position.z += len; break ;
+                default: break ;
+            }
+            rtx::scene::figures.fill(
+                reinterpret_cast<const unsigned char *>(rtx::objects::sp_vec.data()),
+                rtx::objects::sp_vec.size() * sizeof(sphere_t),
+                *rtx::data::queue,
+                true,
+                rtx::objects::sphere_offset
+            );
+            break ;
+        }
+        case (BOX): {
+            switch (dir)
+            {
+                case (AXIS_OX): as_mutable_box(obj)->position.x += len; break ;
+                case (AXIS_OY): as_mutable_box(obj)->position.y += len; break ;
+                case (AXIS_OZ): as_mutable_box(obj)->position.z += len; break ;
+                default: break ;
+            }
+            rtx::scene::figures.fill(
+                reinterpret_cast<const unsigned char *>(rtx::objects::box_vec.data()),
+                rtx::objects::box_vec.size() * sizeof(box_t),
+                *rtx::data::queue,
+                true,
+                rtx::objects::box_offset
+            );
+            break ;
+        }
+        default: break ;
+    }
 }
 
 static void screenshot(const char *fname)
@@ -190,14 +297,17 @@ void rtx::hooks::keyrelease_hook(int keycode, void *)
 
 void rtx::hooks::mouse_hook(int x, int y, void *)
 {
-    if (not move_params::mouse_press)
-        return ;
     int dx = x - move_params::mouse_pos.x;
     int dy = y - move_params::mouse_pos.y;
-    move_params::look_direction.x = dx * rtx::config::horizontal_look_speed;
-    move_params::look_direction.y = dy * rtx::config::vertical_look_speed;
     move_params::mouse_pos.x = x;
     move_params::mouse_pos.y = y;
+    if (move_params::mouse_press) {
+        move_params::look_direction.x = dx * rtx::config::horizontal_look_speed;
+        move_params::look_direction.y = dy * rtx::config::vertical_look_speed;
+    }
+    if (move_params::selected_move_dir != NONE_DIR) {
+        move_object(move_params::selected_obj, move_params::selected_type, move_params::selected_move_dir, {{dx, dy}});
+    }
 }
 
 void rtx::hooks::mousepress_hook(int button, int x, int y, void *)
@@ -206,15 +316,28 @@ void rtx::hooks::mousepress_hook(int button, int x, int y, void *)
     move_params::mouse_pos.y = y;
     if (button == mlxlib::mouse::MOUSE_LEFT)
         move_params::mouse_press = true;
+    else if (button == mlxlib::mouse::MOUSE_RIGHT) {
+        if (move_params::selected_obj == nullptr)
+            return ;
+        if (point_near({{x, y}}, move_params::sel_ox, 10)) {
+            move_params::selected_move_dir = AXIS_OX;
+        } else if (point_near({{x, y}}, move_params::sel_oy, 10)) {
+            move_params::selected_move_dir = AXIS_OY;
+        } else if (point_near({{x, y}}, move_params::sel_oz, 10)) {
+            move_params::selected_move_dir = AXIS_OZ;
+        }
+    }
 }
 
 void rtx::hooks::mouserelease_hook(int button, int x, int y, void *)
 {
     if (button == mlxlib::mouse::MOUSE_LEFT)
         move_params::mouse_press = false;
-    else if (button == mlxlib::mouse::MOUSE_RIGHT) {
-        move_params::selected_obj = object_at_pos(x, y, &move_params::selected_type);
+    else if (button == mlxlib::mouse::MOUSE_RIGHT && move_params::selected_move_dir == NONE_DIR) {
+        move_params::selected_obj = const_cast<void *>(object_at_pos(x, y, &move_params::selected_type));
         move_params::do_update = true;
+    } else {
+        move_params::selected_move_dir = NONE_DIR;
     }
 }
 
@@ -233,10 +356,13 @@ static void update_sel_obj_center(void_ptr obj)
     cur_cam.recompute_reverse_matrix();
 
     FLOAT3 oc = center - cur_cam.position;
-    FLOAT3 ox = oc + ASSIGN_FLOAT3(1., 0., 0.);
-    FLOAT3 oy = oc + ASSIGN_FLOAT3(0., 1., 0.);
-    FLOAT3 oz = oc + ASSIGN_FLOAT3(0., 0., 1.);
-    rtx::linalg::normalize_ref(oc);
+    move_params::sel_obj_dist = length(oc);
+    FLOAT rlen = 1. / move_params::sel_obj_dist;
+    oc *= rlen;
+
+    FLOAT3 ox = oc + ASSIGN_FLOAT3(0.1, 0., 0.);
+    FLOAT3 oy = oc + ASSIGN_FLOAT3(0., 0.1, 0.);
+    FLOAT3 oz = oc + ASSIGN_FLOAT3(0., 0., 0.1);
     rtx::linalg::normalize_ref(ox);
     rtx::linalg::normalize_ref(oy);
     rtx::linalg::normalize_ref(oz);
@@ -315,6 +441,10 @@ void rtx::hooks::framehook(void *)
         draw_line(move_params::sel_c, move_params::sel_ox, mlxlib::color::red);
         draw_line(move_params::sel_c, move_params::sel_oy, mlxlib::color::green);
         draw_line(move_params::sel_c, move_params::sel_oz, mlxlib::color::blue);
+        draw_rect(move_params::sel_ox, 10, mlxlib::color::red);
+        draw_rect(move_params::sel_oy, 10, mlxlib::color::green);
+        draw_rect(move_params::sel_oz, 10, mlxlib::color::blue);
+        (void)draw_circle;
     }
     rtx::data::win->put_image(*rtx::data::img);
     if (fps_period == 30)

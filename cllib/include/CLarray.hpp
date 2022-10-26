@@ -249,6 +249,62 @@ public:
     }
 
 // -----------------------------------------------------------------------------
+    void fill(
+            const value_type *val_ptr,
+            size_t size,
+            const CLqueue &queue,
+            bool block=true,
+            size_t offset=0,
+            cl_uint num_events_in_wait_list=0,
+            const cl_event *event_wait_list=nullptr,
+            cl_event *event=nullptr
+    ) THROW
+    /**
+        \brief fill GPU buffer
+        \detailed function fills GPU memory block with new data from `val_ptr`,
+            overriding old data.
+
+        \param val_ptr pointer with data
+        \param size number of objects in `val_ptr` array
+        \param queue OpenCL queue where filling operation will be enqueued
+        \param block blocking operation flag, if set to true, function will
+            block until all data will be filled
+        \param offset the offset in bytes in the buffer object to read from
+        \param event_wait_list that need to be completed before executing this
+            command
+        \param num_events_in_wait_list number of events in `event_wait_list`
+        \param event returns event id of current event, that can be used in the
+            future to identify it
+
+        \time O(vec.size())
+        \memory O(1)
+
+        \GPUtime O(vec.size())
+        \GPUmemory O(1)
+    */
+    {
+        cl_int  error = CL_SUCCESS;
+
+        if (size - offset > buff_size)
+            throw std::runtime_error("vector size more than buffer size");
+        if (size == 0)
+            return ;
+        error = clEnqueueWriteBuffer(
+                queue.__get_queue(),
+                buffer,
+                static_cast<cl_bool>(block),
+                offset,
+                size * sizeof(value_type),
+                val_ptr,
+                num_events_in_wait_list,
+                event_wait_list,
+                event
+        );
+        if (error != CL_SUCCESS)
+            throw CLexception(error);
+    }
+
+// -----------------------------------------------------------------------------
     std::vector<value_type> dump(
         const CLqueue &queue,
         bool block=true,

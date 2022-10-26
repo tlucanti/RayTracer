@@ -34,6 +34,11 @@ FLOAT rtx::linalg::dot(const FLOAT3 &v1, const FLOAT3 &v2)
     return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 }
 
+int rtx::linalg::dot(const cl_int2 &v1, const cl_int2 &v2)
+{
+    return v1.x * v2.x + v1.y * v2.y;
+}
+
 FLOAT rtx::linalg::dot(const COMPLEX &v1, const COMPLEX &v2)
 {
     return v1.x * v2.x + v1.y * v2.y;
@@ -237,7 +242,12 @@ FLOAT3 operator -(const FLOAT3 &a)
 
 FLOAT3 operator -(const FLOAT3 &a, const FLOAT3 &b)
 {
-    return a + (-b);
+    return {{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}};
+}
+
+cl_int2 operator -(const cl_int2 &a, const cl_int2 &b)
+{
+    return {{a.x - b.x, a.y - b.y}};
 }
 
 FLOAT3 operator *(const FLOAT3 &a, FLOAT t)
