@@ -285,7 +285,7 @@ public:
     {
         cl_int  error = CL_SUCCESS;
 
-        if (size - offset > buff_size)
+        if (size * sizeof(value_type) + offset > buff_size * sizeof(value_type))
             throw std::runtime_error("vector size more than buffer size");
         if (size == 0)
             return ;

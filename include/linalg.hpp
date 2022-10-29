@@ -16,6 +16,7 @@ COMPLEX operator *(FLOAT a, const COMPLEX &b);
 COMPLEX operator +(const COMPLEX &a, const COMPLEX &b);
 COMPLEX operator -(const COMPLEX &a, const COMPLEX &b);
 COMPLEX operator -(const COMPLEX &a);
+COMPLEX to_complex(const cl_int2 &a);
 
 cl_int2 operator -(const cl_int2 &a, const cl_int2 &b);
 

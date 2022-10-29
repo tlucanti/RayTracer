@@ -10,7 +10,8 @@
 
 #define as_mutable_sphere(obj_ptr) static_cast<sphere_t *>(obj_ptr)
 #define as_mutable_triangle(obj_ptr) static_cast<triangle_t *>(obj_ptr)
-//...
+#define as_mutable_cylinder(obj_ptr) static_cast<cylinder_t *>(obj_ptr)
+#define as_mutable_tor(obj_ptr) static_cast<torus_t *>(obj_ptr)
 #define as_mutable_box(obj_ptr) static_cast<box_t *>(obj_ptr)
 
 #define get_mutable_obj_position(obj_ptr) (as_mutable_sphere(obj_ptr)->position)
@@ -20,7 +21,8 @@ typedef enum
     NONE_DIR,
     AXIS_OX,
     AXIS_OY,
-    AXIS_OZ
+    AXIS_OZ,
+    AXIS_RESIZE
 } move_direction_t;
 
 namespace move_params
@@ -28,6 +30,7 @@ namespace move_params
     static FLOAT3 move_direction;
     static COMPLEX look_direction;
     static cl_int2 mouse_pos;
+    static cl_int2 mouse_press_pos;
     static int do_update(0);
     static bool mouse_press(false);
     static struct timespec fps_meter;
@@ -208,6 +211,54 @@ static inline void move_object(void *obj, obj_type_t type, move_direction_t dir,
     }
 }
 
+static inline void resize_object(void *obj, obj_type_t type, const cl_int2 &move_vec_int)
+{
+    FLOAT dx = 1. / static_cast<FLOAT>(rtx::config::width);
+    FLOAT dy = 1. / static_cast<FLOAT>(rtx::config::height);
+    COMPLEX arrow_dir = to_complex(move_params::mouse_press_pos - move_params::sel_c);
+    COMPLEX move_vec = to_complex(move_vec_int);
+    move_vec.x *= dx;
+    move_vec.y *= dy;
+
+    FLOAT len = dot(arrow_dir, move_vec);
+    std::cout << arrow_dir << ' ' << move_vec << ' ' << len << std::endl;
+    len = std::exp(len);
+
+    switch (type)
+    {
+        case (SPHERE):
+            as_mutable_sphere(obj)->radius *= len;
+            rtx::refill_spheres();
+            break ;
+        case (TRIANGLE): {
+            FLOAT3 tr_center = (as_triangle(obj)->a + as_triangle(obj)->b + as_triangle(obj)->c) * (1. / 3.);
+            FLOAT3 oa = (as_triangle(obj)->a - tr_center) * len;
+            FLOAT3 ob = (as_triangle(obj)->b - tr_center) * len;
+            FLOAT3 oc = (as_triangle(obj)->c - tr_center) * len;
+            as_mutable_triangle(obj)->a = tr_center + oa;
+            as_mutable_triangle(obj)->b = tr_center + ob;
+            as_mutable_triangle(obj)->c = tr_center + oc;
+            rtx::refill_triangles();
+            break ;
+        }
+        case (CYLINDER):
+            as_mutable_cylinder(obj)->radius *= len;
+            as_mutable_cylinder(obj)->height *= len;
+            rtx::refill_cylinders();
+            break ;
+        case (TOR):
+            as_mutable_tor(obj)->r *= len;
+            as_mutable_tor(obj)->R *= len;
+            rtx::refill_torus();
+            break ;
+        case (BOX):
+            as_mutable_box(obj)->sides *= len;
+            rtx::refill_boxes();
+            break ;
+        default: break ;
+    }
+}
+
 static void screenshot(const char *fname)
 {
     uint64_t	f_size;
@@ -303,6 +354,9 @@ void rtx::hooks::mouse_hook(int x, int y, void *)
         move_params::look_direction.x = dx * rtx::config::horizontal_look_speed;
         move_params::look_direction.y = dy * rtx::config::vertical_look_speed;
     }
+    if (move_params::selected_move_dir == AXIS_RESIZE) {
+        resize_object(move_params::selected_obj, move_params::selected_type, {{dx, dy}});
+    }
     if (move_params::selected_move_dir != NONE_DIR) {
         move_object(move_params::selected_obj, move_params::selected_type, move_params::selected_move_dir, {{dx, dy}});
     }
@@ -312,6 +366,8 @@ void rtx::hooks::mousepress_hook(int button, int x, int y, void *)
 {
     move_params::mouse_pos.x = x;
     move_params::mouse_pos.y = y;
+    move_params::mouse_press_pos.x = x;
+    move_params::mouse_press_pos.y = y;
     if (button == mlxlib::mouse::MOUSE_LEFT)
         move_params::mouse_press = true;
     else if (button == mlxlib::mouse::MOUSE_RIGHT) {
@@ -323,6 +379,8 @@ void rtx::hooks::mousepress_hook(int button, int x, int y, void *)
             move_params::selected_move_dir = AXIS_OY;
         } else if (point_near({{x, y}}, move_params::sel_oz, 10)) {
             move_params::selected_move_dir = AXIS_OZ;
+        } else if (point_near({{x, y}}, move_params::sel_c, 10)) {
+            move_params::selected_move_dir = AXIS_RESIZE;
         }
     }
 }
@@ -439,6 +497,7 @@ void rtx::hooks::framehook(void *)
         draw_rect(move_params::sel_ox, 10, mlxlib::color::red);
         draw_rect(move_params::sel_oy, 10, mlxlib::color::green);
         draw_rect(move_params::sel_oz, 10, mlxlib::color::blue);
+        draw_rect(move_params::sel_c, 10, mlxlib::color::yellow);
         (void)draw_circle;
     }
     rtx::data::win->put_image(*rtx::data::img);

@@ -296,6 +296,11 @@ COMPLEX operator -(const COMPLEX &a, const COMPLEX &b)
     return {{a.x - b.x, a.y - b.y}};
 }
 
+COMPLEX to_complex(const cl_int2 &a)
+{
+    return {{static_cast<FLOAT>(a.x), static_cast<FLOAT>(a.y)}};
+}
+
 static inline constexpr FLOAT _fabs(FLOAT q) { return q > 0 ? q : -q; }
 
 static inline constexpr FLOAT flt0(FLOAT q) { return _fabs(q) < EPS ? 0 : q; }
