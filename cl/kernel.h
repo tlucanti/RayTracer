@@ -61,6 +61,8 @@
 #  define RTX_TRANSPARENCY
 #  define RTX_REFRACTIVE
 
+# define NO_PARAMS /* empty */
+
 #  define SPHERE_PARAMS     \
     FL3_CREF position,      \
     FLOAT radius,           \
@@ -70,16 +72,20 @@
     FLOAT refractive,       \
     FLOAT transparency,     \
     FLOAT emission,         \
-    uint32_t negative
+    uint32_t negative,      \
+    uint32_t union_num
 
 #  define PLANE_PARAMS      \
-    FL3_CREF point,         \
+    FL3_CREF position,      \
     FL3_CREF normal,        \
     FL3_CREF color,         \
     uint32_t specular,      \
     FLOAT reflective,       \
     FLOAT refractive,       \
-    FLOAT transparency
+    FLOAT transparency,     \
+    FLOAT emission,         \
+    uint32_t negative,      \
+    uint32_t union_num
 
 #  define TRIANGLE_PARAMS   \
     FL3_CREF p1,            \
@@ -90,7 +96,9 @@
     FLOAT reflective,       \
     FLOAT refractive,       \
     FLOAT transparency,     \
-    FLOAT emission
+    FLOAT emission,         \
+    uint32_t negative,      \
+    uint32_t union_num
 
 #  define CONE_PARAMS       \
     FL3_CREF position,      \
@@ -101,7 +109,10 @@
     uint32_t specular,      \
     FLOAT reflective,       \
     FLOAT refractive,       \
-    FLOAT transparency
+    FLOAT transparency,     \
+    FLOAT emission,         \
+    uint32_t negative,      \
+    uint32_t union_num
 
 #  define CYLINDER_PARAMS   \
     FL3_CREF position,      \
@@ -112,7 +123,10 @@
     uint32_t specular,      \
     FLOAT reflective,       \
     FLOAT refractive,       \
-    FLOAT transparency
+    FLOAT transparency,     \
+    FLOAT emission,         \
+    uint32_t negative,      \
+    uint32_t union_num
 
 #  define TORUS_PARAMS      \
     FL3_CREF position,      \
@@ -123,7 +137,10 @@
     uint32_t specular,      \
     FLOAT reflective,       \
     FLOAT refractive,       \
-    FLOAT transparency
+    FLOAT transparency,     \
+    FLOAT emission,         \
+    uint32_t negative,      \
+    uint32_t union_num
 
 #  define BOX_PARAMS        \
     FL3_CREF position,      \
@@ -132,7 +149,10 @@
     uint32_t specular,      \
     FLOAT reflective,       \
     FLOAT refractive,       \
-    FLOAT transparency
+    FLOAT transparency,     \
+    FLOAT emission,         \
+    uint32_t negative,      \
+    uint32_t union_num
 
 #  define LIGHT_PARAMS      \
     light_type_t type,      \

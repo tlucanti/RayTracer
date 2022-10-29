@@ -37,10 +37,12 @@ typedef struct sphere_s
     FLOAT               transparency;   // 56 -- 64
     FLOAT3              position;       //
     uint32_t            negative;       //
+    uint32_t            union_num;
     FLOAT               emission;       //
     FLOAT               radius;         //
 
     DECLARE_CONSTRUCTOR(sphere_s, SPHERE_PARAMS);
+    DECLARE_CONSTRUCTOR(sphere_s, NO_PARAMS);
 } PACKED ALIGNED64 sphere_t;
 
 // -----------------------------------------------------------------------------
@@ -53,9 +55,13 @@ typedef struct plane_s
     FLOAT               refractive;     // 48 -- 56
     FLOAT               transparency;   // 56 -- 64
     FLOAT3              position;          //
+    uint32_t            negative;
+    uint32_t            union_num;
+    FLOAT               emission;
     FLOAT3              normal;         //
 
     DECLARE_CONSTRUCTOR(plane_s, PLANE_PARAMS);
+    DECLARE_CONSTRUCTOR(plane_s, NO_PARAMS);
 } PACKED ALIGNED64 plane_t;
 
 // -----------------------------------------------------------------------------
@@ -68,13 +74,15 @@ typedef struct triangle_s
     FLOAT           refractive;         // 48 -- 56
     FLOAT           transparency;       // 56 -- 64
     FLOAT3          normal;             //
+    uint32_t        negative;
+    uint32_t        union_num;
     FLOAT           emission;           //
-    PADDING16                           //
     FLOAT3          a;                  //
     FLOAT3          b;                  //
     FLOAT3          c;                  //
 
     DECLARE_CONSTRUCTOR(triangle_s, TRIANGLE_PARAMS);
+    DECLARE_CONSTRUCTOR(triangle_s, NO_PARAMS);
 } PACKED ALIGNED64 triangle_t;
 
 // -----------------------------------------------------------------------------
@@ -87,12 +95,16 @@ typedef struct cone_s
     FLOAT           refractive;
     FLOAT           transparency;
     FLOAT3          position;           //
+    uint32_t        negative;
+    uint32_t        union_num;
+    FLOAT           emission;
     FLOAT           width;              //
     FLOAT           gamma;              //
     FLOAT3          direction;          //
     FLOAT3          matr[3];            //
 
     DECLARE_CONSTRUCTOR(cone_s, CONE_PARAMS);
+    DECLARE_CONSTRUCTOR(cone_s, NO_PARAMS);
 } PACKED ALIGNED64 cone_t;
 
 // -----------------------------------------------------------------------------
@@ -105,11 +117,15 @@ typedef struct cylinder_s
     FLOAT           refractive;
     FLOAT           transparency;
     FLOAT3          position;           // 64 -- 96
+    uint32_t        negative;
+    uint32_t        union_num;
+    FLOAT           emission;
     FLOAT           radius;             // 48 -- 56
     FLOAT           height;             // 56 -- 64
     FLOAT3          direction;          // 96 -- 128
 
     DECLARE_CONSTRUCTOR(cylinder_s, CYLINDER_PARAMS);
+    DECLARE_CONSTRUCTOR(cylinder_s, NO_PARAMS);
 } PACKED ALIGNED64 cylinder_t;
 
 // -----------------------------------------------------------------------------
@@ -122,12 +138,16 @@ typedef struct torus_s
     FLOAT           refractive;         //
     FLOAT           transparency;       //
     FLOAT3          position;           //
+    uint32_t        negative;
+    uint32_t        union_num;
+    FLOAT           emission;
     FLOAT           r;                  //
     FLOAT           R;                  //
     FLOAT3          normal;             //
     FLOAT3          matr[3];            //
 
     DECLARE_CONSTRUCTOR(torus_s, TORUS_PARAMS);
+    DECLARE_CONSTRUCTOR(torus_s, NO_PARAMS);
 } PACKED ALIGNED64 torus_t;
 
 // -----------------------------------------------------------------------------
@@ -140,10 +160,15 @@ typedef struct box_s
     FLOAT refractive;
     FLOAT transparency;
     FLOAT3 position;
-
+    uint32_t negative;
+    uint32_t union_num;
+    FLOAT emission;
     FLOAT3 sides;
+    FLOAT alpha;
+    FLOAT theta;
 
     DECLARE_CONSTRUCTOR(box_s, BOX_PARAMS);
+    DECLARE_CONSTRUCTOR(box_s, NO_PARAMS);
 } PACKED ALIGNED64 box_t;
 
 // -----------------------------------------------------------------------------

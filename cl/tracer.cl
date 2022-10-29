@@ -731,5 +731,5 @@ FLOAT3 trace_ray_rtx(
 # endif /* __CPP */
 
 # undef __VERSION
-# define __VERSION 8
+# define __VERSION 9
 #endif /* TRACER_CL */

@@ -12,7 +12,8 @@ sphere_s::sphere_s(
         FLOAT refractive,
         FLOAT transparency,
         FLOAT emission,
-        uint32_t negative
+        uint32_t negative,
+        uint32_t union_num
     ) :
         color(color),
         specular(specular),
@@ -21,30 +22,65 @@ sphere_s::sphere_s(
         transparency(transparency),
         position(position),
         negative(negative),
+        union_num(union_num),
         emission(emission),
         radius(radius)
 {}
 
 // -----------------------------------------------------------------------------
+sphere_s::sphere_s() :
+    color(),
+    specular(),
+    reflective(),
+    refractive(),
+    transparency(),
+    position(),
+    negative(),
+    union_num(),
+    emission(),
+    radius()
+{}
+
+// -----------------------------------------------------------------------------
 plane_s::plane_s(
-        const FLOAT3 &point,
+        const FLOAT3 &position,
         const FLOAT3 &normal,
         const FLOAT3 &color,
         uint32_t specular,
         FLOAT reflective,
         FLOAT refractive,
-        FLOAT transparency
+        FLOAT transparency,
+        FLOAT emission,
+        uint32_t negative,
+        uint32_t union_num
     ) :
         color(color),
         specular(specular),
         reflective(reflective),
         refractive(refractive),
         transparency(transparency),
-        position(point),
+        position(position),
+        negative(negative),
+        union_num(union_num),
+        emission(emission),
         normal(normal)
 {
     rtx::linalg::normalize_ref(this->normal);
 }
+
+// -----------------------------------------------------------------------------
+plane_s::plane_s() :
+    color(),
+    specular(),
+    reflective(),
+    refractive(),
+    transparency(),
+    position(),
+    negative(),
+    union_num(),
+    emission(),
+    normal()
+{}
 
 // -----------------------------------------------------------------------------
 triangle_s::triangle_s(
@@ -56,13 +92,17 @@ triangle_s::triangle_s(
         FLOAT reflective,
         FLOAT refractive,
         FLOAT transparency,
-        FLOAT emission
+        FLOAT emission,
+        uint32_t negative,
+        uint32_t union_num
     ) :
         color(color),
         specular(specular),
         reflective(reflective),
         refractive(refractive),
         transparency(transparency),
+        negative(negative),
+        union_num(union_num),
         emission(emission),
         a(p1),
         b(p2),
@@ -74,6 +114,21 @@ triangle_s::triangle_s(
 }
 
 // -----------------------------------------------------------------------------
+triangle_s::triangle_s() :
+    color(),
+    specular(),
+    reflective(),
+    refractive(),
+    transparency(),
+    negative(),
+    union_num(),
+    emission(),
+    a(),
+    b(),
+    c()
+{}
+
+// -----------------------------------------------------------------------------
 cone_s::cone_s(
         const FLOAT3 &position,
         const FLOAT3 &direction,
@@ -83,7 +138,10 @@ cone_s::cone_s(
         uint32_t specular,
         FLOAT reflective,
         FLOAT refractive,
-        FLOAT transparency
+        FLOAT transparency,
+        FLOAT emission,
+        uint32_t negative,
+        uint32_t union_num
     ) :
         color(color),
         specular(specular),
@@ -91,6 +149,9 @@ cone_s::cone_s(
         refractive(refractive),
         transparency(transparency),
         position(position),
+        negative(negative),
+        union_num(union_num),
+        emission(emission),
         width(width),
         gamma(gamma),
         direction(direction)
@@ -98,6 +159,22 @@ cone_s::cone_s(
     rtx::linalg::normalize_ref(this->direction);
     rtx::linalg::set_rotation_matrix(this->matr, this->direction, {{0, 0, 1}});
 }
+
+// -----------------------------------------------------------------------------
+cone_s::cone_s() :
+    color(),
+    specular(),
+    reflective(),
+    refractive(),
+    transparency(),
+    position(),
+    negative(),
+    union_num(),
+    emission(),
+    width(),
+    gamma(),
+    direction()
+{}
 
 // -----------------------------------------------------------------------------
 cylinder_s::cylinder_s(
@@ -109,7 +186,10 @@ cylinder_s::cylinder_s(
         uint32_t specular,
         FLOAT reflective,
         FLOAT refractive,
-        FLOAT transparency
+        FLOAT transparency,
+        FLOAT emission,
+        uint32_t negative,
+        uint32_t union_num
    ) :
         color(color),
         specular(specular),
@@ -117,12 +197,31 @@ cylinder_s::cylinder_s(
         refractive(refractive),
         transparency(transparency),
         position(position),
+        negative(negative),
+        union_num(union_num),
+        emission(emission),
         radius(radius),
         height(height),
         direction(direction)
 {
     rtx::linalg::normalize_ref(this->direction);
 }
+
+// -----------------------------------------------------------------------------
+cylinder_s::cylinder_s() :
+    color(),
+    specular(),
+    reflective(),
+    refractive(),
+    transparency(),
+    position(),
+    negative(),
+    union_num(),
+    emission(),
+    radius(),
+    height(),
+    direction()
+{}
 
 // -----------------------------------------------------------------------------
 torus_s::torus_s(
@@ -134,7 +233,10 @@ torus_s::torus_s(
         uint32_t specular,
         FLOAT reflective,
         FLOAT refractive,
-        FLOAT transparency
+        FLOAT transparency,
+        FLOAT emission,
+        uint32_t negative,
+        uint32_t union_num
     ) :
         color(color),
         specular(specular),
@@ -142,6 +244,9 @@ torus_s::torus_s(
         refractive(refractive),
         transparency(transparency),
         position(position),
+        negative(negative),
+        union_num(union_num),
+        emission(emission),
         r(r),
         R(R),
         normal(normal)
@@ -151,6 +256,22 @@ torus_s::torus_s(
 }
 
 // -----------------------------------------------------------------------------
+torus_s::torus_s() :
+    color(),
+    specular(),
+    reflective(),
+    refractive(),
+    transparency(),
+    position(),
+    negative(),
+    union_num(),
+    emission(),
+    r(),
+    R(),
+    normal()
+{}
+
+// -----------------------------------------------------------------------------
 box_t::box_s(
         const FLOAT3 &position,
         const FLOAT3 &sides,
@@ -158,7 +279,10 @@ box_t::box_s(
         uint32_t specular,
         FLOAT reflective,
         FLOAT refractive,
-        FLOAT transparency
+        FLOAT transparency,
+        FLOAT emission,
+        uint32_t negative,
+        uint32_t union_num
     ) :
         color(color),
         specular(specular),
@@ -166,10 +290,25 @@ box_t::box_s(
         refractive(refractive),
         transparency(transparency),
         position(position),
+        negative(negative),
+        union_num(union_num),
+        emission(emission),
         sides(sides)
-{
+{}
 
-}
+// -----------------------------------------------------------------------------
+box_t::box_s() :
+    color(),
+    specular(),
+    reflective(),
+    refractive(),
+    transparency(),
+    position(),
+    negative(),
+    union_num(),
+    emission(),
+    sides()
+{}
 
 // -----------------------------------------------------------------------------
 light_s::light_s(

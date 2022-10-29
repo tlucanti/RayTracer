@@ -26,6 +26,32 @@ union Flags
     unsigned long long all;
 };
 
+struct bitmap_t
+{
+    bool got_color;
+    bool got_specular;
+    bool got_reflective;
+    bool got_refractive;
+    bool got_transparency;
+    bool got_position;
+    bool got_negative;
+    bool got_union;
+    bool got_emission;
+
+    bool got_radius;
+    bool got_normal;
+    bool got_a;
+    bool got_b;
+    bool got_c;
+    bool got_direction;
+    bool got_width;
+    bool got_gamma;
+    bool got_height;
+    bool got_inner;
+    bool got_outer;
+    bool got_sides;
+};
+
 inline static Flags flags;
 
 
@@ -223,8 +249,8 @@ static void parse_int_positive(const std::string &name, const item_type &item, b
     flag = true;
 }
 
-template <class item_type>
-static void parse_bool(const std::string &name, const item_type &item, bool &flag, bool &value)
+template <class item_type, class bool_type>
+static void parse_bool(const std::string &name, const item_type &item, bool &flag, bool_type &value)
 {
     parse_type_assert(name, item.value(), BOOL_TYPE);
     value = static_cast<bool>(item.value());
@@ -406,59 +432,93 @@ static void parse_cameras(const nlohmann::json &cameras)
     parse_ok(true, "scene::cameras "_W + "parsed"_G);
 }
 
+template <class obj_type>
+static FLOAT3 &_get_obj_position(obj_type &obj)
+{
+    return obj.position;
+}
+
+static FLOAT3 &_get_obj_position(triangle_t &tr)
+{
+    return tr.a;
+}
+
+template <class item_type, class obj_type>
+static bool parse_common(
+        const std::string &name,
+        const item_type &item,
+        obj_type &obj,
+        bitmap_t &bitmap
+   )
+{
+    switch (rtx::hash(item.key()))
+    {
+        case ("color"_hash):
+            parse_color(name + " color", item, bitmap.got_color, obj.color);
+            break ;
+        case ("specular"_hash):
+            parse_int_positive(name + " specular", item, bitmap.got_specular, obj.specular);
+            break ;
+        case ("reflective"_hash):
+            parse_float_unit(name + " reflective", item, bitmap.got_reflective, obj.reflective);
+            break ;
+        case ("refractive"_hash):
+            parse_float_positive(name + " refractive", item, bitmap.got_refractive, obj.refractive);
+            break ;
+        case ("transparency"_hash):
+            parse_float_unit(name + " transparency", item, bitmap.got_transparency, obj.transparency);
+            break ;
+        case ("center"_hash):
+        case ("position"_hash):
+            parse_vec3_point(name + " position", item, bitmap.got_position, _get_obj_position(obj));
+            break ;
+        case ("negative"_hash):
+            parse_bool(name + " negative", item, bitmap.got_negative, obj.negative);
+            break ;
+        case ("union"_hash):
+            parse_int_positive(name + " union number", item, bitmap.got_union, obj.union_num);
+            break ;
+        case ("emission"_hash):
+            parse_float_positive(name + " emission", item, bitmap.got_emission, obj.emission);
+            break ;
+        default: return false;
+    }
+    return true;
+}
+
+template <class obj_type>
+static void undefined_check_common(
+        const std::string &name,
+        obj_type &obj,
+        bitmap_t &bitmap
+    )
+{
+    parse_undefined_assert(name + " color", bitmap.got_color);
+    parse_undefined_info_set(name + " specular", bitmap.got_specular, 0u, obj.specular);
+    parse_undefined_info_set(name + " reflective", bitmap.got_reflective, 0., obj.reflective);
+    parse_undefined_info_set(name + " refractive", bitmap.got_refractive, 1., obj.refractive);
+    parse_undefined_info_set(name + " transparency", bitmap.got_transparency, 0., obj.transparency);
+}
+
 static void parse_sphere_single(const nlohmann::json &sphere)
 {
     parse_type_assert("sphere", sphere, OBJECT_TYPE);
-
-    FLOAT3 color;
-    uint32_t specular;
-    FLOAT reflective;
-    FLOAT refractive;
-    FLOAT transparency;
-    FLOAT3 position;
-    FLOAT radius;
-    FLOAT emission;
-    bool negative;
-
-    bool got_color = false;
-    bool got_specular = false;
-    bool got_reflective = false;
-    bool got_refractive = false;
-    bool got_transparency = false;
-    bool got_position = false;
-    bool got_radius = false;
-    bool got_emission = false;
-    bool got_negative = false;
+    sphere_t sp;
+    bitmap_t bitmap {};
 
     for (const auto &item : sphere.items())
     {
-        switch (rtx::hash(item.key()))
-        {
-            case ("color"_hash): parse_color("sphere color", item, got_color, color); break ;
-            case ("specular"_hash): parse_int_positive("sphere specular", item, got_specular, specular); break ;
-            case ("reflective"_hash): parse_float_unit("sphere reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_positive("sphere refractive", item, got_refractive, refractive); break ;
-            case ("transparency"_hash): parse_float_unit("sphere transparency", item, got_transparency, transparency); break ;
-            case ("center"_hash):
-            case ("position"_hash): parse_vec3_point("sphere position", item, got_position, position); break ;
-            case ("radius"_hash): parse_float_positive("sphere radius", item, got_radius, radius); break ;
-            case ("emission"_hash): parse_float_positive("sphere emission", item, got_emission, emission); break ;
-            case ("negative"_hash): parse_bool("sphere negative", item, got_negative, negative); break ;
-            default: parse_unknown_notify(item.key()); break ;
-        }
+        if (parse_common("sphere", item, sp, bitmap))
+            continue ;
+        else if (rtx::hash(item.key()) == "radius"_hash)
+            parse_float_positive("sphere radius", item, bitmap.got_radius, sp.radius);
+        else
+            parse_unknown_notify(item.key());
     }
-    parse_undefined_assert("sphere color", got_color);
-    parse_undefined_info_set("sphere specular", got_specular, 0u, specular);
-    parse_undefined_info_set("sphere reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("sphere refractive", got_refractive, 1., refractive);
-    parse_undefined_info_set("sphere transparency", got_transparency, 0., transparency);
-    parse_undefined_info_set("sphere emission", got_emission, 0., emission);
-    parse_undefined_assert("sphere position", got_position);
-    parse_undefined_assert("sphere radius", got_radius);
-    parse_undefined_info_set("sphere negative", got_negative, false, negative);
-    if (got_color && got_position && got_radius)
+    undefined_check_common("sphere", sp, bitmap);
+    parse_undefined_assert("sphere radius", bitmap.got_radius);
+    if (bitmap.got_color && bitmap.got_position && bitmap.got_radius)
     {
-        sphere_t sp(position, radius, color, specular, reflective, refractive, transparency, emission, negative);
         parse_print("added sphere " + rtx::B["["
             + to_string(rtx::objects::sp_vec.size()) + "]"] + ": "
             + rtx::Orange[to_string(sp)]);
@@ -478,48 +538,22 @@ static void parse_spheres(const nlohmann::json &spheres)
 static void parse_plane_single(const nlohmann::json &plane)
 {
     parse_type_assert("plane", plane, OBJECT_TYPE);
-
-    FLOAT3 color;
-    uint32_t specular;
-    FLOAT reflective;
-    FLOAT refractive;
-    FLOAT transparency;
-    FLOAT3 point;
-    FLOAT3 normal;
-
-    bool got_color = false;
-    bool got_specular = false;
-    bool got_reflective = false;
-    bool got_refractive = false;
-    bool got_transparency = false;
-    bool got_point = false;
-    bool got_normal = false;
+    plane_t pl;
+    bitmap_t bitmap {};
 
     for (const auto &item : plane.items())
     {
-        switch (rtx::hash(item.key()))
-        {
-            case ("color"_hash): parse_color("plane color", item, got_color, color); break ;
-            case ("specular"_hash): parse_int_positive("plane specular", item, got_specular, specular); break ;
-            case ("reflective"_hash): parse_float_unit("plane reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_positive("plane refractive", item, got_refractive, refractive); break ;
-            case ("transparency"_hash): parse_float_unit("plane transparency", item, got_transparency, transparency); break ;
-            case ("position"_hash):
-            case ("point"_hash): parse_vec3_point("plane point", item, got_point, point); break;
-            case ("normal"_hash): parse_vec3_unit("plane normal", item, got_normal, normal); break ;
-            default: parse_unknown_notify(item.key()); break ;
-        }
+        if (parse_common("plane", item, pl, bitmap))
+            continue ;
+        else if (rtx::hash(item.key()) == "normal"_hash)
+            parse_vec3_unit("plane normal", item, bitmap.got_normal, pl.normal);
+        else
+            parse_unknown_notify(item.key());
     }
-    parse_undefined_assert("plane color", got_color);
-    parse_undefined_info_set("plane specular", got_specular, 0u, specular);
-    parse_undefined_info_set("plane reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("plane refractive", got_refractive, 1., refractive);
-    parse_undefined_info_set("plane transparency", got_transparency, 0., transparency);
-    parse_undefined_assert("plane point", got_point);
-    parse_undefined_assert("plane normal", got_normal);
-    if (got_color && got_point && got_normal)
+    undefined_check_common("plane", pl, bitmap);
+    parse_undefined_assert("plane normal", bitmap.got_normal);
+    if (bitmap.got_color && bitmap.got_position && bitmap.got_normal)
     {
-        plane_t pl(point, normal, color, specular, reflective, refractive, transparency);
         parse_print("added plane " + rtx::B["["
             + to_string(rtx::objects::pl_vec.size()) + "]"] + ": "
             + rtx::Orange[to_string(pl)]);
@@ -539,55 +573,27 @@ static void parse_planes(const nlohmann::json &planes)
 static void parse_triangle_single(const nlohmann::json &triangle)
 {
     parse_type_assert("triangle", triangle, OBJECT_TYPE);
-
-    FLOAT3 color;
-    uint32_t specular;
-    FLOAT reflective;
-    FLOAT refractive;
-    FLOAT transparency;
-    FLOAT emission;
-    FLOAT3 a;
-    FLOAT3 b;
-    FLOAT3 c;
-
-    bool got_color = false;
-    bool got_specular = false;
-    bool got_reflective = false;
-    bool got_refractive = false;
-    bool got_transparency = false;
-    bool got_emission = false;
-    bool got_a = false;
-    bool got_b = false;
-    bool got_c = false;
+    triangle_t tr;
+    bitmap_t bitmap {};
 
     for (const auto &item : triangle.items())
     {
+        if (parse_common("triangle", item, tr, bitmap))
+            continue ;
         switch (rtx::hash(item.key()))
         {
-            case ("color"_hash): parse_color("triangle color", item, got_color, color); break ;
-            case ("specular"_hash): parse_int_positive("triangle specular", item, got_specular, specular); break ;
-            case ("reflective"_hash): parse_float_unit("triangle reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_positive("triangle refractive", item, got_refractive, refractive); break ;
-            case ("transparency"_hash): parse_float_unit("triangle transparency", item, got_transparency, transparency); break ;
-            case ("emission"_hash): parse_float_unit("triangle emission", item, got_emission, emission); break ;
-            case ("a"_hash): parse_vec3_point("triangle point a", item, got_a, a); break ;
-            case ("b"_hash): parse_vec3_point("triangle point b", item, got_b, b); break ;
-            case ("c"_hash): parse_vec3_point("triangle point c", item, got_c, c); break ;
+            case ("a"_hash): parse_vec3_point("triangle point a", item, bitmap.got_a, tr.a); break ;
+            case ("b"_hash): parse_vec3_point("triangle point b", item, bitmap.got_b, tr.b); break ;
+            case ("c"_hash): parse_vec3_point("triangle point c", item, bitmap.got_c, tr.c); break ;
             default: parse_unknown_notify(item.key()); break ;
         }
     }
-    parse_undefined_assert("triangle color", got_color);
-    parse_undefined_info_set("triangle specular", got_specular, 0u, specular);
-    parse_undefined_info_set("triangle reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("triangle refractive", got_refractive, 1., refractive);
-    parse_undefined_info_set("triangle transparency", got_transparency, 0., transparency);
-    parse_undefined_info_set("triangle emission", got_emission, 0., emission);
-    parse_undefined_assert("triangle point a", got_a);
-    parse_undefined_assert("triangle point b", got_b);
-    parse_undefined_assert("triangle point c", got_c);
-    if (got_color && got_a && got_b && got_c)
+    undefined_check_common("triangle", tr, bitmap);
+    parse_undefined_assert("triangle point a", bitmap.got_a);
+    parse_undefined_assert("triangle point b", bitmap.got_b);
+    parse_undefined_assert("triangle point c", bitmap.got_c);
+    if (bitmap.got_color && bitmap.got_a && bitmap.got_b && bitmap.got_c)
     {
-        triangle_t tr(a, b, c, color, specular, reflective, refractive, transparency, emission);
         parse_print("added triangle " + rtx::B["["
             + to_string(rtx::objects::tr_vec.size()) + "]"] + ": "
             + rtx::Orange[to_string(tr)]);
@@ -607,55 +613,27 @@ static void parse_triangles(const nlohmann::json &triangles)
 static void parse_hyperboloid_single(const nlohmann::json &hyper)
 {
     parse_type_assert("hyperboloid", hyper, OBJECT_TYPE);
-
-    FLOAT3 color;
-    uint32_t specular;
-    FLOAT reflective;
-    FLOAT refractive;
-    FLOAT transparency;
-    FLOAT3 position;
-    FLOAT3 direction;
-    FLOAT width;
-    FLOAT gamma;
-
-    bool got_color = false;
-    bool got_specular = false;
-    bool got_reflective = false;
-    bool got_refractive = false;
-    bool got_transparency = false;
-    bool got_position = false;
-    bool got_direction = false;
-    bool got_width = false;
-    bool got_gamma = false;
+    cone_t cn;
+    bitmap_t bitmap {};
 
     for (const auto &item : hyper.items())
     {
+        if (parse_common("hyperboloid", item, cn, bitmap))
+            continue ;
         switch (rtx::hash(item.key()))
         {
-            case ("color"_hash): parse_color("hyperboloid color", item, got_color, color); break ;
-            case ("specular"_hash): parse_int_positive("hyperboloid specular", item, got_specular, specular); break ;
-            case ("reflective"_hash): parse_float_unit("hyperboloid reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_positive("hyperboloid refractive", item, got_refractive, refractive); break ;
-            case ("transparency"_hash): parse_float_unit("hyperboloid transparency", item, got_transparency, transparency); break ;
-            case ("position"_hash): parse_vec3_point("hyperboloid position", item, got_position, position); break ;
-            case ("direction"_hash): parse_vec3_unit("hyperboloid direction", item, got_direction, direction); break ;
-            case ("width"_hash): parse_float_unit("hyperboloid width", item, got_width, width); break ;
-            case ("gamma"_hash): parse_float_any("hyperboloid gamma", item, got_gamma, gamma); break ;
+            case ("direction"_hash): parse_vec3_unit("hyperboloid direction", item, bitmap.got_direction, cn.direction); break ;
+            case ("width"_hash): parse_float_unit("hyperboloid width", item, bitmap.got_width, cn.width); break ;
+            case ("gamma"_hash): parse_float_any("hyperboloid gamma", item, bitmap.got_gamma, cn.gamma); break ;
             default: parse_unknown_notify(item.key()); break ;
         }
     }
-    parse_undefined_assert("hyperboloid color", got_color);
-    parse_undefined_info_set("hyperboloid specular", got_specular, 0u, specular);
-    parse_undefined_info_set("hyperboloid reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("hyperboloid refractive", got_refractive, 1., refractive);
-    parse_undefined_info_set("hyperboloid transparency", got_transparency, 0., transparency);
-    parse_undefined_assert("hyperboloid position", got_position);
-    parse_undefined_assert("hyperboloid direction", got_direction);
-    parse_undefined_assert("hyperboloid width", got_width);
-    parse_undefined_info_set("hyperboloid gamma", got_gamma, 0., gamma);
-    if (got_color && got_position && got_direction && got_width)
+    undefined_check_common("hyperboloid", cn, bitmap);
+    parse_undefined_assert("hyperboloid direction", bitmap.got_direction);
+    parse_undefined_assert("hyperboloid width", bitmap.got_width);
+    parse_undefined_info_set("hyperboloid gamma", bitmap.got_gamma, 0., cn.gamma);
+    if (bitmap.got_color && bitmap.got_position && bitmap.got_direction && bitmap.got_width)
     {
-        cone_t cn(position, direction, width, gamma, color, specular, reflective, refractive, transparency);
         parse_print("added hyperboloid " + rtx::B["["
             + to_string(rtx::objects::cn_vec.size()) + "]"] + ": "
             + rtx::Orange[to_string(cn)]);
@@ -675,56 +653,27 @@ static void parse_hyperboloids(const nlohmann::json &cones)
 static void parse_cylinder_single(const nlohmann::json &cylinder)
 {
     parse_type_assert("cylinder", cylinder, OBJECT_TYPE);
-
-    FLOAT3 color;
-    uint32_t specular;
-    FLOAT reflective;
-    FLOAT refractive;
-    FLOAT transparency;
-    FLOAT3 position;
-    FLOAT3 direction;
-    FLOAT radius;
-    FLOAT height;
-
-    bool got_color = false;
-    bool got_specular = false;
-    bool got_reflective = false;
-    bool got_refractive = false;
-    bool got_transparency = false;
-    bool got_position = false;
-    bool got_direction = false;
-    bool got_radius = false;
-    bool got_height = false;
+    cylinder_t cy;
+    bitmap_t bitmap {};
 
     for (const auto &item : cylinder.items())
     {
+        if (parse_common("cylinder", item, cy, bitmap))
+            continue ;
         switch (rtx::hash(item.key()))
         {
-            case ("color"_hash): parse_color("cylinder color", item, got_color, color); break ;
-            case ("specular"_hash): parse_int_positive("cylinder specular", item, got_specular, specular); break ;
-            case ("reflective"_hash): parse_float_unit("cylinder reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_positive("cylinder refractive", item, got_refractive, refractive); break ;
-            case ("transparency"_hash): parse_float_unit("cylinder transparency", item, got_transparency, transparency); break ;
-            case ("position"_hash): parse_vec3_point("cylinder position", item, got_position, position); break ;
-            case ("direction"_hash): parse_vec3_unit("cylinder direction", item, got_direction, direction); break ;
-            case ("radius"_hash): parse_float_positive("cylinder radius", item, got_radius, radius); break ;
-            case ("height"_hash): parse_float_positive("cylinder height", item, got_height, height); break ;
+            case ("direction"_hash): parse_vec3_unit("cylinder direction", item, bitmap.got_direction, cy.direction); break ;
+            case ("radius"_hash): parse_float_positive("cylinder radius", item, bitmap.got_radius, cy.radius); break ;
+            case ("height"_hash): parse_float_positive("cylinder height", item, bitmap.got_height, cy.height); break ;
             default: parse_unknown_notify(item.key()); break ;
         }
     }
-
-    parse_undefined_assert("cylinder color", got_color);
-    parse_undefined_info_set("cylinder specular", got_specular, 0u, specular);
-    parse_undefined_info_set("cylinder reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("cylinder refractive", got_refractive, 1., refractive);
-    parse_undefined_info_set("cylinder transparency", got_transparency, 0., transparency);
-    parse_undefined_info_set("cylinder height", got_height, std::numeric_limits<double>::infinity(), height);
-    parse_undefined_assert("cylinder position", got_position);
-    parse_undefined_assert("cylinder direction", got_direction);
-    parse_undefined_assert("cylinder radius", got_radius);
-    if (got_color && got_position && got_direction && got_radius)
+    undefined_check_common("cylinder", cy, bitmap);
+    parse_undefined_info_set("cylinder height", bitmap.got_height, std::numeric_limits<double>::infinity(), cy.height);
+    parse_undefined_assert("cylinder direction", bitmap.got_direction);
+    parse_undefined_assert("cylinder radius", bitmap.got_radius);
+    if (bitmap.got_color && bitmap.got_position && bitmap.got_direction && bitmap.got_radius)
     {
-        cylinder_t cy(position, direction, radius, height, color, specular, reflective, refractive, transparency);
         parse_print("added cylinder " + rtx::B["["
             + to_string(rtx::objects::cy_vec.size()) + "]"] + ": "
             + rtx::Orange[to_string(cy)]);
@@ -744,56 +693,27 @@ static void parse_cylinders(const nlohmann::json &cylinders)
 static void parse_torus_single(const nlohmann::json &torus)
 {
     parse_type_assert("torus", torus, OBJECT_TYPE);
-
-    FLOAT3 color;
-    uint32_t specular;
-    FLOAT reflective;
-    FLOAT refractive;
-    FLOAT transparency;
-    FLOAT3 position;
-    FLOAT3 normal;
-    FLOAT inner;
-    FLOAT outer;
-
-    bool got_color = false;
-    bool got_specular = false;
-    bool got_reflective = false;
-    bool got_refractive = false;
-    bool got_transparency = false;
-    bool got_position = false;
-    bool got_normal = false;
-    bool got_inner = false;
-    bool got_outer = false;
+    torus_t to;
+    bitmap_t bitmap {};
 
     for (const auto &item : torus.items())
     {
+        if (parse_common("torus", item, to, bitmap))
+            continue ;
         switch (rtx::hash(item.key()))
         {
-            case ("color"_hash): parse_color("torus color", item, got_color, color); break ;
-            case ("specular"_hash): parse_int_positive("torus specular", item, got_specular, specular); break ;
-            case ("reflective"_hash): parse_float_unit("torus reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_positive("torus refractive", item, got_refractive, refractive); break ;
-            case ("transparency"_hash): parse_float_unit("torus transparency", item, got_transparency, transparency); break ;
-            case ("position"_hash): parse_vec3_point("torus position", item, got_position, position); break ;
-            case ("normal"_hash): parse_vec3_unit("torus normal", item, got_normal, normal); break ;
-            case ("inner_radius"_hash): parse_float_positive("torus inner radius", item, got_inner, inner); break ;
-            case ("outer_radius"_hash): parse_float_positive("torus outer radius", item, got_outer, outer); break ;
+            case ("normal"_hash): parse_vec3_unit("torus normal", item, bitmap.got_normal, to.normal); break ;
+            case ("inner_radius"_hash): parse_float_positive("torus inner radius", item, bitmap.got_inner, to.r); break ;
+            case ("outer_radius"_hash): parse_float_positive("torus outer radius", item, bitmap.got_outer, to.R); break ;
             default: parse_unknown_notify(item.key()); break ;
         }
     }
-
-    parse_undefined_assert("torus color", got_color);
-    parse_undefined_info_set("torus specular", got_specular, 0u, specular);
-    parse_undefined_info_set("torus reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("torus refractive", got_refractive, 1., refractive);
-    parse_undefined_info_set("torus transparency", got_transparency, 0., transparency);
-    parse_undefined_assert("torus position", got_position);
-    parse_undefined_assert("torus normal", got_normal);
-    parse_undefined_assert("torus inner radius", got_inner);
-    parse_undefined_assert("torus outer radius", got_outer);
-    if (got_color && got_position && got_normal && got_inner && got_outer)
+    undefined_check_common("torus", to, bitmap);
+    parse_undefined_assert("torus normal", bitmap.got_normal);
+    parse_undefined_assert("torus inner radius", bitmap.got_inner);
+    parse_undefined_assert("torus outer radius", bitmap.got_outer);
+    if (bitmap.got_color && bitmap.got_position && bitmap.got_normal && bitmap.got_inner && bitmap.got_outer)
     {
-        torus_t to(position, normal, inner, outer, color, specular, reflective, refractive, transparency);
         parse_print("added torus " + rtx::B["["
             + to_string(rtx::objects::to_vec.size()) + "]"] + ": "
             + rtx::Orange[to_string(to)]);
@@ -813,50 +733,22 @@ static void parse_torus(const nlohmann::json &torus)
 static void parse_box_single(const nlohmann::json &box)
 {
     parse_type_assert("box", box, OBJECT_TYPE);
+    box_t bo;
+    bitmap_t bitmap {};
 
-    FLOAT3 color;
-    uint32_t specular;
-    FLOAT reflective;
-    FLOAT refractive;
-    FLOAT transparency;
-    FLOAT3 position;
-    FLOAT3 sides;
-
-    bool got_color = false;
-    bool got_specular = false;
-    bool got_reflective = false;
-    bool got_refractive = false;
-    bool got_transparency = false;
-    bool got_position = false;
-    bool got_sides = false;
-
-    for (const auto &item : box.items())
-    {
-        switch (rtx::hash(item.key()))
-        {
-            case ("color"_hash): parse_color("box color", item, got_color, color); break ;
-            case ("specular"_hash): parse_int_positive("box specular", item, got_specular, specular); break ;
-            case ("reflective"_hash): parse_float_unit("box reflective", item, got_reflective, reflective); break ;
-            case ("refractive"_hash): parse_float_positive("box refractive", item, got_refractive, refractive); break ;
-            case ("transparency"_hash): parse_float_unit("box transparency", item, got_transparency, transparency); break ;
-            case ("position"_hash): parse_vec3_point("box position", item, got_position, position); break ;
-            case ("sides"_hash): parse_vec3_point("box sides", item, got_sides, sides); break ;
-            default: parse_unknown_notify(item.key()); break ;
-        }
+    for (const auto &item : box.items()) {
+        if (parse_common("box", item, bo, bitmap))
+            continue;
+        else if (rtx::hash(item.key()) == "sides"_hash)
+            parse_vec3_point("box sides", item, bitmap.got_sides, bo.sides);
+        else
+            parse_unknown_notify(item.key());
     }
-
-    parse_undefined_assert("box color", got_color);
-    parse_undefined_info_set("box specular", got_specular, 0u, specular);
-    parse_undefined_info_set("box reflective", got_reflective, 0., reflective);
-    parse_undefined_info_set("box refractive", got_refractive, 1., refractive);
-    parse_undefined_info_set("box transparency", got_transparency, 0., transparency);
-    parse_undefined_assert("box position", got_position);
-    parse_undefined_assert("box sides", got_sides);
-
+    undefined_check_common("torus", bo, bitmap);
+    parse_undefined_assert("box sides", bitmap.got_sides);
     parse_assert(rtx::config::tracer_type != RTX_RAY_TRACER, "box object is not supported in RAY_TRACER tracer");
-    if (got_color && got_position && got_sides)
+    if (bitmap.got_color && bitmap.got_position && bitmap.got_sides)
     {
-        box_t bo(position, sides, color, specular, reflective, refractive, transparency);
         parse_print("added box " + rtx::B["["
             + to_string(rtx::objects::box_vec.size()) + "]"] + ": "
             + rtx::Orange[to_string(bo)]);
