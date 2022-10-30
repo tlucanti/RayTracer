@@ -221,7 +221,7 @@ static inline void resize_object(void *obj, obj_type_t type, const cl_int2 &move
     move_vec.y *= dy;
 
     FLOAT len = dot(arrow_dir, move_vec);
-    std::cout << arrow_dir << ' ' << move_vec << ' ' << len << std::endl;
+//    std::cout << arrow_dir << ' ' << move_vec << ' ' << len << std::endl;
     len = std::exp(len);
 
     switch (type)

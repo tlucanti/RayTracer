@@ -2,6 +2,8 @@
 #ifndef TRACING_BASE_CL
 # define TRACING_BASE_CL
 
+# include <kernel.h>
+
 # define set_scene_fig_next(__field, __type, __cnt, __base_ptr, __shift_var) \
 do {                                                                        \
     __field = creinterpret_cast(                                            \
@@ -42,6 +44,8 @@ void pixpos_from_vec3(FLOAT3 vec, int *x, int *y, int width, int height)
 CPP_UNUSED CPP_INLINE
 __kernel void tracer_kernel(
         __global uint32_t *canvas,
+        ENABLE_IF_MARCHER(__global dsf_buff_item_t *dsf_buffer COMA)
+        ENABLE_IF_MARCHER(int32_t dsf_buffer_size COMA)
 
         byte_ptr figures,
 
@@ -78,6 +82,8 @@ __kernel void tracer_kernel(
             .boxes_num = boxes_num,
             .lights_num = lights_num,
             .cameras_num = cameras_num
+            ENABLE_IF_MARCHER(COMA .dsf_buffer = dsf_buffer)
+            ENABLE_IF_MARCHER(COMA .dsf_buffer_size = dsf_buffer_size)
     };
     size_t shift = 0;
 

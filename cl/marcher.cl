@@ -51,27 +51,44 @@ FLOAT box_dfs(
     return length(fmax(fabs(co) - box->sides, 0.));
 }
 
+// min(a, b, c, max(d, e, f), g, max(h, i))
 # define update_closest_t(__dsf_func, __obj_name, __obj_type)       \
 do {                                                               \
-    FLOAT __t = __dsf_func(point, __obj_name + i);              \
-    bool __expr;    \
-                                                                    \
-    if (__obj_name[i].negative)     \
-        __expr = -__t > closest_t;      \
-    else        \
-        __expr = __t < closest_t; \
-    if (__expr)                                  \
-    {                                                   \
-        closest_t = __t;                                  \
-        *closest_obj = __obj_name + i;                  \
-        *obj_type = __obj_type;                         \
-    }                                                   \
+    FLOAT __t = __dsf_func(point, __obj_name + i);                  \
+    const int32_t __union_num = __obj_name[i].union_num;     \
+    ;                                                           \
+    if (__union_num == -1 && __t < closest_t) {                 \
+        closest_t = __t;                            \
+        closest_obj = __obj_name + i;              \
+        obj_type = __obj_type;                     \
+    } else if (__union_num != -1 &&           \
+            __t > scene->dsf_buffer[__union_num].val) \
+    {                                                                   \
+        scene->dsf_buffer[__union_num].val = __t;                \
+        scene->dsf_buffer[__union_num].ptr = __obj_name + i;    \
+    }       \
+} while (false)
+
+# define update_shadow_t(__dsf_func, __obj_name)            \
+do {                                                        \
+    FLOAT __t = __dsf_func(point, __obj_name + i);          \
+    const int32_t __union_num = __obj_name[i].union_num;    \
+    ;                                                       \
+    if (__union_num != -1)                                  \
+        scene->dsf_buffer[__union_num].val = fmax(          \
+            scene->dsf_buffer[__union_num].val,             \
+            __t                                             \
+        );                                                  \
+    else                                                    \
+        closest_t = fmin(closest_t, __t);                   \
 } while (false)
 
 CPP_UNUSED CPP_INLINE
-FLOAT scene_dsf(scene_ptr scene, FLOAT3 point, void_ptr *closest_obj, obj_type_t *obj_type)
+FLOAT scene_dsf(scene_ptr scene, FLOAT3 point, void_ptr *closest_obj_ptr, obj_type_t *obj_type_ptr)
 {
     FLOAT closest_t = INFINITY;
+    void_ptr closest_obj;
+    obj_type_t obj_type;
 
     for (uint32_t i=0; i < scene->spheres_num; ++i)
     {
@@ -79,18 +96,27 @@ FLOAT scene_dsf(scene_ptr scene, FLOAT3 point, void_ptr *closest_obj, obj_type_t
         if (closest_t < HIT_DISTANCE)
             break ;
     }
-//    for (uint32_t i=0; i < scene->planes_num; ++i)
-//    {
-//        update_closest_t(plane_dsf, scene->planes, PLANE);
-//        if (closest_t < HIT_DISTANCE)
-//            break ;
-//    }
-//    for (uint32_t i=0; i < scene->boxes_num; ++i)
-//    {
-//        update_closest_t(box_dfs, scene->boxes, BOX);
-//        if (closest_t < HIT_DISTANCE)
-//            break ;
-//    }
+    for (uint32_t i=0; i < scene->planes_num; ++i)
+    {
+        update_closest_t(plane_dsf, scene->planes, PLANE);
+        if (closest_t < HIT_DISTANCE)
+            break ;
+    }
+    for (uint32_t i=0; i < scene->boxes_num; ++i)
+    {
+        update_closest_t(box_dfs, scene->boxes, BOX);
+        if (closest_t < HIT_DISTANCE)
+            break ;
+    }
+    for (int i=0; i < scene->dsf_buffer_size; ++i) {
+        const FLOAT _val = scene->dsf_buffer[i].val;
+        if (_val < closest_t) {
+            closest_t = _val;
+            closest_obj = scene->dsf_buffer[i].ptr;
+        }
+    }
+    *closest_obj_ptr = closest_obj;
+    *obj_type_ptr = obj_type;
     return closest_t;
 }
 
@@ -98,29 +124,27 @@ CPP_UNUSED CPP_INLINE
 FLOAT shadow_dsf(scene_ptr scene, FLOAT3 point)
 {
     FLOAT closest_t = INFINITY;
-//    closest_t = fmax(sphere_dsf(point, scene->spheres + 0), -sphere_dsf(point, scene->spheres + 1));
-    return closest_t;
 
     for (uint32_t i=0; i < scene->spheres_num; ++i)
     {
-//        if (scene->spheres[i].negative)
-//            closest_t = fmax(closest_t, sphere_dsf(point, scene->spheres + i));
-//        else
-            closest_t = fmin(closest_t, sphere_dsf(point, scene->spheres + i));
+        update_shadow_t(sphere_dsf, scene->spheres);
         if (closest_t < HIT_DISTANCE)
             break ;
     }
     for (uint32_t i=0; i < scene->planes_num; ++i)
     {
-        closest_t = fmin(closest_t, plane_dsf(point, scene->planes + i));
+        update_shadow_t(plane_dsf, scene->planes);
         if (closest_t < HIT_DISTANCE)
             break ;
     }
     for (uint32_t i=0; i < scene->boxes_num; ++i)
     {
-        closest_t = fmin(closest_t, box_dfs(point, scene->boxes + i));
+        update_shadow_t(box_dfs, scene->boxes);
         if (closest_t < HIT_DISTANCE)
             break ;
+    }
+    for (int i=0; i < scene->dsf_buffer_size; ++i) {
+        closest_t = fmin(closest_t, scene->dsf_buffer[i].val);
     }
     return closest_t;
 }

@@ -5,6 +5,7 @@
 #include <exception.hpp>
 #include <objects.hpp>
 #include <utils.hpp>
+#include <set>
 
 union Flags
 {
@@ -53,7 +54,7 @@ struct bitmap_t
 };
 
 inline static Flags flags;
-
+inline std::set<int> unions;
 
 typedef enum
 {
@@ -469,7 +470,7 @@ static bool parse_common(
             parse_float_unit(name + " transparency", item, bitmap.got_transparency, obj.transparency);
             break ;
         case ("center"_hash):
-        case ("position"_hash):
+        case ("position"_hash + std::is_same<obj_type, triangle_t>::value):
             parse_vec3_point(name + " position", item, bitmap.got_position, _get_obj_position(obj));
             break ;
         case ("negative"_hash):
@@ -477,6 +478,7 @@ static bool parse_common(
             break ;
         case ("union"_hash):
             parse_int_positive(name + " union number", item, bitmap.got_union, obj.union_num);
+            unions.insert(obj.union_num);
             break ;
         case ("emission"_hash):
             parse_float_positive(name + " emission", item, bitmap.got_emission, obj.emission);
@@ -498,6 +500,11 @@ static void undefined_check_common(
     parse_undefined_info_set(name + " reflective", bitmap.got_reflective, 0., obj.reflective);
     parse_undefined_info_set(name + " refractive", bitmap.got_refractive, 1., obj.refractive);
     parse_undefined_info_set(name + " transparency", bitmap.got_transparency, 0., obj.transparency);
+    if (not std::is_same<obj_type, triangle_t>::value)
+        parse_undefined_assert(name + " position", bitmap.got_position);
+    parse_undefined_info_set(name + " negative", bitmap.got_negative, 0u, obj.negative);
+    parse_undefined_info_set(name + " union", bitmap.got_union, -1, obj.union_num);
+    parse_undefined_info_set(name + " emission", bitmap.got_emission, 0., obj.emission);
 }
 
 static void parse_sphere_single(const nlohmann::json &sphere)
@@ -746,7 +753,7 @@ static void parse_box_single(const nlohmann::json &box)
     }
     undefined_check_common("torus", bo, bitmap);
     parse_undefined_assert("box sides", bitmap.got_sides);
-    parse_assert(rtx::config::tracer_type != RTX_RAY_TRACER, "box object is not supported in RAY_TRACER tracer");
+    parse_assert(rtx::config::tracer_type != RAY_TRACER_TYPE, "box object is not supported in RAY_TRACER tracer");
     if (bitmap.got_color && bitmap.got_position && bitmap.got_sides)
     {
         parse_print("added box " + rtx::B["["
@@ -888,6 +895,7 @@ void rtx::parse_scene()
     parse_assert(flags.cameras, "your scene don`t have any cameras");
     if (not flags.cameras)
         throw rtx::Exception("cannot start due to scene errors");
+    rtx::scene::union_cnt = static_cast<int>(unions.size());
 
     assert(not rtx::objects::li_vec.empty());
     assert(not rtx::objects::cam_vec.empty());

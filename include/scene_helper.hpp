@@ -18,7 +18,7 @@ void_ptr object_at_pos(int x, int y, obj_type_t *obj_type)
     direction = rotate_vector(direction, cur_cam.rotate_matrix);
     FLOAT3 dummy_vec;
 
-    if (rtx::config::tracer_type == RTX_RAY_TRACER) {
+    if (rtx::config::tracer_type == RAY_TRACER_TYPE) {
         FLOAT dummy_float;
 
         return closest_intersection_rtx(
@@ -32,7 +32,7 @@ void_ptr object_at_pos(int x, int y, obj_type_t *obj_type)
             &dummy_vec
         );
     }
-    else if (rtx::config::tracer_type == RTX_RAY_MARCHER)
+    else if (rtx::config::tracer_type == RAY_MARCHER_TYPE)
         return closest_intersection_rmc(
             &rtx::scene::local_scene,
             cur_cam.position,

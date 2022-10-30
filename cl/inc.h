@@ -125,6 +125,8 @@ FLOAT3 trace_ray_rmc(
 CPP_UNUSED
 __kernel void tracer_kernel(
         __global uint32_t *canvas,
+        ENABLE_IF_MARCHER(__global dsf_buff_item_t *dsf_buffer COMA)
+        ENABLE_IF_MARCHER(int32_t dsf_buffer_size COMA)
 
         byte_ptr figures,
 

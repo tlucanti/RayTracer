@@ -37,7 +37,7 @@ typedef struct sphere_s
     FLOAT               transparency;   // 56 -- 64
     FLOAT3              position;       //
     uint32_t            negative;       //
-    uint32_t            union_num;
+    int32_t            union_num;
     FLOAT               emission;       //
     FLOAT               radius;         //
 
@@ -56,7 +56,7 @@ typedef struct plane_s
     FLOAT               transparency;   // 56 -- 64
     FLOAT3              position;          //
     uint32_t            negative;
-    uint32_t            union_num;
+    int32_t            union_num;
     FLOAT               emission;
     FLOAT3              normal;         //
 
@@ -75,7 +75,7 @@ typedef struct triangle_s
     FLOAT           transparency;       // 56 -- 64
     FLOAT3          normal;             //
     uint32_t        negative;
-    uint32_t        union_num;
+    int32_t        union_num;
     FLOAT           emission;           //
     FLOAT3          a;                  //
     FLOAT3          b;                  //
@@ -96,7 +96,7 @@ typedef struct cone_s
     FLOAT           transparency;
     FLOAT3          position;           //
     uint32_t        negative;
-    uint32_t        union_num;
+    int32_t        union_num;
     FLOAT           emission;
     FLOAT           width;              //
     FLOAT           gamma;              //
@@ -118,7 +118,7 @@ typedef struct cylinder_s
     FLOAT           transparency;
     FLOAT3          position;           // 64 -- 96
     uint32_t        negative;
-    uint32_t        union_num;
+    int32_t        union_num;
     FLOAT           emission;
     FLOAT           radius;             // 48 -- 56
     FLOAT           height;             // 56 -- 64
@@ -139,7 +139,7 @@ typedef struct torus_s
     FLOAT           transparency;       //
     FLOAT3          position;           //
     uint32_t        negative;
-    uint32_t        union_num;
+    int32_t        union_num;
     FLOAT           emission;
     FLOAT           r;                  //
     FLOAT           R;                  //
@@ -161,7 +161,7 @@ typedef struct box_s
     FLOAT transparency;
     FLOAT3 position;
     uint32_t negative;
-    uint32_t union_num;
+    int32_t union_num;
     FLOAT emission;
     FLOAT3 sides;
     FLOAT alpha;
@@ -213,6 +213,14 @@ typedef __constant const camera_t   *__restrict camera_ptr;
 typedef __constant const void       *__restrict void_ptr;
 typedef __constant const unsigned char *__restrict byte_ptr;
 
+# ifdef RTX_RAY_MARCHER
+typedef struct
+{
+    FLOAT val;
+    void_ptr ptr;
+} dsf_buff_item_t;
+# endif
+
 typedef struct
 {
     sphere_ptr      spheres;
@@ -236,6 +244,9 @@ typedef struct
 
     CL_CONST uint32_t lights_num;
     CL_CONST uint32_t cameras_num;
+
+    ENABLE_IF_MARCHER(__global dsf_buff_item_t *dsf_buffer;)
+    ENABLE_IF_MARCHER(int dsf_buffer_size;)
 } scene_t;
 
 typedef const scene_t *__restrict scene_ptr;

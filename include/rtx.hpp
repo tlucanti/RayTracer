@@ -37,6 +37,8 @@ namespace data
 namespace scene
 {
     extern cllib::CLarray<unsigned char, cllib::read_only_array> figures;
+    extern cllib::CLarray<dsf_buff_item_t, cllib::read_write_array> dfs_buff;
+    extern int union_cnt;
     extern scene_t local_scene;
 
     extern cllib::CLarray<camera_t, cllib::read_only_array> cameras;

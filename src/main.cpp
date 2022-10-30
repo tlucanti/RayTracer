@@ -11,6 +11,10 @@ void rtx::init_kernel()
     cllib::CLkernel &kernel = *rtx::data::kernel;
     kernel.reset_args();
     kernel.set_next_arg(rtx::scene::canvas);
+    if (rtx::config::tracer_type == RAY_MARCHER_TYPE) {
+        kernel.set_next_arg(rtx::scene::dfs_buff);
+        kernel.set_next_arg(rtx::scene::union_cnt);
+    }
 //    kernel.set_next_arg(rtx::scene::distances);
 
     kernel.set_next_arg(rtx::scene::figures);
@@ -101,14 +105,14 @@ void argparse(int argc, char **argv)
                         case ("tracer"_hash):
                         case ("tracing"_hash):
                         case ("rtx"_hash): {
-                            rtx::config::tracer_type = RTX_RAY_TRACER;
+                            rtx::config::tracer_type = RAY_TRACER_TYPE;
                             rtx::config::kernel_file = rtx::config::tracer_fname;
                             break ;
                         }
                         case ("marcher"_hash):
                         case ("marching"_hash):
                         case ("rmc"_hash): {
-                            rtx::config::tracer_type = RTX_RAY_MARCHER;
+                            rtx::config::tracer_type = RAY_MARCHER_TYPE;
                             rtx::config::kernel_file = rtx::config::marcher_fname;
                             break ;
                         }

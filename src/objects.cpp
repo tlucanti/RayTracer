@@ -13,7 +13,7 @@ sphere_s::sphere_s(
         FLOAT transparency,
         FLOAT emission,
         uint32_t negative,
-        uint32_t union_num
+        int32_t union_num
     ) :
         color(color),
         specular(specular),
@@ -52,7 +52,7 @@ plane_s::plane_s(
         FLOAT transparency,
         FLOAT emission,
         uint32_t negative,
-        uint32_t union_num
+        int32_t union_num
     ) :
         color(color),
         specular(specular),
@@ -94,7 +94,7 @@ triangle_s::triangle_s(
         FLOAT transparency,
         FLOAT emission,
         uint32_t negative,
-        uint32_t union_num
+        int32_t union_num
     ) :
         color(color),
         specular(specular),
@@ -141,7 +141,7 @@ cone_s::cone_s(
         FLOAT transparency,
         FLOAT emission,
         uint32_t negative,
-        uint32_t union_num
+        int32_t union_num
     ) :
         color(color),
         specular(specular),
@@ -189,7 +189,7 @@ cylinder_s::cylinder_s(
         FLOAT transparency,
         FLOAT emission,
         uint32_t negative,
-        uint32_t union_num
+        int32_t union_num
    ) :
         color(color),
         specular(specular),
@@ -236,7 +236,7 @@ torus_s::torus_s(
         FLOAT transparency,
         FLOAT emission,
         uint32_t negative,
-        uint32_t union_num
+        int32_t union_num
     ) :
         color(color),
         specular(specular),
@@ -282,7 +282,7 @@ box_t::box_s(
         FLOAT transparency,
         FLOAT emission,
         uint32_t negative,
-        uint32_t union_num
+        int32_t union_num
     ) :
         color(color),
         specular(specular),

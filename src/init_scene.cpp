@@ -101,6 +101,7 @@ void rtx::init_scene()
 {
     std::vector<unsigned char> fig_vec;
     scene_t &local_scene = rtx::scene::local_scene;
+    dsf_buff_item_t empty_item {0, nullptr};
 
     add_figures_next(fig_vec, rtx::objects::sp_vec, &local_scene.spheres, &local_scene.spheres_num, &rtx::objects::sphere_offset);
     add_figures_next(fig_vec, rtx::objects::pl_vec, &local_scene.planes, &local_scene.planes_num, &rtx::objects::plane_offset);
@@ -111,6 +112,11 @@ void rtx::init_scene()
     add_figures_next(fig_vec, rtx::objects::box_vec, &local_scene.boxes,  &local_scene.boxes_num, &rtx::objects::box_offset);
 
     rtx::scene::figures = cllib::CLarray<unsigned char, cllib::read_only_array>(fig_vec, *rtx::data::context, *rtx::data::queue);
+    if (rtx::scene::union_cnt > 0) {
+        rtx::scene::dfs_buff = cllib::CLarray<dsf_buff_item_t, cllib::read_write_array>(
+                static_cast<size_t>(rtx::scene::union_cnt), *rtx::data::context);
+        rtx::scene::dfs_buff.memset(empty_item, *rtx::data::queue);
+    }
 
     rtx::scene::cameras = cllib::CLarray<camera_t, cllib::read_only_array>(rtx::objects::cam_vec, *rtx::data::context, *rtx::data::queue);
     rtx::scene::lights = cllib::CLarray<light_t, cllib::read_only_array>(rtx::objects::li_vec, *rtx::data::context, *rtx::data::queue);

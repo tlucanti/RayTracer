@@ -19,8 +19,8 @@ typedef cl_double2 COMPLEX;
 typedef const FLOAT3 &FL3_CREF;
 
 enum rtx_tracer_type {
-    RTX_RAY_TRACER,
-    RTX_RAY_MARCHER
+    RAY_TRACER_TYPE,
+    RAY_MARCHER_TYPE
 };
 
 namespace RTX_NAMESPACE

@@ -19,6 +19,15 @@
 
 # define BLACK ASSIGN_FLOAT3(0., 0., 0.)
 
+# define COMA ,
+# ifdef RTX_RAY_TRACER
+#  define ENABLE_IF_TRACER(__x) __x
+#  define ENABLE_IF_MARCHER(__x) /* EMPTY */
+# elif defined(RTX_RAY_MARCHER)
+#  define ENABLE_IF_TRACER(__x) /* EMPTY */
+#  define ENABLE_IF_MARCHER(__x) __x
+# endif
+
 # ifndef __CPP
 #  define CPP_UNUSED
 #  define CPP_INLINE
@@ -73,7 +82,7 @@
     FLOAT transparency,     \
     FLOAT emission,         \
     uint32_t negative,      \
-    uint32_t union_num
+    int32_t union_num
 
 #  define PLANE_PARAMS      \
     FL3_CREF position,      \
@@ -85,7 +94,7 @@
     FLOAT transparency,     \
     FLOAT emission,         \
     uint32_t negative,      \
-    uint32_t union_num
+    int32_t union_num
 
 #  define TRIANGLE_PARAMS   \
     FL3_CREF p1,            \
@@ -98,7 +107,7 @@
     FLOAT transparency,     \
     FLOAT emission,         \
     uint32_t negative,      \
-    uint32_t union_num
+    int32_t union_num
 
 #  define CONE_PARAMS       \
     FL3_CREF position,      \
@@ -112,7 +121,7 @@
     FLOAT transparency,     \
     FLOAT emission,         \
     uint32_t negative,      \
-    uint32_t union_num
+    int32_t union_num
 
 #  define CYLINDER_PARAMS   \
     FL3_CREF position,      \
@@ -126,7 +135,7 @@
     FLOAT transparency,     \
     FLOAT emission,         \
     uint32_t negative,      \
-    uint32_t union_num
+    int32_t union_num
 
 #  define TORUS_PARAMS      \
     FL3_CREF position,      \
@@ -140,7 +149,7 @@
     FLOAT transparency,     \
     FLOAT emission,         \
     uint32_t negative,      \
-    uint32_t union_num
+    int32_t union_num
 
 #  define BOX_PARAMS        \
     FL3_CREF position,      \
@@ -152,7 +161,7 @@
     FLOAT transparency,     \
     FLOAT emission,         \
     uint32_t negative,      \
-    uint32_t union_num
+    int32_t union_num
 
 #  define LIGHT_PARAMS      \
     light_type_t type,      \

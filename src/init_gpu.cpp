@@ -26,9 +26,9 @@ void rtx::init_gpu()
         flags += " -DRTX_TRANSPARENCY ";
     if (rtx::config::refractive)
         flags += " -DRTX_REFRACTIVE ";
-    if (rtx::config::tracer_type == RTX_RAY_TRACER)
+    if (rtx::config::tracer_type == RAY_TRACER_TYPE)
         flags += " -DRTX_RAY_TRACER ";
-    else if (rtx::config::tracer_type == RTX_RAY_MARCHER)
+    else if (rtx::config::tracer_type == RAY_MARCHER_TYPE)
         flags += " -DRTX_RAY_MARCHER ";
     program.compile(device, true, flags.c_str());
 
