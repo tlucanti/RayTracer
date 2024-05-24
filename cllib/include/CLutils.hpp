@@ -41,7 +41,7 @@ namespace __utils
         if (not stream.is_open())
             throw std::invalid_argument("file stream not opened");
         std::streamsize start = stream.gcount();
-        stream.ignore(std::numeric_limits<std::streamsize>::max());
+        stream.ignore(100000000);
         std::streamsize length = stream.gcount();
         stream.seekg(0, std::ios_base::beg);
         std::string content;

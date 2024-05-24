@@ -2,7 +2,7 @@
 {
   "config": {
     "transparency": true,
-    "blinding": false,
+    "blinding": true,
     "refractive": true
   },
   "lights": [

@@ -4,6 +4,7 @@
 #include <event_hooks.hpp>
 #include <exception.hpp>
 #include <scene_helper.hpp>
+#include <cstring>
 
 #include <sstream>
 #include <mlxlib>
@@ -269,7 +270,7 @@ static void screenshot(const char *fname)
         rtx::Error("screen-capture", std::string("cannot open file `") + fname + "` for screenshot");
         return ;
     }
-    bzero(header, 56);
+    std::memset(header, 0, 56);
     f_size = 14 + 40 + (rtx::config::width * rtx::config::height) * 4;
     rtx::config::height *= static_cast<unsigned int>(-1);
     header[0x00] = 0x4d42u | f_size << 16u;
@@ -303,6 +304,7 @@ static void reload_scene()
 void rtx::hooks::keypress_hook(int keycode, void *)
 {
     (void)reload_scene;
+    std::cout << "pressed " << keycode << '\n';
     switch (keycode)
     {
         case mlxlib::keys::KEY_W: move_params::move_direction.z = rtx::config::forward_move_step; break ;

@@ -4,7 +4,9 @@
 
 void rtx::init_gpu()
 {
+	std::cout << "nr platforms: " << cllib::get_platforms().size() << '\n';
     auto platform = std::move(cllib::get_platforms().at(0));
+    	std::cout << "nr devices: " << platform.get_devices().size() << '\n';
     auto device = std::move(platform.get_devices().at(0));
 
     rtx::data::context = new cllib::CLcontext(device);

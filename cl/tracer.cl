@@ -655,7 +655,7 @@ FLOAT3 trace_ray_rtx(
     while (recursion_depth > 0)
     {
         --recursion_depth;
-        closest_obj = closest_intersection(
+        closest_obj = closest_intersection_rtx(
                 scene,
                 camera,
                 direction,
@@ -731,5 +731,5 @@ FLOAT3 trace_ray_rtx(
 # endif /* __CPP */
 
 # undef __VERSION
-# define __VERSION 9
+# define __VERSION 10
 #endif /* TRACER_CL */

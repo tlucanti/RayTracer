@@ -3,6 +3,7 @@
 # define TRACING_BASE_CL
 
 # include <kernel.h>
+# include <inc.h>
 
 # define set_scene_fig_next(__field, __type, __cnt, __base_ptr, __shift_var) \
 do {                                                                        \

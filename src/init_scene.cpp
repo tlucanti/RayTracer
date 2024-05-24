@@ -1,5 +1,6 @@
 
 #include <rtx.hpp>
+#include <cstring>
 
 void rtx::refill_spheres()
 {
